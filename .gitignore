@@ -11,8 +11,6 @@ composer.lock
 .env.*.local
 *.env
 
-src/Infrastructure/Parser/Generated/
-
 # Generated static site (built by CI)
 /dist/
 
