@@ -72,7 +72,19 @@ Surprise factor: RANDOM_SPACED > WEIGHTED > EVEN
 ```bash
 composer install
 php bin/processable-items-demo.php
+# Multi-tenant: each tenant gets its own isolated SQLite file
+php bin/processable-items-demo.php --tenant=acme-corp
+php bin/processable-items-demo.php --tenant=globex
 ```
+
+### Multi-tenancy
+
+`ConnectionFactory::forTenant(string $tenantSlug, string $baseDir = 'data')` creates a dedicated SQLite database per tenant (`data/{slug}.sqlite`).
+
+- **Full schema isolation** — each tenant's rows live in a separate database file; no row-level filtering is needed.
+- **Slug validation** — slugs must be 1–64 lowercase alphanumeric + hyphen characters; path-traversal attempts throw `InvalidArgumentException`.
+- **Zero-config** — the data directory and schema are created automatically on first use.
+- **Backward-compatible** — the default `ConnectionFactory::forFile()` path is unchanged for single-tenant usage.
 
 ### Run tests
 
@@ -107,6 +119,32 @@ php bin/generate-security-tasks.php
 ```bash
 ./vendor/bin/phpunit --testsuite SecurityTasks
 ```
+
+### Brand-aware task templates
+
+Inject a `BrandAwareTaskTemplates` value object into `SecurityTaskGenerator` to
+customise task names per customer, brand, or environment.
+
+```php
+use ElementO\SecurityTasks\Domain\BrandAwareTaskTemplates;
+
+$templates = BrandAwareTaskTemplates::create(
+    brandName: 'ACME Bank',
+    overrides: [
+        'BankingAndPaymentCredentialPhishing' => [
+            '[ACME Bank] Run ACME wire-transfer alert drill',
+            '[ACME Bank] Update fraud-detection rules for credential phishing',
+        ],
+    ],
+);
+
+$generator = new SecurityTaskGenerator($attackRepo, $service, $templates);
+```
+
+Behaviour:
+- **Explicit override** — if an attack name has an entry in `$overrides`, those strings are used verbatim.
+- **Brand prefix fallback** — every other task name is automatically prefixed `[{BrandName}] [CATEGORY-TAG] …`, e.g. `[ACME Bank] [SOCIAL-ENG] Run phishing simulation for …`.
+- **Immutable design** — use `->withOverride()` and `->withBrandName()` to derive modified copies without mutating the original.
 
 ### Run all tests
 

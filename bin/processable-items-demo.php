@@ -14,12 +14,22 @@ use ElementO\ProcessableItems\Infrastructure\Time\GermanHolidayCalendar;
 $projectRoot = dirname(__DIR__);
 require $projectRoot . '/vendor/autoload.php';
 
+// --- Parse CLI options ---
+$opts   = getopt('', ['tenant:']);
+$tenant = $opts['tenant'] ?? null;
+
 // Bootstrap
-$factory    = ConnectionFactory::forFile($projectRoot);
+$factory = $tenant !== null
+    ? ConnectionFactory::forTenant($tenant, $projectRoot . '/data')
+    : ConnectionFactory::forFile($projectRoot);
 $userRepo   = new UserRepository($factory);
 $itemRepo   = new ProcessableItemRepository($factory);
 $calendar   = new GermanHolidayCalendar();
 $service    = new ProcessableItemsService($itemRepo, $calendar);
+
+if ($tenant !== null) {
+    echo "Tenant: {$tenant}\n";
+}
 
 // Seed demo users if table is empty
 $users = $userRepo->findAll();
@@ -78,4 +88,4 @@ foreach ($strategies as $strategy) {
     echo "\n";
 }
 
-echo "Done. Items written to data/processable_items.sqlite\n";
+echo "Done. Items written to data/" . ($tenant ?? 'processable_items') . ".sqlite\n";

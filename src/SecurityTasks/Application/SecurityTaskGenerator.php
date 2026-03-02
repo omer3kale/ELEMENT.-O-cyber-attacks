@@ -13,6 +13,7 @@ use ElementO\ProcessableItems\Domain\DistributionStrategy;
 use ElementO\ProcessableItems\Domain\ProcessableItem;
 use ElementO\ProcessableItems\Domain\User;
 use ElementO\ProcessableItems\Infrastructure\Database\UserRepository;
+use ElementO\SecurityTasks\Domain\BrandAwareTaskTemplates;
 
 /**
  * Bridges the cyber-attack catalog with the processable-items scheduler.
@@ -24,12 +25,20 @@ use ElementO\ProcessableItems\Infrastructure\Database\UserRepository;
  *
  * Design decision: task names are assigned to users in round-robin order
  * so every user receives a representative spread of the catalog.
+ *
+ * Brand awareness:
+ *   Pass a `BrandAwareTaskTemplates` instance to the constructor to:
+ *     1. Use fully custom per-attack task names for the named brand.
+ *     2. Automatically prepend "[{BrandName}]" to all generic task names
+ *        that do not have an explicit override, e.g.:
+ *        "[ACME Bank] [SOCIAL-ENG] Run phishing simulation for …"
  */
 final class SecurityTaskGenerator
 {
     public function __construct(
         private readonly AttackRepository        $attackRepository,
         private readonly ProcessableItemsService $itemsService,
+        private readonly ?BrandAwareTaskTemplates $brandTemplates = null,
     ) {}
 
     /**
@@ -103,13 +112,33 @@ final class SecurityTaskGenerator
      * Every task name is prefixed with a category tag, e.g. [SOCIAL-ENG],
      * so operators can filter or triage tasks by threat domain at a glance.
      *
+     * When a `BrandAwareTaskTemplates` instance is configured:
+     *   - If the brand defines an explicit override for this attack name,
+     *     those strings are returned verbatim.
+     *   - Otherwise, the generic task names are generated and each receives
+     *     the brand name as a leading secondary tag, e.g.:
+     *     "[ACME Bank] [SOCIAL-ENG] Run phishing simulation for …"
+     *
      * @param  AttackAggregate $attack
      * @return string[]
      */
     public function taskNamesForAttack(AttackAggregate $attack): array
     {
+        // --- Brand-aware: explicit override takes full precedence ---
+        if ($this->brandTemplates !== null) {
+            $override = $this->brandTemplates->overridesFor($attack->name);
+            if ($override !== null) {
+                return $override;
+            }
+        }
+
         $tag = $this->categoryTag($attack);
         $n   = $attack->name;
+
+        // --- Brand name prefix (no override, but brand context is set) ---
+        $brandPrefix = $this->brandTemplates !== null
+            ? '[' . $this->brandTemplates->brandName() . '] '
+            : '';
 
         // --- Social engineering ---
         if ($attack->category === AttackCategory::SocialEngineering
@@ -118,48 +147,48 @@ final class SecurityTaskGenerator
             || str_contains($n, 'Vishing')
         ) {
             return [
-                "{$tag} Run phishing simulation for {$n}",
-                "{$tag} Review security-awareness training content for {$n}",
+                "{$brandPrefix}{$tag} Run phishing simulation for {$n}",
+                "{$brandPrefix}{$tag} Review security-awareness training content for {$n}",
             ];
         }
 
         // --- API / BOLA / IDOR ---
         if (str_contains($n, 'ApiBola') || str_contains($n, 'Idor')) {
             return [
-                "{$tag} Review API for BOLA/IDOR exposures ({$n})",
-                "{$tag} Validate object-level authorization on all REST endpoints ({$n})",
+                "{$brandPrefix}{$tag} Review API for BOLA/IDOR exposures ({$n})",
+                "{$brandPrefix}{$tag} Validate object-level authorization on all REST endpoints ({$n})",
             ];
         }
 
         // --- SQL injection ---
         if (str_contains($n, 'SqlInjection')) {
             return [
-                "{$tag} Run SQL injection tests against critical endpoints ({$n})",
-                "{$tag} Verify parameterised queries and ORM usage for {$n}",
+                "{$brandPrefix}{$tag} Run SQL injection tests against critical endpoints ({$n})",
+                "{$brandPrefix}{$tag} Verify parameterised queries and ORM usage for {$n}",
             ];
         }
 
         // --- Cloud misconfiguration ---
         if (str_contains($n, 'CloudMisconfiguration') || str_contains($n, 'Cloud')) {
             return [
-                "{$tag} Audit cloud storage and IAM roles for misconfigurations ({$n})",
-                "{$tag} Review public bucket ACLs and signed-URL policies for {$n}",
+                "{$brandPrefix}{$tag} Audit cloud storage and IAM roles for misconfigurations ({$n})",
+                "{$brandPrefix}{$tag} Review public bucket ACLs and signed-URL policies for {$n}",
             ];
         }
 
         // --- MitM / network sniffing ---
         if (str_contains($n, 'Mitm') || str_contains($n, 'Network')) {
             return [
-                "{$tag} Review network encryption and HSTS against MitM ({$n})",
-                "{$tag} Verify TLS certificate pinning and CSP headers for {$n}",
+                "{$brandPrefix}{$tag} Review network encryption and HSTS against MitM ({$n})",
+                "{$brandPrefix}{$tag} Verify TLS certificate pinning and CSP headers for {$n}",
             ];
         }
 
         // --- Ransomware ---
         if (str_contains($n, 'Ransomware') || str_contains($n, 'DataExtortion')) {
             return [
-                "{$tag} Test backup and restore procedures against {$n}",
-                "{$tag} Verify EDR alerting thresholds for encryption spikes ({$n})",
+                "{$brandPrefix}{$tag} Test backup and restore procedures against {$n}",
+                "{$brandPrefix}{$tag} Verify EDR alerting thresholds for encryption spikes ({$n})",
             ];
         }
 
@@ -170,8 +199,8 @@ final class SecurityTaskGenerator
             || str_contains($n, 'SupplyChain')
         ) {
             return [
-                "{$tag} Review third-party dependency trust for {$n}",
-                "{$tag} Verify software bill-of-materials (SBOM) and signing policy ({$n})",
+                "{$brandPrefix}{$tag} Review third-party dependency trust for {$n}",
+                "{$brandPrefix}{$tag} Verify software bill-of-materials (SBOM) and signing policy ({$n})",
             ];
         }
 
@@ -181,30 +210,30 @@ final class SecurityTaskGenerator
             || str_contains($n, 'PasswordStealer')
         ) {
             return [
-                "{$tag} Review MFA enforcement and breach-credential monitoring ({$n})",
-                "{$tag} Validate rate-limiting and account-lockout controls for {$n}",
+                "{$brandPrefix}{$tag} Review MFA enforcement and breach-credential monitoring ({$n})",
+                "{$brandPrefix}{$tag} Validate rate-limiting and account-lockout controls for {$n}",
             ];
         }
 
         // --- Malware / exploitation (catch-all for Malware category) ---
         if ($attack->category === AttackCategory::Malware) {
             return [
-                "{$tag} Verify EDR coverage and patch status against {$n}",
-                "{$tag} Review privilege separation controls for {$n}",
+                "{$brandPrefix}{$tag} Verify EDR coverage and patch status against {$n}",
+                "{$brandPrefix}{$tag} Review privilege separation controls for {$n}",
             ];
         }
 
         // --- IoT ---
         if ($attack->category === AttackCategory::Iot) {
             return [
-                "{$tag} Audit IoT device firmware versions and network segmentation ({$n})",
+                "{$brandPrefix}{$tag} Audit IoT device firmware versions and network segmentation ({$n})",
             ];
         }
 
         // --- Mobile ---
         if ($attack->category === AttackCategory::Mobile) {
             return [
-                "{$tag} Review mobile app code signing and certificate validation ({$n})",
+                "{$brandPrefix}{$tag} Review mobile app code signing and certificate validation ({$n})",
             ];
         }
 
@@ -213,20 +242,20 @@ final class SecurityTaskGenerator
             || str_contains($n, 'PromptInjection')
         ) {
             return [
-                "{$tag} Review LLM input sanitisation and system-prompt isolation ({$n})",
-                "{$tag} Test agent tool permissions and output filtering for {$n}",
+                "{$brandPrefix}{$tag} Review LLM input sanitisation and system-prompt isolation ({$n})",
+                "{$brandPrefix}{$tag} Test agent tool permissions and output filtering for {$n}",
             ];
         }
 
         // --- Insider threat ---
         if (str_contains($n, 'Insider')) {
             return [
-                "{$tag} Review privileged-access monitoring and DLP controls ({$n})",
+                "{$brandPrefix}{$tag} Review privileged-access monitoring and DLP controls ({$n})",
             ];
         }
 
         // Default
-        return ["{$tag} Review security controls for {$n}"];
+        return ["{$brandPrefix}{$tag} Review security controls for {$n}"];
     }
 
     // -------------------------------------------------------------------------
