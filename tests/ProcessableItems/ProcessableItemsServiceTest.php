@@ -28,7 +28,7 @@ final class ProcessableItemsServiceTest extends TestCase
     protected function setUp(): void
     {
         $factory = new ConnectionFactory('sqlite::memory:');
-        $factory->getConnection(); // triggers schema creation
+        $factory->getConnection(); 
 
         $this->service   = new ProcessableItemsService(
             new ProcessableItemRepository($factory),
@@ -40,9 +40,7 @@ final class ProcessableItemsServiceTest extends TestCase
         $this->users     = [new User(1, 'Alice'), new User(2, 'Bob')];
     }
 
-    // -----------------------------------------------------------------------
     // 1. Min distance floor
-    // -----------------------------------------------------------------------
 
     public function testMinDistanceIsFlooredTo30Minutes(): void
     {
@@ -51,7 +49,7 @@ final class ProcessableItemsServiceTest extends TestCase
             amountPerUser:      10,
             start:              $this->weekStart,
             end:                $this->weekEnd,
-            minDistanceMinutes: 10, // below floor – must be raised to 30
+            minDistanceMinutes: 10, 
             strategy:           DistributionStrategy::EVEN,
         );
 
@@ -74,9 +72,7 @@ final class ProcessableItemsServiceTest extends TestCase
         }
     }
 
-    // -----------------------------------------------------------------------
     // 2. Office hours and weekdays only
-    // -----------------------------------------------------------------------
 
     public function testItemsFallOnWeekdaysAndOfficeHoursOnly(): void
     {
@@ -109,13 +105,10 @@ final class ProcessableItemsServiceTest extends TestCase
         }
     }
 
-    // -----------------------------------------------------------------------
     // 3. No items on German holidays
-    // -----------------------------------------------------------------------
 
     public function testNoItemsScheduledOnHolidays(): void
     {
-        // Labour Day 2026-05-01 is a Friday — range contains it
         $start = new DateTimeImmutable('2026-04-27 09:00');
         $end   = new DateTimeImmutable('2026-05-01 17:00');
 
@@ -137,9 +130,7 @@ final class ProcessableItemsServiceTest extends TestCase
         }
     }
 
-    // -----------------------------------------------------------------------
     // 4. Strategy: EVEN – monotonically spread
-    // -----------------------------------------------------------------------
 
     public function testEvenStrategyProducesMonotonicallySpreadTimes(): void
     {
@@ -165,9 +156,7 @@ final class ProcessableItemsServiceTest extends TestCase
         }
     }
 
-    // -----------------------------------------------------------------------
-    // 5. Strategy: RANDOM_SPACED – all items valid (office hours + spacing)
-    // -----------------------------------------------------------------------
+    // 5. Strategy: RANDOM_SPACED 
 
     public function testRandomSpacedProducesValidItems(): void
     {
@@ -193,14 +182,10 @@ final class ProcessableItemsServiceTest extends TestCase
         }
     }
 
-    // -----------------------------------------------------------------------
-    // 6. Strategy: WEIGHTED – majority of times in 15:00-17:00 window
-    // -----------------------------------------------------------------------
+    // 6. Strategy: WEIGHTED 
 
     public function testWeightedStrategyFavorsLaterSlots(): void
     {
-        // Seed PHP's MT RNG so shuffle() in selectWeighted() is deterministic
-        // across macOS and Linux CI (PHP 8.2 Mersenne Twister is cross-platform).
         mt_srand(42);
 
         // Use multiple users and a full week to get a reasonable sample
@@ -238,11 +223,6 @@ final class ProcessableItemsServiceTest extends TestCase
 
         $ratio = $lateCount / $totalCount;
 
-        // With weights early=1 / mid=2 / late=3, the late window (15:00-17:00)
-        // is highly over-represented in the sampling pool (~43 % of entries).
-        // The threshold of 0.20 is deliberately conservative; actual ratio with
-        // seed 42 is well above that.  The seed guarantees the same shuffle
-        // sequence on every PHP 8.2 platform (Mersenne Twister is deterministic).
         $this->assertGreaterThan(
             0.20,
             $ratio,
@@ -259,14 +239,10 @@ final class ProcessableItemsServiceTest extends TestCase
 
     }
 
-    // -----------------------------------------------------------------------
     // 7. estimateCapacity
-    // -----------------------------------------------------------------------
 
     public function testEstimateCapacityForOneWeekWithDefaultSpacing(): void
     {
-        // Mon–Fri = 5 days × 16 slots/day = 80 slots.
-        // With 30-min spacing every adjacent slot qualifies → capacity = 80.
         $capacity = $this->service->estimateCapacity(
             start: $this->weekStart,
             end:   $this->weekEnd,
@@ -288,7 +264,6 @@ final class ProcessableItemsServiceTest extends TestCase
 
     public function testEstimateCapacityIgnoresWeekends(): void
     {
-        // 2026-03-14 (Sat) – 2026-03-15 (Sun) → no valid slots → 0.
         $capacity = $this->service->estimateCapacity(
             start: new DateTimeImmutable('2026-03-14 09:00'),
             end:   new DateTimeImmutable('2026-03-15 17:00'),
@@ -299,27 +274,21 @@ final class ProcessableItemsServiceTest extends TestCase
 
     public function testEstimateCapacityRespectsHolidays(): void
     {
-        // Labour Day 2026-05-01 (Friday) — the only working day in the range.
         $capWithHoliday    = $this->service->estimateCapacity(
             start: new DateTimeImmutable('2026-05-01 09:00'),
             end:   new DateTimeImmutable('2026-05-01 17:00'),
         );
 
-        // Same range excluding the holiday (Thursday before):
-        // 2026-04-30 is Ascension Day (Christi Himmelfahrt) in many German states;
-        // use the full Mon–Fri week and compare with the holiday-free reference week.
         $capReferenceWeek = $this->service->estimateCapacity(
-            start: $this->weekStart, // 2026-03-09 Mon
-            end:   $this->weekEnd,   // 2026-03-13 Fri — no holidays
+            start: $this->weekStart, 
+            end:   $this->weekEnd,   
         );
 
         $this->assertSame(0, $capWithHoliday,         'Labour Day should yield zero capacity.');
         $this->assertSame(80, $capReferenceWeek,       'Reference week (no holidays) should yield 80 slots.');
     }
 
-    // -----------------------------------------------------------------------
     // Helpers
-    // -----------------------------------------------------------------------
 
     /** @return array<int, ProcessableItem[]> */
     private function groupByUser(array $items): array

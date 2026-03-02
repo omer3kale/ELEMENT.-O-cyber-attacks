@@ -23,11 +23,18 @@ try {
     $renderer = new AttackListRenderer();
     $html     = $renderer->render($all);
 
-    if (!is_dir($distDir)) {
-        mkdir($distDir, 0777, true);
+    // Output directories: dist/ for backward compat + docs/catalog/ so the
+    // docs navigation link works both locally and on GitHub Pages.
+    $catalogDir = $projectRoot . '/docs/catalog';
+
+    foreach ([$distDir, $catalogDir] as $outDir) {
+        if (!is_dir($outDir)) {
+            mkdir($outDir, 0777, true);
+        }
     }
 
-    file_put_contents($distDir . '/index.html', $html);
+    file_put_contents($distDir   . '/index.html', $html);
+    file_put_contents($catalogDir . '/index.html', $html);
 
     // PWA: manifest
     $manifest = json_encode([
@@ -42,7 +49,8 @@ try {
             ['src' => 'icons/icon.svg', 'sizes' => 'any', 'type' => 'image/svg+xml', 'purpose' => 'any maskable'],
         ],
     ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-    file_put_contents($distDir . '/manifest.json', $manifest);
+    file_put_contents($distDir    . '/manifest.json', $manifest);
+    file_put_contents($catalogDir . '/manifest.json', $manifest);
 
     // PWA: service worker
     $sw = <<<'JS'
@@ -69,19 +77,23 @@ self.addEventListener('fetch', e => {
   );
 });
 JS;
-    file_put_contents($distDir . '/sw.js', $sw);
+    file_put_contents($distDir    . '/sw.js', $sw);
+    file_put_contents($catalogDir . '/sw.js', $sw);
 
     // PWA: icon
-    if (!is_dir($distDir . '/icons')) {
-        mkdir($distDir . '/icons', 0777, true);
+    foreach ([$distDir, $catalogDir] as $outDir) {
+        if (!is_dir($outDir . '/icons')) {
+            mkdir($outDir . '/icons', 0777, true);
+        }
     }
     $icon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">'
           . '<rect width="192" height="192" rx="24" fill="#0d1117"/>'
           . '<text x="96" y="130" font-family="monospace" font-size="96" font-weight="bold" fill="#58a6ff" text-anchor="middle">E</text>'
           . '</svg>';
-    file_put_contents($distDir . '/icons/icon.svg', $icon);
+    file_put_contents($distDir    . '/icons/icon.svg', $icon);
+    file_put_contents($catalogDir . '/icons/icon.svg', $icon);
 
-    echo 'Built dist/index.html — ' . count($all) . ' attacks' . PHP_EOL;
+    echo 'Built dist/index.html + docs/catalog/index.html — ' . count($all) . ' attacks' . PHP_EOL;
     exit(0);
 } catch (Throwable $e) {
     echo 'ERROR: ' . $e->getMessage() . PHP_EOL;

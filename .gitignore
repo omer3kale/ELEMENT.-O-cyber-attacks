@@ -11,8 +11,9 @@ composer.lock
 .env.*.local
 *.env
 
-# Generated static site (built by CI)
+# Generated static site and catalog mirror (built by CI / build-static-site.php)
 /dist/
+/docs/catalog/
 
 # ProcessableItems SQLite database (generated at runtime)
 /data/

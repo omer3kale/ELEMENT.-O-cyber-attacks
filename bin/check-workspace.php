@@ -65,7 +65,7 @@ foreach ($all as $attack) {
 
 //(c) Workspace hygiene
 
-// (c1) No http/https in .attack files
+//(c1) No http/https in .attack files
 $attackFiles = new RecursiveIteratorIterator(
     new RecursiveDirectoryIterator($modelsDir, FilesystemIterator::SKIP_DOTS)
 );

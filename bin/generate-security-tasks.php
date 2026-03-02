@@ -17,16 +17,16 @@ use ElementO\SecurityTasks\Application\SecurityTaskGenerator;
 $projectRoot = dirname(__DIR__);
 require $projectRoot . '/vendor/autoload.php';
 
-// --- Parse CLI options ---
+// Parse CLI options
 $opts   = getopt('', ['tenant:']);
 $tenant = $opts['tenant'] ?? null;
 
-// --- Bootstrap attack catalog ---
+// Bootstrap attack catalog 
 $parser    = new ANTLRParserAdapter();
 $attacks   = $parser->parseDirectory($projectRoot . '/models');
 $attackRepo = new FilesystemAttackRepository($attacks);
 
-// --- Bootstrap processable-items infrastructure ---
+// Bootstrap processable-items infrastructure
 $factory  = $tenant !== null
     ? ConnectionFactory::forTenant($tenant, $projectRoot . '/data')
     : ConnectionFactory::forFile($projectRoot);
@@ -39,7 +39,7 @@ if ($tenant !== null) {
     echo "Tenant: {$tenant}\n";
 }
 
-// --- Seed demo users if table is empty ---
+// Seed demo users if table is empty
 $users = $userRepo->findAll();
 if (empty($users)) {
     foreach (['Alice', 'Bob', 'Charlie'] as $name) {
@@ -48,10 +48,10 @@ if (empty($users)) {
     $users = $userRepo->findAll();
 }
 
-// --- Generator ---
+// Generator 
 $generator = new SecurityTaskGenerator($attackRepo, $service);
 
-// --- Date range: next full work week ---
+// Date range: next full work week 
 $start = new DateTimeImmutable('next monday 09:00');
 $end   = $start->modify('+4 days')->setTime(17, 0);
 
@@ -66,7 +66,7 @@ echo sprintf(
     count($users),
 );
 
-// --- Run all three strategies ---
+// Run all three strategies
 foreach (DistributionStrategy::cases() as $strategy) {
     echo str_repeat('=', 80) . "\n";
     echo sprintf("Strategy: %s\n", $strategy->value);
@@ -79,11 +79,11 @@ foreach (DistributionStrategy::cases() as $strategy) {
         tasksPerUser:       5,
         start:              $start,
         end:                $end,
-        minDistanceMinutes: 20,   // exercises the 30-min floor
+        minDistanceMinutes: 20,   
         strategy:           $strategy,
     );
 
-    // Build user-id -> name lookup
+    // Build user-id
     $userNames = [];
     foreach ($users as $u) {
         $userNames[$u->id()] = $u->name();

@@ -38,7 +38,7 @@
     </p>
   </section>
 
-  <!-- ── ProcessableItem lifecycle ────────────────────────────── -->
+  <!-- ── ProcessableItem lifecycle -->
   <section class="section">
     <p class="section__label">Domain model</p>
     <h2 class="section__title"><code>ProcessableItem</code> lifecycle</h2>
@@ -64,7 +64,7 @@
     </div>
   </section>
 
-  <!-- ── Three strategies ──────────────────────────────────────── -->
+  <!-- ── Three strategies -->
   <section class="section">
     <p class="section__label">Pluggable distribution</p>
     <h2 class="section__title">Three strategies, one interface</h2>
@@ -76,7 +76,6 @@
 
     <div class="card-grid">
       <div class="card card--accent">
-        <div class="card__icon">⚖️</div>
         <div class="card__title">EVEN</div>
         <div class="card__desc">
           Tasks are distributed at mathematically equal intervals across eligible slots.
@@ -85,7 +84,6 @@
         </div>
       </div>
       <div class="card card--accent">
-        <div class="card__icon">🎲</div>
         <div class="card__title">RANDOM_SPACED</div>
         <div class="card__desc">
           Slots are chosen with uniform randomness, subject to a minimum-spacing floor.
@@ -95,7 +93,6 @@
         </div>
       </div>
       <div class="card card--accent">
-        <div class="card__icon">📈</div>
         <div class="card__title">WEIGHTED</div>
         <div class="card__desc">
           Earlier available slots have lower weight; later slots have progressively higher
@@ -120,19 +117,19 @@
         <tbody>
           <tr>
             <td><strong>EVEN</strong></td>
-            <td>✅ Yes</td>
+            <td> Yes</td>
             <td>Uniform — equal gaps</td>
             <td>Compliance audits, regression suites</td>
           </tr>
           <tr>
             <td><strong>RANDOM_SPACED</strong></td>
-            <td>❌ No</td>
+            <td> No</td>
             <td>Uniform random, spacing-floored</td>
             <td>Red-team simulations, threat emulation</td>
           </tr>
           <tr>
             <td><strong>WEIGHTED</strong></td>
-            <td>❌ No</td>
+            <td> No</td>
             <td>Exponential late-day bias</td>
             <td>Security awareness, cognitive-load training</td>
           </tr>
@@ -141,7 +138,7 @@
     </div>
   </section>
 
-  <!-- ── Pseudocode ────────────────────────────────────────────── -->
+  <!-- ── Pseudocode  -->
   <section class="section">
     <p class="section__label">Algorithm overview</p>
     <h2 class="section__title">How EVEN and WEIGHTED work</h2>
@@ -162,7 +159,7 @@ for slot in sort(chosen):
     assign(user, slot)</code></pre>
   </section>
 
-  <!-- ── Office hours & holidays ───────────────────────────────── -->
+  <!-- ── Office hours & holidays  -->
   <section class="section">
     <p class="section__label">Constraints</p>
     <h2 class="section__title">Office hours &amp; German holiday calendar</h2>
@@ -183,7 +180,7 @@ for slot in sort(chosen):
     </div>
   </section>
 
-  <!-- ── estimateCapacity ──────────────────────────────────────── -->
+  <!-- ── estimateCapacity  -->
   <section class="section">
     <p class="section__label">Planning API</p>
     <h2 class="section__title"><code>estimateCapacity()</code></h2>

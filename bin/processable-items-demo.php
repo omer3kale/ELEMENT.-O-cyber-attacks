@@ -14,7 +14,7 @@ use ElementO\ProcessableItems\Infrastructure\Time\GermanHolidayCalendar;
 $projectRoot = dirname(__DIR__);
 require $projectRoot . '/vendor/autoload.php';
 
-// --- Parse CLI options ---
+// Parse CLI options 
 $opts   = getopt('', ['tenant:']);
 $tenant = $opts['tenant'] ?? null;
 
@@ -34,13 +34,13 @@ if ($tenant !== null) {
 // Seed demo users if table is empty
 $users = $userRepo->findAll();
 if (empty($users)) {
-    foreach (['Alice', 'Bob', 'Charlie'] as $name) {
+    foreach (['Alice', 'Bobby', 'Delta'] as $name) {
         $userRepo->save(new User(0, $name));
     }
     $users = $userRepo->findAll();
 }
 
-// Date range: next full work week Monday 09:00 -> Friday 17:00
+// Date range
 $start = new DateTimeImmutable('next monday 09:00');
 $end   = $start->modify('+4 days')->setTime(17, 0);
 
@@ -65,7 +65,7 @@ foreach ($strategies as $strategy) {
         amountPerUser:      5,
         start:              $start,
         end:                $end,
-        minDistanceMinutes: 15,   // exercises the 30-min floor
+        minDistanceMinutes: 15,   
         strategy:           $strategy,
     );
 

@@ -11,9 +11,6 @@
         <testsuite name="SecurityTasks">
             <directory>tests/SecurityTasks</directory>
         </testsuite>
-        <testsuite name="All">
-            <directory>tests</directory>
-        </testsuite>
     </testsuites>
 
     <source>

@@ -3,29 +3,6 @@
 
 declare(strict_types=1);
 
-/**
- * bin/run-all-tenants.php
- *
- * Hosted-operator script: iterate over every configured tenant slug and
- * run the security task generator for each one.
- *
- * Tenant discovery (first match wins):
- *   1. JSON file path in $TENANTS_FILE env var  (e.g. /etc/element-io/tenants.json)
- *   2. Comma-separated list in $TENANTS env var  (e.g. "acme-corp,globex-inc")
- *   3. Default file ./tenants.json relative to the project root
- *
- * Environment variables:
- *   TENANTS_FILE   Path to a JSON file containing a flat array of slug strings.
- *   TENANTS        Comma-separated slug list (overridden by TENANTS_FILE).
- *   DATA_DIR       Base directory for per-tenant SQLite files. Default: ./data
- *   TZ             PHP timezone. Default: UTC
- *
- * Usage:
- *   php bin/run-all-tenants.php
- *   TENANTS=acme-corp,globex-inc php bin/run-all-tenants.php
- *   TENANTS_FILE=/etc/element-io/tenants.json php bin/run-all-tenants.php
- */
-
 use ElementO\Infrastructure\Parser\ANTLRParserAdapter;
 use ElementO\Infrastructure\Repository\FilesystemAttackRepository;
 use ElementO\ProcessableItems\Application\ProcessableItemsService;
@@ -40,11 +17,11 @@ use ElementO\SecurityTasks\Application\SecurityTaskGenerator;
 $projectRoot = dirname(__DIR__);
 require $projectRoot . '/vendor/autoload.php';
 
-// ── Timezone ─────────────────────────────────────────────────────────────────
+// Timezone 
 $tz = getenv('TZ') ?: 'UTC';
 date_default_timezone_set($tz);
 
-// ── Tenant discovery ─────────────────────────────────────────────────────────
+// Tenant discovery 
 $tenants = discoverTenants($projectRoot);
 
 if (empty($tenants)) {
@@ -52,19 +29,19 @@ if (empty($tenants)) {
     exit(1);
 }
 
-// ── DATA_DIR ─────────────────────────────────────────────────────────────────
+// DATA_DIR 
 $dataDir = getenv('DATA_DIR') ?: $projectRoot . '/data';
 if (!is_dir($dataDir)) {
     mkdir($dataDir, 0777, true);
 }
 
-// ── Shared attack catalog (parsed once, reused for all tenants) ───────────────
+// Shared attack catalog  
 $parser     = new ANTLRParserAdapter();
 $attacks    = $parser->parseDirectory($projectRoot . '/models');
 $attackRepo = new FilesystemAttackRepository($attacks);
 $calendar   = new GermanHolidayCalendar();
 
-// ── Scheduling window: next full work week ─────────────────────────────────
+// Scheduling window: next full work week 
 $start = new DateTimeImmutable('next monday 09:00');
 $end   = $start->modify('+4 days')->setTime(17, 0);
 
@@ -79,7 +56,7 @@ printf("Window: %s → %s\n", $start->format('Y-m-d H:i'), $end->format('Y-m-d H
 printf("Tenants: %d  |  Catalog attacks: %d\n\n", $totalTenants, count($attacks));
 echo str_repeat('─', 72) . "\n";
 
-// ── Per-tenant loop ───────────────────────────────────────────────────────────
+// Per-tenant loop 
 foreach ($tenants as $slug) {
     $tenantStart = microtime(true);
 
@@ -133,11 +110,8 @@ printf(
     microtime(true) - $wallStart,
 );
 
-// ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Discover tenant slugs from the environment or a JSON file.
- *
  * @return string[]
  */
 function discoverTenants(string $projectRoot): array

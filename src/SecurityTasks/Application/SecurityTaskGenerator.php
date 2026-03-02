@@ -15,24 +15,6 @@ use ElementO\ProcessableItems\Domain\User;
 use ElementO\ProcessableItems\Infrastructure\Database\UserRepository;
 use ElementO\SecurityTasks\Domain\BrandAwareTaskTemplates;
 
-/**
- * Bridges the cyber-attack catalog with the processable-items scheduler.
- *
- * For each attack in the catalog it derives one or more security task
- * templates (strings).  Those templates are then scheduled as
- * ProcessableItems for the supplied users via ProcessableItemsService,
- * respecting office hours, German holidays, and per-user minimum spacing.
- *
- * Design decision: task names are assigned to users in round-robin order
- * so every user receives a representative spread of the catalog.
- *
- * Brand awareness:
- *   Pass a `BrandAwareTaskTemplates` instance to the constructor to:
- *     1. Use fully custom per-attack task names for the named brand.
- *     2. Automatically prepend "[{BrandName}]" to all generic task names
- *        that do not have an explicit override, e.g.:
- *        "[ACME Bank] [SOCIAL-ENG] Run phishing simulation for …"
- */
 final class SecurityTaskGenerator
 {
     public function __construct(
@@ -67,8 +49,7 @@ final class SecurityTaskGenerator
             return [];
         }
 
-        // Assign task names to each user in round-robin so every user
-        // gets a varied sample from across the full threat catalog.
+        // Assign task names to each user in round-robin fashion.
         $allItems = [];
 
         foreach ($users as $user) {
@@ -103,22 +84,9 @@ final class SecurityTaskGenerator
         return $allItems;
     }
 
-    // -------------------------------------------------------------------------
-    // Public – exposed so it can be tested without touching the service
-    // -------------------------------------------------------------------------
+    // Public
 
     /**
-     * Map a single attack to a list of human-readable security task names.
-     * Every task name is prefixed with a category tag, e.g. [SOCIAL-ENG],
-     * so operators can filter or triage tasks by threat domain at a glance.
-     *
-     * When a `BrandAwareTaskTemplates` instance is configured:
-     *   - If the brand defines an explicit override for this attack name,
-     *     those strings are returned verbatim.
-     *   - Otherwise, the generic task names are generated and each receives
-     *     the brand name as a leading secondary tag, e.g.:
-     *     "[ACME Bank] [SOCIAL-ENG] Run phishing simulation for …"
-     *
      * @param  AttackAggregate $attack
      * @return string[]
      */
@@ -258,16 +226,8 @@ final class SecurityTaskGenerator
         return ["{$brandPrefix}{$tag} Review security controls for {$n}"];
     }
 
-    // -------------------------------------------------------------------------
     // Private helpers
-    // -------------------------------------------------------------------------
 
-    /**
-     * Returns a short uppercase tag for the attack's threat category,
-     * e.g. "[SOCIAL-ENG]", "[MALWARE]", "[CLOUD]".
-     * Displayed as a prefix on every task name so operators can quickly
-     * filter or sort tasks by threat domain.
-     */
     private function categoryTag(AttackAggregate $attack): string
     {
         return '[' . match ($attack->category) {
@@ -287,9 +247,6 @@ final class SecurityTaskGenerator
     }
 
     /**
-     * Build a flat list of unique task templates from all attacks.
-     * Duplicates are removed (same string from different attacks).
-     *
      * @param  AttackAggregate[] $attacks
      * @return string[]
      */
@@ -309,9 +266,6 @@ final class SecurityTaskGenerator
     }
 
     /**
-     * Picks $count templates for a given user, starting at an offset derived
-     * from the user id so different users get different leading tasks.
-     *
      * @param  string[] $templates
      * @return string[]
      */

@@ -15,12 +15,6 @@ use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Tests for multi-tenant ConnectionFactory::forTenant().
- *
- * File-based tests use a per-class temporary directory that is removed on
- * tearDown so no artefacts linger in the project tree.
- */
 final class ConnectionFactoryTenantTest extends TestCase
 {
     private string $tmpDir;
@@ -42,9 +36,7 @@ final class ConnectionFactoryTenantTest extends TestCase
         @rmdir($this->tmpDir);
     }
 
-    // -----------------------------------------------------------------------
-    // 1. Valid slug → ConnectionFactory is created and schema is applied
-    // -----------------------------------------------------------------------
+    // ConnectionFactory is created and schema is applied
 
     public function testForTenantWithValidSlugCreatesDatabase(): void
     {
@@ -65,9 +57,7 @@ final class ConnectionFactoryTenantTest extends TestCase
         $this->assertNotNull($factory->getConnection());
     }
 
-    // -----------------------------------------------------------------------
-    // 2. Invalid slug → InvalidArgumentException
-    // -----------------------------------------------------------------------
+    // InvalidArgumentException
 
     #[DataProvider('invalidSlugProvider')]
     public function testForTenantWithInvalidSlugThrows(string $slug): void
@@ -91,9 +81,7 @@ final class ConnectionFactoryTenantTest extends TestCase
         ];
     }
 
-    // -----------------------------------------------------------------------
-    // 3. Two tenants are isolated — data written to A never appears in B
-    // -----------------------------------------------------------------------
+    // Two tenants are isolated 
 
     public function testTenantDataIsIsolated(): void
     {
@@ -153,9 +141,7 @@ final class ConnectionFactoryTenantTest extends TestCase
         $this->assertFileExists($this->tmpDir . '/tenant-beta.sqlite');
     }
 
-    // -----------------------------------------------------------------------
-    // 4. Tenant data persists across reconnection (same slug reuses db file)
-    // -----------------------------------------------------------------------
+    // 4. Tenant data persists across reconnection
 
     public function testTenantDatabasePersistsBetweenConnections(): void
     {

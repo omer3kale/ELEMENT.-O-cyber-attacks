@@ -6,16 +6,6 @@ namespace ElementO\ProcessableItems\Infrastructure\Time;
 
 use DateTimeImmutable;
 
-/**
- * Provides German federal public holiday detection for a rolling window of years.
- *
- * Scope note: Only nation-wide (federal) holidays are covered. State-specific
- * holidays (e.g. Corpus Christi, Epiphany in Bavaria) are omitted — a full
- * per-state implementation is out of scope for this challenge.
- *
- * Easter-based dates are computed algorithmically (Anonymous Gregorian / Meeus
- * algorithm) so the calendar stays correct across years without manual updates.
- */
 final class GermanHolidayCalendar
 {
     /** @var array<string, true>  key = 'Y-m-d' */
@@ -30,7 +20,6 @@ final class GermanHolidayCalendar
             foreach ($this->holidaysForYear($year) as $d) {
                 $this->cache[$d] = true;
             }
-            // sentinel so we don't recompute
             $this->cache[$year] = true;
         }
 
@@ -44,23 +33,20 @@ final class GermanHolidayCalendar
 
         return [
             // Fixed dates
-            sprintf('%04d-01-01', $year),  // New Year's Day
-            sprintf('%04d-05-01', $year),  // Labour Day
-            sprintf('%04d-10-03', $year),  // German Unity Day
-            sprintf('%04d-12-25', $year),  // Christmas Day
-            sprintf('%04d-12-26', $year),  // Second Christmas Day
+            sprintf('%04d-01-01', $year),  
+            sprintf('%04d-05-01', $year), 
+            sprintf('%04d-10-03', $year),  
+            sprintf('%04d-12-25', $year),  
+            sprintf('%04d-12-26', $year),  
 
             // Easter-relative
-            $easter->modify('-2 days')->format('Y-m-d'),  // Good Friday
-            $easter->modify('+1 day')->format('Y-m-d'),   // Easter Monday
-            $easter->modify('+39 days')->format('Y-m-d'), // Ascension Day
-            $easter->modify('+50 days')->format('Y-m-d'), // Whit Monday
+            $easter->modify('-2 days')->format('Y-m-d'),  
+            $easter->modify('+1 day')->format('Y-m-d'),   
+            $easter->modify('+39 days')->format('Y-m-d'), 
+            $easter->modify('+50 days')->format('Y-m-d'), 
         ];
     }
 
-    /**
-     * Computes Easter Sunday using the Anonymous Gregorian algorithm.
-     */
     private function easterSunday(int $year): DateTimeImmutable
     {
         $a = $year % 19;

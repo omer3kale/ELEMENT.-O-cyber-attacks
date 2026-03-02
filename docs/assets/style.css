@@ -1,6 +1,5 @@
 /* ====================================================================
-   ELEMENT.İO  –  GitHub Pages shared stylesheet
-   Target:  dark-mode documentation, matching the attack catalog theme
+   ELEMENT.İO 
    ==================================================================== */
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -41,7 +40,7 @@ body {
   min-height: 100vh;
 }
 
-/* ── Nav ─────────────────────────────────────────────────────────── */
+/* Nav */
 .site-nav {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
@@ -106,10 +105,10 @@ body {
 }
 .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
 
-/* ── Page wrapper ────────────────────────────────────────────────── */
+/* Page wrapper */
 .page-wrap { max-width: 1100px; margin: 0 auto; padding: 48px 32px 80px; }
 
-/* ── Hero ───────────────────────────────────────────────────────── */
+/* Hero  */
 .hero {
   padding: 64px 0 48px;
   border-bottom: 1px solid var(--border);
@@ -170,7 +169,7 @@ body {
 }
 .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
 
-/* ── Section headings ───────────────────────────────────────────── */
+/* Section headings */
 .section { margin-bottom: 56px; }
 .section__label {
   font-size: 11px;
@@ -194,7 +193,7 @@ body {
   margin-bottom: 28px;
 }
 
-/* ── Cards / grids ──────────────────────────────────────────────── */
+/* Cards / grids */
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -222,7 +221,7 @@ body {
 .card__desc { font-size: 13px; color: var(--text-muted); line-height: 1.55; }
 .card--accent { border-color: var(--accent-dim); }
 
-/* ── Code blocks ────────────────────────────────────────────────── */
+/* Code blocks */
 pre, code {
   font-family: var(--mono);
 }
@@ -259,7 +258,7 @@ pre code {
   margin-bottom: 6px;
 }
 
-/* ── Flow steps ─────────────────────────────────────────────────── */
+/* Flow steps */
 .flow { display: flex; flex-direction: column; gap: 0; }
 .flow-step {
   display: grid;
@@ -302,7 +301,7 @@ pre code {
 }
 .flow-step__desc { font-size: 13px; color: var(--text-muted); margin-bottom: 10px; }
 
-/* ── Prose ──────────────────────────────────────────────────────── */
+/* Prose */
 .prose h2 {
   font-size: 22px;
   font-weight: 700;
@@ -322,7 +321,7 @@ pre code {
 .prose li { margin-bottom: 5px; color: var(--text); }
 .prose strong { color: var(--text-heading); font-weight: 700; }
 
-/* ── Table ──────────────────────────────────────────────────────── */
+/* Table */
 .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .data-table th {
   text-align: left;
@@ -349,7 +348,7 @@ pre code {
   margin-bottom: 24px;
 }
 
-/* ── Callout ────────────────────────────────────────────────────── */
+/* Callout */
 .callout {
   background: var(--surface);
   border-left: 3px solid var(--accent);
@@ -364,7 +363,7 @@ pre code {
 .callout--red  { border-left-color: var(--red); }
 .callout strong { color: var(--text-heading); }
 
-/* ── Tag chip ───────────────────────────────────────────────────── */
+/* Tag chip */
 .tag {
   display: inline-block;
   padding: 2px 9px;
@@ -383,7 +382,7 @@ pre code {
 .tag--red { background: #2a1f1f; color: var(--red); border-color: #5c2e2e; }
 .tag--orange { background: #2a1f10; color: var(--orange); border-color: #4a3318; }
 
-/* ── Diagram box ────────────────────────────────────────────────── */
+/* Diagram box */
 .diagram {
   background: var(--code-bg);
   border: 1px solid var(--code-border);
@@ -400,7 +399,7 @@ pre code {
   font-size: 13px;
 }
 
-/* ── Footer ─────────────────────────────────────────────────────── */
+/* Footer */
 .site-footer {
   border-top: 1px solid var(--border);
   padding: 24px 32px;
@@ -417,7 +416,7 @@ pre code {
 .site-footer a { color: var(--text-muted); text-decoration: none; }
 .site-footer a:hover { color: var(--accent); }
 
-/* ── Responsive ─────────────────────────────────────────────────── */
+/*w Responsive */
 @media (max-width: 600px) {
   .page-wrap { padding: 32px 16px 60px; }
   .hero { padding: 40px 0 32px; }

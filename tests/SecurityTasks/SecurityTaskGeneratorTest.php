@@ -21,12 +21,6 @@ use ElementO\ProcessableItems\Infrastructure\Time\GermanHolidayCalendar;
 use ElementO\SecurityTasks\Application\SecurityTaskGenerator;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Tests for SecurityTaskGenerator.
- *
- * Uses an in-memory SQLite connection (no VPS required) and a real
- * GermanHolidayCalendar so CI can run these without any external services.
- */
 final class SecurityTaskGeneratorTest extends TestCase
 {
     private SecurityTaskGenerator $generator;
@@ -45,7 +39,7 @@ final class SecurityTaskGeneratorTest extends TestCase
         $calendar  = new GermanHolidayCalendar();
         $service   = new ProcessableItemsService($itemRepo, $calendar);
 
-        // Generator needs an AttackRepository — use the in-memory impl.
+        // Generator needs an AttackRepository 
         $attackRepo = new FilesystemAttackRepository([]);
         $this->generator = new SecurityTaskGenerator($attackRepo, $service);
 
@@ -54,9 +48,7 @@ final class SecurityTaskGeneratorTest extends TestCase
         $this->weekEnd   = new DateTimeImmutable('2026-03-13 17:00');
     }
 
-    // -----------------------------------------------------------------------
     // 1. taskNamesForAttack – social engineering
-    // -----------------------------------------------------------------------
 
     public function testSocialEngineeringAttackProducesPhishingTasks(): void
     {
@@ -68,9 +60,7 @@ final class SecurityTaskGeneratorTest extends TestCase
         $this->assertStringContainsString('phishing', strtolower($names[0]));
     }
 
-    // -----------------------------------------------------------------------
     // 2. taskNamesForAttack – API BOLA/IDOR
-    // -----------------------------------------------------------------------
 
     public function testApiBolaAttackProducesAuthorizationTasks(): void
     {
@@ -89,9 +79,7 @@ final class SecurityTaskGeneratorTest extends TestCase
         $this->assertTrue($found, 'Expected at least one task mentioning BOLA/IDOR.');
     }
 
-    // -----------------------------------------------------------------------
     // 3. taskNamesForAttack – SQL injection
-    // -----------------------------------------------------------------------
 
     public function testSqlInjectionAttackProducesTestTasks(): void
     {
@@ -103,9 +91,7 @@ final class SecurityTaskGeneratorTest extends TestCase
         $this->assertStringContainsStringIgnoringCase('sql injection', $names[0]);
     }
 
-    // -----------------------------------------------------------------------
     // 4. taskNamesForAttack – cloud misconfiguration
-    // -----------------------------------------------------------------------
 
     public function testCloudAttackProducesAuditTasks(): void
     {
@@ -124,9 +110,7 @@ final class SecurityTaskGeneratorTest extends TestCase
         $this->assertTrue($found, 'Expected at least one cloud audit task.');
     }
 
-    // -----------------------------------------------------------------------
     // 5. taskNamesForAttack – ransomware
-    // -----------------------------------------------------------------------
 
     public function testRansomwareAttackProducesBackupTasks(): void
     {
@@ -137,9 +121,7 @@ final class SecurityTaskGeneratorTest extends TestCase
         $this->assertNotEmpty($names);
     }
 
-    // -----------------------------------------------------------------------
     // 6. taskNamesForAttack – supply chain
-    // -----------------------------------------------------------------------
 
     public function testSupplyChainAttackProducesDependencyTasks(): void
     {
@@ -158,9 +140,7 @@ final class SecurityTaskGeneratorTest extends TestCase
         $this->assertTrue($found, 'Expected at least one supply-chain dependency task.');
     }
 
-    // -----------------------------------------------------------------------
     // 7. taskNamesForAttack – default fallback
-    // -----------------------------------------------------------------------
 
     public function testUnknownAttackProducesDefaultReviewTask(): void
     {
@@ -172,9 +152,7 @@ final class SecurityTaskGeneratorTest extends TestCase
         $this->assertStringContainsStringIgnoringCase('review', $names[0]);
     }
 
-    // -----------------------------------------------------------------------
     // 8. generateAndSchedule – returns items constrained to office hours
-    // -----------------------------------------------------------------------
 
     public function testGenerateAndScheduleReturnsOfficeHourItems(): void
     {
@@ -195,7 +173,7 @@ final class SecurityTaskGeneratorTest extends TestCase
             tasksPerUser:       3,
             start:              $this->weekStart,
             end:                $this->weekEnd,
-            minDistanceMinutes: 10, // floor will raise to 30
+            minDistanceMinutes: 10, 
             strategy:           DistributionStrategy::EVEN,
         );
 
@@ -211,9 +189,7 @@ final class SecurityTaskGeneratorTest extends TestCase
         }
     }
 
-    // -----------------------------------------------------------------------
     // 9. generateAndSchedule – task names come from the attack catalog
-    // -----------------------------------------------------------------------
 
     public function testGenerateAndScheduleUsesAttackDerivedTaskNames(): void
     {
@@ -246,10 +222,7 @@ final class SecurityTaskGeneratorTest extends TestCase
         $this->assertTrue($found, 'Expected item names to reference SQL injection attack.');
     }
 
-    // -----------------------------------------------------------------------
     // 10. generateAndSchedule – round-robin gives different starting tasks
-    //     to different users when there are enough templates
-    // -----------------------------------------------------------------------
 
     public function testRoundRobinGivesDifferentTasksToUsers(): void
     {
@@ -288,9 +261,7 @@ final class SecurityTaskGeneratorTest extends TestCase
         );
     }
 
-    // -----------------------------------------------------------------------
     // 11. taskNamesForAttack – all names are prefixed with a category tag
-    // -----------------------------------------------------------------------
 
     public function testTaskNamesArePrefixedWithCategoryTag(): void
     {
@@ -319,9 +290,7 @@ final class SecurityTaskGeneratorTest extends TestCase
         }
     }
 
-    // -----------------------------------------------------------------------
     // Helpers
-    // -----------------------------------------------------------------------
 
     private function makeAttack(string $name, AttackCategory $category): AttackAggregate
     {

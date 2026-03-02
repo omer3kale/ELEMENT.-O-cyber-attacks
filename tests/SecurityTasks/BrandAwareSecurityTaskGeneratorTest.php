@@ -22,15 +22,9 @@ use ElementO\SecurityTasks\Domain\BrandAwareTaskTemplates;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Tests for BrandAwareTaskTemplates value object and brand-aware
- * SecurityTaskGenerator behaviour.
- */
 final class BrandAwareSecurityTaskGeneratorTest extends TestCase
 {
-    // -----------------------------------------------------------------------
     // BrandAwareTaskTemplates – value object tests
-    // -----------------------------------------------------------------------
 
     public function testCreateWithValidBrandName(): void
     {
@@ -90,9 +84,7 @@ final class BrandAwareSecurityTaskGeneratorTest extends TestCase
         $this->assertSame('Globex',    $renamed->brandName(),  'Copy should have new name.');
     }
 
-    // -----------------------------------------------------------------------
     // SecurityTaskGenerator with BrandAwareTaskTemplates
-    // -----------------------------------------------------------------------
 
     private function makeGenerator(?BrandAwareTaskTemplates $brand = null): SecurityTaskGenerator
     {
