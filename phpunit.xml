@@ -9,11 +9,18 @@
         <testsuite name="ProcessableItems">
             <directory>tests/ProcessableItems</directory>
         </testsuite>
+        <testsuite name="SecurityTasks">
+            <directory>tests/SecurityTasks</directory>
+        </testsuite>
+        <testsuite name="All">
+            <directory>tests</directory>
+        </testsuite>
     </testsuites>
 
     <source>
         <include>
             <directory>src/ProcessableItems</directory>
+            <directory>src/SecurityTasks</directory>
         </include>
     </source>
 </phpunit>

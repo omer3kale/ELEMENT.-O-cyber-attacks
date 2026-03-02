@@ -72,9 +72,43 @@ php bin/processable-items-demo.php
 ./vendor/bin/phpunit --testsuite ProcessableItems
 ```
 
+## Module 3: Security Task Generator
+
+Bridges the attack catalog and the scheduler: reads every `AttackAggregate`, derives concrete security task names from it, and feeds them into `ProcessableItemsService` as scheduled work items.
+
+### How it works
+
+1. `SecurityTaskGenerator` loads all attacks from the catalog.
+2. For each attack it maps category + name to human-readable task names (e.g. `ApiBolaIdorDataExposure` → `"Review API for BOLA/IDOR exposures"`; `SqlInjectionEcommerce` → `"Run SQL injection tests against critical endpoints"`).
+3. Task templates are assigned to users in round-robin so each user gets a varied spread across the threat library.
+4. `ProcessableItemsService` handles all time constraints - office hours, German holidays, per-user min spacing.
+
+### Story
+
+> We turn our ATT&CK-style threat library into scheduled, time-bound security work items for real users, respecting office hours, German holidays, and per-user pacing via the Processable Items service.
+
+### Run the generator
+
+```bash
+php bin/generate-security-tasks.php
+```
+
+### Run SecurityTasks tests
+
+```bash
+./vendor/bin/phpunit --testsuite SecurityTasks
+```
+
+### Run all tests
+
+```bash
+./vendor/bin/phpunit --testsuite All
+```
+
 ## Tech
 
 - PHP 8.2
 - ANTLR 4.13.1
 - Composer / PSR-4
 - MITRE ATT&CK aligned
+- SQLite (in-process, zero-config)

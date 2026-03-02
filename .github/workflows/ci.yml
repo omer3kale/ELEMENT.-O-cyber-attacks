@@ -24,3 +24,6 @@ jobs:
 
       - name: Run ProcessableItems tests
         run: ./vendor/bin/phpunit --testsuite ProcessableItems
+
+      - name: Run SecurityTasks tests
+        run: ./vendor/bin/phpunit --testsuite SecurityTasks
