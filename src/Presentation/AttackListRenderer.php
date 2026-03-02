@@ -26,7 +26,13 @@ final class AttackListRenderer
         <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>ELEMENT.-O Cyber Attack Catalogue</title>
+        <title>ELEMENT.İO Cyber Attack Catalogue</title>
+        <meta name="theme-color" content="#0d1117">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="apple-mobile-web-app-title" content="ELEMENT.İO">
+        <link rel="manifest" href="manifest.json">
+        <link rel="apple-touch-icon" href="icons/icon.svg">
         <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; font-size: 14px; line-height: 1.6; }
@@ -87,8 +93,7 @@ final class AttackListRenderer
         </head>
         <body>
         <header class="site-header">
-          <div class="site-header__title">ELEMENT.-O / Cyber Attack Catalogue</div>
-          <div class="site-header__meta">{$count} attacks &mdash; ANTLR 4 DSL &mdash; MITRE ATT&amp;CK aligned</div>
+          <div class="site-header__title">ELEMENT.İO / Cyber Attack Catalogue</div>
         </header>
         <main class="site-main">
           <div class="attack-grid">
@@ -96,6 +101,11 @@ final class AttackListRenderer
           </div>
         </main>
         {$modals}
+        <script>
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
+        }
+        </script>
         </body>
         </html>
         HTML;
