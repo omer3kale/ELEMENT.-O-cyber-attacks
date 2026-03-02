@@ -21,3 +21,6 @@ jobs:
 
       - name: Check workspace
         run: php bin/check-workspace.php
+
+      - name: Run ProcessableItems tests
+        run: ./vendor/bin/phpunit --testsuite ProcessableItems
