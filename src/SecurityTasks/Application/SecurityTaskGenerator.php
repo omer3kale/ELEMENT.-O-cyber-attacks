@@ -100,13 +100,16 @@ final class SecurityTaskGenerator
 
     /**
      * Map a single attack to a list of human-readable security task names.
+     * Every task name is prefixed with a category tag, e.g. [SOCIAL-ENG],
+     * so operators can filter or triage tasks by threat domain at a glance.
      *
      * @param  AttackAggregate $attack
      * @return string[]
      */
     public function taskNamesForAttack(AttackAggregate $attack): array
     {
-        $n = $attack->name;
+        $tag = $this->categoryTag($attack);
+        $n   = $attack->name;
 
         // --- Social engineering ---
         if ($attack->category === AttackCategory::SocialEngineering
@@ -115,48 +118,48 @@ final class SecurityTaskGenerator
             || str_contains($n, 'Vishing')
         ) {
             return [
-                "Run phishing simulation for {$n}",
-                "Review security-awareness training content for {$n}",
+                "{$tag} Run phishing simulation for {$n}",
+                "{$tag} Review security-awareness training content for {$n}",
             ];
         }
 
         // --- API / BOLA / IDOR ---
         if (str_contains($n, 'ApiBola') || str_contains($n, 'Idor')) {
             return [
-                "Review API for BOLA/IDOR exposures ({$n})",
-                "Validate object-level authorization on all REST endpoints ({$n})",
+                "{$tag} Review API for BOLA/IDOR exposures ({$n})",
+                "{$tag} Validate object-level authorization on all REST endpoints ({$n})",
             ];
         }
 
         // --- SQL injection ---
         if (str_contains($n, 'SqlInjection')) {
             return [
-                "Run SQL injection tests against critical endpoints ({$n})",
-                "Verify parameterised queries and ORM usage for {$n}",
+                "{$tag} Run SQL injection tests against critical endpoints ({$n})",
+                "{$tag} Verify parameterised queries and ORM usage for {$n}",
             ];
         }
 
         // --- Cloud misconfiguration ---
         if (str_contains($n, 'CloudMisconfiguration') || str_contains($n, 'Cloud')) {
             return [
-                "Audit cloud storage and IAM roles for misconfigurations ({$n})",
-                "Review public bucket ACLs and signed-URL policies for {$n}",
+                "{$tag} Audit cloud storage and IAM roles for misconfigurations ({$n})",
+                "{$tag} Review public bucket ACLs and signed-URL policies for {$n}",
             ];
         }
 
         // --- MitM / network sniffing ---
         if (str_contains($n, 'Mitm') || str_contains($n, 'Network')) {
             return [
-                "Review network encryption and HSTS against MitM ({$n})",
-                "Verify TLS certificate pinning and CSP headers for {$n}",
+                "{$tag} Review network encryption and HSTS against MitM ({$n})",
+                "{$tag} Verify TLS certificate pinning and CSP headers for {$n}",
             ];
         }
 
         // --- Ransomware ---
         if (str_contains($n, 'Ransomware') || str_contains($n, 'DataExtortion')) {
             return [
-                "Test backup and restore procedures against {$n}",
-                "Verify EDR alerting thresholds for encryption spikes ({$n})",
+                "{$tag} Test backup and restore procedures against {$n}",
+                "{$tag} Verify EDR alerting thresholds for encryption spikes ({$n})",
             ];
         }
 
@@ -167,8 +170,8 @@ final class SecurityTaskGenerator
             || str_contains($n, 'SupplyChain')
         ) {
             return [
-                "Review third-party dependency trust for {$n}",
-                "Verify software bill-of-materials (SBOM) and signing policy ({$n})",
+                "{$tag} Review third-party dependency trust for {$n}",
+                "{$tag} Verify software bill-of-materials (SBOM) and signing policy ({$n})",
             ];
         }
 
@@ -178,30 +181,30 @@ final class SecurityTaskGenerator
             || str_contains($n, 'PasswordStealer')
         ) {
             return [
-                "Review MFA enforcement and breach-credential monitoring ({$n})",
-                "Validate rate-limiting and account-lockout controls for {$n}",
+                "{$tag} Review MFA enforcement and breach-credential monitoring ({$n})",
+                "{$tag} Validate rate-limiting and account-lockout controls for {$n}",
             ];
         }
 
         // --- Malware / exploitation (catch-all for Malware category) ---
         if ($attack->category === AttackCategory::Malware) {
             return [
-                "Verify EDR coverage and patch status against {$n}",
-                "Review privilege separation controls for {$n}",
+                "{$tag} Verify EDR coverage and patch status against {$n}",
+                "{$tag} Review privilege separation controls for {$n}",
             ];
         }
 
         // --- IoT ---
         if ($attack->category === AttackCategory::Iot) {
             return [
-                "Audit IoT device firmware versions and network segmentation ({$n})",
+                "{$tag} Audit IoT device firmware versions and network segmentation ({$n})",
             ];
         }
 
         // --- Mobile ---
         if ($attack->category === AttackCategory::Mobile) {
             return [
-                "Review mobile app code signing and certificate validation ({$n})",
+                "{$tag} Review mobile app code signing and certificate validation ({$n})",
             ];
         }
 
@@ -210,25 +213,49 @@ final class SecurityTaskGenerator
             || str_contains($n, 'PromptInjection')
         ) {
             return [
-                "Review LLM input sanitisation and system-prompt isolation ({$n})",
-                "Test agent tool permissions and output filtering for {$n}",
+                "{$tag} Review LLM input sanitisation and system-prompt isolation ({$n})",
+                "{$tag} Test agent tool permissions and output filtering for {$n}",
             ];
         }
 
         // --- Insider threat ---
         if (str_contains($n, 'Insider')) {
             return [
-                "Review privileged-access monitoring and DLP controls ({$n})",
+                "{$tag} Review privileged-access monitoring and DLP controls ({$n})",
             ];
         }
 
         // Default
-        return ["Review security controls for {$n}"];
+        return ["{$tag} Review security controls for {$n}"];
     }
 
     // -------------------------------------------------------------------------
     // Private helpers
     // -------------------------------------------------------------------------
+
+    /**
+     * Returns a short uppercase tag for the attack's threat category,
+     * e.g. "[SOCIAL-ENG]", "[MALWARE]", "[CLOUD]".
+     * Displayed as a prefix on every task name so operators can quickly
+     * filter or sort tasks by threat domain.
+     */
+    private function categoryTag(AttackAggregate $attack): string
+    {
+        return '[' . match ($attack->category) {
+            AttackCategory::SocialEngineering => 'SOCIAL-ENG',
+            AttackCategory::Malware           => 'MALWARE',
+            AttackCategory::Network           => 'NETWORK',
+            AttackCategory::Application       => 'APP',
+            AttackCategory::Cloud             => 'CLOUD',
+            AttackCategory::Iot               => 'IOT',
+            AttackCategory::Mobile            => 'MOBILE',
+            AttackCategory::SupplyChain       => 'SUPPLY-CHAIN',
+            AttackCategory::Physical          => 'PHYSICAL',
+            AttackCategory::Cryptographic     => 'CRYPTO',
+            AttackCategory::AiMl              => 'AI-ML',
+            AttackCategory::Quantum           => 'QUANTUM',
+        } . ']';
+    }
 
     /**
      * Build a flat list of unique task templates from all attacks.

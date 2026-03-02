@@ -25,6 +25,34 @@ use ElementO\ProcessableItems\Infrastructure\Time\GermanHolidayCalendar;
  *   - If constraints leave fewer valid slots than $amountPerUser the service
  *     schedules as many as possible and returns fewer items without throwing.
  *   - Items are only persisted (INSERT) — they are never processed here.
+ *
+ * Distribution strategies – when to use each:
+ *
+ *   EVEN
+ *     Picks slots at evenly-spaced indices across the available slot pool.
+ *     Produces a perfectly predictable, regular cadence.
+ *     Best for: compliance schedules, SLA-driven tasks, auditable workflows
+ *     where reviewers must confirm items were distributed uniformly.
+ *
+ *   RANDOM_SPACED
+ *     Shuffles the full slot pool then greedily picks items that satisfy
+ *     the minimum-distance constraint.
+ *     Produces unpredictable times while still guaranteeing spacing.
+ *     Best for: red-team exercises, phishing simulations, or any task where
+ *     predictability would allow employees / adversaries to anticipate events.
+ *
+ *   WEIGHTED
+ *     Assigns each slot a weight (early 09–13 = 1 / mid 13–15 = 2 /
+ *     late 15–17 = 3), builds a weighted pool, then samples it.
+ *     Biases scheduling toward end-of-day to minimise morning-rush disruption.
+ *     Best for: security-awareness tasks and training reminders that should
+ *     not compete with high-priority morning work, or when regulations mandate
+ *     tasks are completed in the final work-hour window.
+ *
+ * Trade-off summary:
+ *   Predictability : EVEN > WEIGHTED > RANDOM_SPACED
+ *   Late-day bias  : WEIGHTED > RANDOM_SPACED ≈ EVEN
+ *   Surprise factor: RANDOM_SPACED > WEIGHTED > EVEN
  */
 final class ProcessableItemsService
 {
@@ -142,7 +170,17 @@ final class ProcessableItemsService
     // -------------------------------------------------------------------------
 
     /**
-     * EVEN: picks $amount slots at evenly-spaced indices.
+     * EVEN: picks $amount slots at evenly-spaced indices across the slot pool.
+     *
+     * Algorithm:
+     *   1. Compute step = max(floor(count/amount), ceil(minDist/slotStep)).
+     *   2. Walk $slots in step-sized increments, accepting each candidate
+     *      only when it is at least $minDistance minutes from the last pick.
+     *
+     * Characteristics:
+     *   - Deterministic (no randomness).
+     *   - Output is strictly monotonically ordered by time.
+     *   - Distributes load uniformly; gaps are predictable and equal.
      *
      * @param  DateTimeImmutable[] $slots
      * @return DateTimeImmutable[]
@@ -174,8 +212,20 @@ final class ProcessableItemsService
     }
 
     /**
-     * RANDOM_SPACED: shuffles all slots then greedily picks those that
-     * are >= minDistance apart from the last picked slot.
+     * RANDOM_SPACED: shuffles the full slot pool then greedily selects slots
+     * that satisfy the minimum-distance constraint against the *last* pick.
+     *
+     * Algorithm:
+     *   1. Shuffle $slots with PHP's Mersenne Twister PRNG.
+     *   2. Walk the shuffled list in order; accept each candidate only when it
+     *      is ≥ $minDistance minutes from the previously accepted slot.
+     *   3. Sort accepted slots chronologically before returning.
+     *
+     * Characteristics:
+     *   - Non-deterministic unless the caller seeds mt_srand() beforehand.
+     *   - Guarantees spacing but NOT uniform coverage — long gaps may appear.
+     *   - Produced output is rarely predictable, making it suitable for
+     *     adversarial or surprise-effect scenarios.
      *
      * @param  DateTimeImmutable[] $slots
      * @return DateTimeImmutable[]
@@ -205,13 +255,28 @@ final class ProcessableItemsService
     }
 
     /**
-     * WEIGHTED: favors later-day slots.
-     *   09:00 – 13:00  weight 1
-     *   13:00 – 15:00  weight 2
-     *   15:00 – 17:00  weight 3
+     * WEIGHTED: biases scheduling toward later-day slots using a pool-sampling
+     * approach.
      *
-     * Builds a weighted pool, samples without replacement using those weights,
-     * and enforces minDistance.
+     * Slot weights:
+     *   09:00 – 12:30  (early)  weight = 1
+     *   13:00 – 14:30  (mid)    weight = 2
+     *   15:00 – 16:30  (late)   weight = 3
+     *
+     * Algorithm:
+     *   1. Build a weighted pool: each slot index appears $weight times.
+     *      A late slot therefore appears 3× as often as an early slot.
+     *   2. Shuffle the pool with PHP's Mersenne Twister PRNG.
+     *   3. Walk the shuffled pool; for each entry accept the underlying slot
+     *      when it has not been used yet AND is ≥ $minDistance from the last
+     *      accepted slot.
+     *   4. Sort accepted slots chronologically before returning.
+     *
+     * Characteristics:
+     *   - Non-deterministic unless the caller seeds mt_srand() beforehand.
+     *   - Late-window slots (~15:00–17:00) are sampled ~3× more frequently
+     *     than early-window slots, minimising disruption to morning work.
+     *   - The greedy distance check ensures spacing is always respected.
      *
      * @param  DateTimeImmutable[] $slots
      * @return DateTimeImmutable[]
@@ -282,5 +347,34 @@ final class ProcessableItemsService
     {
         $diff = abs($b->getTimestamp() - $a->getTimestamp());
         return (int) floor($diff / 60);
+    }
+
+    // -------------------------------------------------------------------------
+    // Capacity estimation
+    // -------------------------------------------------------------------------
+
+    /**
+     * Returns the maximum number of items that could be scheduled for a
+     * single user in the given date/time range, given the minimum spacing.
+     *
+     * This is a pure calculation — it builds the slot list without touching
+     * the database or any user state.
+     *
+     * The result is an upper bound: EVEN strategy can always saturate it;
+     * RANDOM_SPACED and WEIGHTED may schedule fewer due to greedy ordering.
+     *
+     * @param  DateTimeImmutable $start              Range start (inclusive).
+     * @param  DateTimeImmutable $end                Range end   (inclusive).
+     * @param  int               $minDistanceMinutes Min spacing (floored to 30).
+     * @return int Maximum schedulable items for one user.
+     */
+    public function estimateCapacity(
+        DateTimeImmutable $start,
+        DateTimeImmutable $end,
+        int $minDistanceMinutes = self::MIN_DISTANCE_FLOOR,
+    ): int {
+        $effective = max($minDistanceMinutes, self::MIN_DISTANCE_FLOOR);
+        $slots     = $this->buildSlots($start, $end);
+        return count($this->enforceMinDistance($slots, $effective));
     }
 }

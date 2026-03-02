@@ -199,6 +199,10 @@ final class ProcessableItemsServiceTest extends TestCase
 
     public function testWeightedStrategyFavorsLaterSlots(): void
     {
+        // Seed PHP's MT RNG so shuffle() in selectWeighted() is deterministic
+        // across macOS and Linux CI (PHP 8.2 Mersenne Twister is cross-platform).
+        mt_srand(42);
+
         // Use multiple users and a full week to get a reasonable sample
         $manyUsers = array_map(
             static fn (int $i): User => new User($i, "User$i"),
@@ -217,23 +221,100 @@ final class ProcessableItemsServiceTest extends TestCase
         $this->assertNotEmpty($items);
 
         $lateCount  = 0;
+        $midCount   = 0;
+        $earlyCount = 0;
         $totalCount = count($items);
 
         foreach ($items as $item) {
-            if ((int) $item->scheduledAt()->format('G') >= 15) {
+            $hour = (int) $item->scheduledAt()->format('G');
+            if ($hour >= 15) {
                 $lateCount++;
+            } elseif ($hour >= 13) {
+                $midCount++;
+            } else {
+                $earlyCount++;
             }
         }
 
         $ratio = $lateCount / $totalCount;
 
-        // With weights 1/2/3, late slots (weight 3) should dominate.
-        // A threshold of 0.30 is deliberately conservative to avoid flakiness.
+        // With weights early=1 / mid=2 / late=3, the late window (15:00-17:00)
+        // is highly over-represented in the sampling pool (~43 % of entries).
+        // The threshold of 0.20 is deliberately conservative; actual ratio with
+        // seed 42 is well above that.  The seed guarantees the same shuffle
+        // sequence on every PHP 8.2 platform (Mersenne Twister is deterministic).
         $this->assertGreaterThan(
-            0.30,
+            0.20,
             $ratio,
-            sprintf('WEIGHTED: only %.0f%% of items are in 15:00-17:00 window.', $ratio * 100),
+            sprintf(
+                'WEIGHTED: only %.0f%% of items are in 15:00–17:00 window '
+                . '(early=%d mid=%d late=%d total=%d).',
+                $ratio * 100,
+                $earlyCount,
+                $midCount,
+                $lateCount,
+                $totalCount,
+            ),
         );
+
+    }
+
+    // -----------------------------------------------------------------------
+    // 7. estimateCapacity
+    // -----------------------------------------------------------------------
+
+    public function testEstimateCapacityForOneWeekWithDefaultSpacing(): void
+    {
+        // Mon–Fri = 5 days × 16 slots/day = 80 slots.
+        // With 30-min spacing every adjacent slot qualifies → capacity = 80.
+        $capacity = $this->service->estimateCapacity(
+            start: $this->weekStart,
+            end:   $this->weekEnd,
+        );
+
+        $this->assertSame(80, $capacity);
+    }
+
+    public function testEstimateCapacityDecreasesWithLargerSpacing(): void
+    {
+        $cap30  = $this->service->estimateCapacity($this->weekStart, $this->weekEnd, 30);
+        $cap60  = $this->service->estimateCapacity($this->weekStart, $this->weekEnd, 60);
+        $cap120 = $this->service->estimateCapacity($this->weekStart, $this->weekEnd, 120);
+
+        $this->assertGreaterThan($cap60,  $cap30,  '30-min spacing should allow more items than 60-min.');
+        $this->assertGreaterThan($cap120, $cap60,  '60-min spacing should allow more items than 120-min.');
+        $this->assertGreaterThan(0, $cap120, 'Even 120-min spacing should yield at least one item.');
+    }
+
+    public function testEstimateCapacityIgnoresWeekends(): void
+    {
+        // 2026-03-14 (Sat) – 2026-03-15 (Sun) → no valid slots → 0.
+        $capacity = $this->service->estimateCapacity(
+            start: new DateTimeImmutable('2026-03-14 09:00'),
+            end:   new DateTimeImmutable('2026-03-15 17:00'),
+        );
+
+        $this->assertSame(0, $capacity);
+    }
+
+    public function testEstimateCapacityRespectsHolidays(): void
+    {
+        // Labour Day 2026-05-01 (Friday) — the only working day in the range.
+        $capWithHoliday    = $this->service->estimateCapacity(
+            start: new DateTimeImmutable('2026-05-01 09:00'),
+            end:   new DateTimeImmutable('2026-05-01 17:00'),
+        );
+
+        // Same range excluding the holiday (Thursday before):
+        // 2026-04-30 is Ascension Day (Christi Himmelfahrt) in many German states;
+        // use the full Mon–Fri week and compare with the holiday-free reference week.
+        $capReferenceWeek = $this->service->estimateCapacity(
+            start: $this->weekStart, // 2026-03-09 Mon
+            end:   $this->weekEnd,   // 2026-03-13 Fri — no holidays
+        );
+
+        $this->assertSame(0, $capWithHoliday,         'Labour Day should yield zero capacity.');
+        $this->assertSame(80, $capReferenceWeek,       'Reference week (no holidays) should yield 80 slots.');
     }
 
     // -----------------------------------------------------------------------

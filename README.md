@@ -53,11 +53,19 @@ A self-contained scheduling module that lives alongside the attack catalogue.
 
 ### Distribution strategies
 
-| Strategy | Behaviour |
-|---|---|
-| `EVEN` | Picks slots at evenly-spaced indices across the full valid window |
-| `RANDOM_SPACED` | Shuffles all valid slots then greedily picks those >= minDistance apart |
-| `WEIGHTED` | Slots 15:00–17:00 get 3x weight, 13:00–15:00 get 2x, earlier get 1x; respects minDistance |
+| Strategy | Algorithm | Predictability | Best for |
+|---|---|---|---|
+| `EVEN` | Picks slots at evenly-spaced indices; no randomness | High — output is fully deterministic | Compliance schedules, SLA-driven tasks, auditable workflows where uniform distribution must be provable |
+| `RANDOM_SPACED` | Shuffles all valid slots, then greedily picks those ≥ `minDistance` apart | Low — output varies per run | Red-team exercises, phishing simulations, any task where predictability would let users anticipate events |
+| `WEIGHTED` | Builds a weighted pool (early 09–13 = ×1, mid 13–15 = ×2, late 15–17 = ×3), shuffles, then greedily picks respecting spacing | Medium — biased but not deterministic | Security-awareness reminders and training nudges that must not compete with high-priority morning work |
+
+**Trade-off summary**
+
+```
+Predictability : EVEN  > WEIGHTED > RANDOM_SPACED
+Late-day bias  : WEIGHTED > RANDOM_SPACED ≈ EVEN
+Surprise factor: RANDOM_SPACED > WEIGHTED > EVEN
+```
 
 ### Run the demo
 
@@ -79,9 +87,10 @@ Bridges the attack catalog and the scheduler: reads every `AttackAggregate`, der
 ### How it works
 
 1. `SecurityTaskGenerator` loads all attacks from the catalog.
-2. For each attack it maps category + name to human-readable task names (e.g. `ApiBolaIdorDataExposure` → `"Review API for BOLA/IDOR exposures"`; `SqlInjectionEcommerce` → `"Run SQL injection tests against critical endpoints"`).
-3. Task templates are assigned to users in round-robin so each user gets a varied spread across the threat library.
-4. `ProcessableItemsService` handles all time constraints - office hours, German holidays, per-user min spacing.
+2. For each attack it maps category + name to human-readable task names (e.g. `ApiBolaIdorDataExposure` → `"[APP] Review API for BOLA/IDOR exposures"`;  `SqlInjectionEcommerce` → `"[APP] Run SQL injection tests against critical endpoints"`).
+3. Every task name is prefixed with a **category tag** (e.g. `[SOCIAL-ENG]`, `[MALWARE]`, `[CLOUD]`, `[SUPPLY-CHAIN]`, `[AI-ML]`) so operators can filter or triage by threat domain at a glance.
+4. Task templates are assigned to users in round-robin so each user gets a varied spread across the threat library.
+5. `ProcessableItemsService` handles all time constraints — office hours, German holidays, per-user min spacing.
 
 ### Story
 
@@ -112,3 +121,17 @@ php bin/generate-security-tasks.php
 - Composer / PSR-4
 - MITRE ATT&CK aligned
 - SQLite (in-process, zero-config)
+
+## Future extensions
+
+The following capabilities are not yet implemented but are explicitly in scope for future milestones:
+
+- **Blackout windows per user** — allow each user to declare date/time ranges when they must not receive items (e.g. PTO, conference weeks).
+- **Per-user calendar import** — import iCal / Google Calendar busy blocks to derive blackout windows automatically.
+- **Team-level quotas** — cap the total number of concurrent pending items across a team to avoid overloading a small group.
+- **Multi-tenant `ConnectionFactory`** — one SQLite (or Postgres/MySQL) database file per tenant, selectable via CLI `--tenant` flag, with full schema isolation.
+- **MySQL / PostgreSQL adapter** — replace the SQLite `ConnectionFactory` with a PDO-based adapter for production relational databases.
+- **REST API layer** — a thin PSR-7 HTTP layer over `ProcessableItemsService` and `SecurityTaskGenerator` for webhook-driven or SaaS deployments.
+- **Webhook notifications** — push a notification (Slack, Teams, email) when an item's scheduled time is reached or when a batch is completed.
+- **Brand-aware task templates** — inject a `BrandAwareTaskTemplates` value object so task names reference the customer's actual product names, domain, or threat profile rather than generic labels.
+- **`estimateCapacity()` API endpoint** — expose the capacity calculation as a lightweight dry-run endpoint so schedulers can check feasibility before committing a schedule.

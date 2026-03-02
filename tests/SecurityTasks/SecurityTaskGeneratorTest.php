@@ -289,6 +289,37 @@ final class SecurityTaskGeneratorTest extends TestCase
     }
 
     // -----------------------------------------------------------------------
+    // 11. taskNamesForAttack – all names are prefixed with a category tag
+    // -----------------------------------------------------------------------
+
+    public function testTaskNamesArePrefixedWithCategoryTag(): void
+    {
+        $cases = [
+            [$this->makeAttack('PhishingSim', AttackCategory::SocialEngineering), '[SOCIAL-ENG]'],
+            [$this->makeAttack('ApiBolaIdorDataExposure', AttackCategory::Application),  '[APP]'],
+            [$this->makeAttack('CloudMisconfigurationDataExposure', AttackCategory::Cloud), '[CLOUD]'],
+            [$this->makeAttack('WannaCryRansomware', AttackCategory::Malware), '[MALWARE]'],
+            [$this->makeAttack('SolarwindsSupplyChain', AttackCategory::SupplyChain), '[SUPPLY-CHAIN]'],
+            [$this->makeAttack('MobileGrievous', AttackCategory::Mobile), '[MOBILE]'],
+            [$this->makeAttack('IotBotnet', AttackCategory::Iot), '[IOT]'],
+            [$this->makeAttack('PromptInjectionInternalLlmAgent', AttackCategory::AiMl), '[AI-ML]'],
+            [$this->makeAttack('ObscureAttack', AttackCategory::Physical), '[PHYSICAL]'],
+        ];
+
+        foreach ($cases as [$attack, $expectedTag]) {
+            $names = $this->generator->taskNamesForAttack($attack);
+            $this->assertNotEmpty($names, "No task names for {$attack->name}");
+            foreach ($names as $name) {
+                $this->assertStringStartsWith(
+                    $expectedTag,
+                    $name,
+                    "Task name for {$attack->name} should start with {$expectedTag}, got: {$name}",
+                );
+            }
+        }
+    }
+
+    // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------
 
