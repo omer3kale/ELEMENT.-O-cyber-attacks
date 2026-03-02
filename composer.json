@@ -1,107 +1,25 @@
 {
     "name": "element-o/cyber-attacks",
-    "description": "ELEMENT.-O | Comprehensive cyber security attack template platform with ANTLR4 DSL parsing",
     "type": "project",
     "license": "proprietary",
-    "keywords": [
-        "cybersecurity",
-        "mitre-attack",
-        "antlr4",
-        "dsl",
-        "ddd",
-        "laravel",
-        "security-awareness"
-    ],
-    "authors": [
-        {
-            "name": "Ömer Üçkale",
-            "email": "omer@example.com",
-            "homepage": "https://github.com/omer3kale",
-            "role": "Developer"
-        }
-    ],
     "require": {
         "php": "^8.2",
-        "laravel/framework": "^10.0",
         "antlr/antlr4-php-runtime": "^0.9",
-        "ramsey/uuid": "^4.7",
-        "symfony/console": "^6.4",
-        "twig/twig": "^3.8"
-    },
-    "require-dev": {
-        "phpunit/phpunit": "^10.5",
-        "phpstan/phpstan": "^1.10",
-        "laravel/pint": "^1.13",
-        "pestphp/pest": "^2.6",
-        "pestphp/pest-plugin-laravel": "^2.2",
-        "fakerphp/faker": "^1.23",
-        "mockery/mockery": "^1.6"
+        "ramsey/uuid": "^4.7"
     },
     "autoload": {
         "psr-4": {
-            "ElementO\\": "src/",
-            "ElementO\\Domain\\": "src/Domain/",
-            "ElementO\\Application\\": "src/Application/",
-            "ElementO\\Infrastructure\\": "src/Infrastructure/"
+            "ElementO\\": "src/"
         }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "ElementO\\Tests\\": "tests/"
-        }
-    },
-    "scripts": {
-        "post-autoload-dump": [
-            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
-            "@php artisan package:discover --ansi"
-        ],
-        "post-update-cmd": [
-            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
-        ],
-        "generate-site": [
-            "@php artisan generate:site"
-        ],
-        "test": [
-            "@php vendor/bin/pest"
-        ],
-        "test-coverage": [
-            "@php vendor/bin/pest --coverage --min=80"
-        ],
-        "analyse": [
-            "@php vendor/bin/phpstan analyse src tests --level=8"
-        ],
-        "format": [
-            "@php vendor/bin/pint"
-        ],
-        "antlr-generate": [
-            "java -jar tools/antlr-4.13.1-complete.jar -Dlanguage=PHP -visitor -no-listener grammar/AttackDSL.g4 -o src/Infrastructure/Parser/Generated"
-        ]
-    },
-    "scripts-descriptions": {
-        "generate-site": "Parse all .attack DSL files and emit static HTML to docs/",
-        "test": "Run the full test suite via PestPHP",
-        "test-coverage": "Run tests with code coverage (minimum 80%)",
-        "analyse": "Run PHPStan static analysis at level 8",
-        "format": "Auto-format all PHP files with Laravel Pint",
-        "antlr-generate": "Regenerate PHP parser/visitor from grammar/AttackDSL.g4"
     },
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
         "sort-packages": true,
         "allow-plugins": {
-            "pestphp/pest-plugin": true,
             "php-http/discovery": true
         }
     },
-    "extra": {
-        "laravel": {
-            "dont-discover": []
-        }
-    },
-    "bin": [
-        "bin/parse-attacks.php"
-    ],
     "minimum-stability": "stable",
     "prefer-stable": true
 }
