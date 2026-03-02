@@ -1,0 +1,52 @@
+# PHP / Composer 
+/vendor/
+composer.lock
+
+# Laravel 
+/bootstrap/cache/
+/storage/
+.env
+.env.backup
+.env.testing
+.env.*.local
+*.env
+
+src/Infrastructure/Parser/Generated/
+
+# Generated static site (built by CI)
+/dist/
+
+# Build / IDE artefacts 
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*.orig
+*~
+
+# Node 
+node_modules/
+npm-debug.log*
+yarn-error.log
+.pnpm-debug.log
+/public/hot
+/public/storage
+
+# PHPUnit / PestPHP 
+.phpunit.result.cache
+coverage/
+/.phpunit.cache
+
+# PHPStan 
+.phpstan/
+
+# ANTLR tooling 
+tools/*.interp
+tools/*.tokens
+
+# OS / temp
+*.log
+*.tmp
+*.bak

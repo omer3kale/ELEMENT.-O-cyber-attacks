@@ -1,0 +1,199 @@
+attack BankingTrojanWebinject {
+    mitre_id   : "T1055" ;
+    category   : MALWARE ;
+    difficulty : HARD ;
+
+    real_world_case {
+        year        : 2021 ;
+        victim      : "Retail banking customers across Germany, the United Kingdom, Spain, Italy, 
+and Poland using online banking portals via desktop browsers; estimated 38,000 infected endpoints 
+identified across a single Dridex-lineage campaign tracked by European financial CERTs and 
+law enforcement during 2020-2021" ;
+        impact      : "Fraudulent outbound transfers averaging 4,500 EUR per compromised account; 
+aggregate campaign losses estimated at 40 million EUR across affected EU banking customers; 
+secondary losses from chargeback processing, account remediation, and fraud investigation 
+estimated to double direct theft figures; money mule networks across 15 countries used for 
+rapid multi-hop laundering before law enforcement asset freeze" ;
+        attribution : "Financially motivated cybercrime groups operating banking trojan families 
+consistent with Dridex, TrickBot, and BokBot infrastructure; operator communications via 
+encrypted forums and Jabber-based coordination; affiliate distribution model where initial 
+access brokers deliver the loader and trojan operators manage web-inject panel configuration 
+and money mule coordination; no confirmed nation-state sponsorship" ;
+    }
+
+    attack_vector : "Initial infection is achieved via a phishing email carrying a malicious 
+Microsoft Office document with an embedded macro or a zipped JavaScript dropper, or via a 
+drive-by download from a compromised legitimate website or malvertising network that delivers 
+an exploit kit targeting unpatched browser or plugin vulnerabilities. Once executed, the dropper 
+downloads and installs the banking trojan payload into a trusted process using process injection 
+or DLL side-loading, establishing persistence via scheduled tasks or registry run keys. The trojan 
+registers a browser helper object or hooks browser API functions to intercept all HTTPS traffic 
+before it is encrypted, enabling it to read credentials, session tokens, OTPs, and form data 
+typed into any banking login page. On detecting a target banking domain the trojan injects 
+attacker-controlled HTML and JavaScript into the live banking session rendered in the victim's 
+browser, modifying pages to add extra authentication prompts requesting OTP, card number, 
+or phone number for so-called additional security verification, with all entered data silently 
+transmitted to an attacker-controlled panel. In transaction-hijacking variants the trojan 
+intercepts a pending wire transfer form, replaces the beneficiary account number with a 
+money-mule account number in the browser DOM before the signed request is sent to the bank, 
+so the victim's screen shows the intended payee while the bank receives the substituted 
+mule account details. C2 communication uses encrypted HTTPS or custom binary protocols 
+over rotating domain generation algorithm infrastructure, with fallback dead-drop channels 
+using legitimate cloud document or pastebin services, making C2 traffic difficult to 
+distinguish from normal browsing" ;
+
+    target_profile : "Retail banking customers accessing personal or small-business online banking 
+portals via desktop browsers on Windows endpoints; business banking customers with higher account 
+balances and payment limits are prioritised by operators when web-inject panel configuration 
+allows target-bank filtering; employees at small and medium businesses with access to 
+company payment accounts represent the highest-value sub-segment; users on unmanaged or 
+under-protected home Windows machines with outdated browsers and no endpoint detection tooling 
+have the highest susceptibility; mobile browser variants exist for some trojan families but 
+desktop Windows environments represent the primary target owing to richer browser hooking 
+API surface" ;
+
+    success_rate        : 5-20% ;
+    average_impact      : "Direct fraud per compromised account: 1,500 to 12,000 EUR depending 
+on account type and available balance; business accounts with same-day payment facilities 
+can sustain single-event losses of 50,000 to 200,000 EUR before fraud detection triggers a 
+hold; aggregate per-campaign losses for active trojan operations with 5,000 to 40,000 infected 
+bots range from 5 million to 60 million EUR based on law enforcement seizure figures; 
+chargeback, investigation, and account remediation costs at affected banks estimated at 
+0.5 to 1.5 times direct fraud loss" ;
+    delivery_method     : "Primary: phishing email with malicious Office document attachment 
+using VBA macro or template injection, or ZIP archive containing a JavaScript or PowerShell 
+dropper; secondary: malvertising campaigns on ad networks serving exploit kit landing pages 
+to users of unpatched browsers, targeting vulnerabilities in browser engines or plugin 
+frameworks; tertiary: SEO poisoning placing trojanized software downloads in search engine 
+results for common utility or productivity software queries, exploiting user intent to 
+install software legitimately" ;
+    detection_difficulty : HIGH ;
+
+    prevention_measures : [
+        "Deploy an endpoint detection and response solution with behavioral detection covering 
+process injection, browser API hooking, and anomalous child process creation from Office 
+applications and browser processes; configure alerts for known trojan persistence mechanisms 
+including scheduled task creation and registry run key modification by non-system processes",
+        "Enforce email attachment sandboxing with dynamic detonation for all Office documents, 
+archives, and script files received externally; block delivery of macro-enabled Office formats 
+from external senders at the gateway and disable VBA macro execution by Group Policy for 
+all users who do not require it for business function",
+        "Apply Group Policy and Intune configuration to disable legacy browser extension 
+frameworks and restrict installation of browser helper objects to IT-approved extensions only; 
+configure browsers in a hardened baseline using CIS Browser Benchmarks",
+        "Implement bank-side strong customer authentication with dynamic linking tying 
+transaction authorisation codes to the specific beneficiary account number and transfer amount, 
+so that a trojan intercepting and replacing beneficiary details cannot reuse a code the 
+victim approved for a different payee",
+        "Deploy real-time behavioural fraud analytics on the bank platform that flag anomalous 
+session characteristics including unusual beneficiary additions, device fingerprint changes, 
+rapid transaction sequences, and login-to-transfer timing inconsistent with the customer's 
+historical pattern, triggering step-up authentication or temporary holds",
+        "Maintain and enforce a current patch cadence for all browser software, operating 
+system components, and third-party plugins; prioritise patches for vulnerabilities known 
+to be actively exploited by exploit-kit campaigns targeting financial sector victims",
+        "Implement DNS and web proxy filtering using threat intelligence feeds for banking 
+trojan C2 domain generation algorithm outputs and known malicious hosting infrastructure; 
+configure firewall egress rules blocking outbound connections on non-standard ports 
+commonly used by trojan C2 channels",
+        "Educate customers via in-app and statement messaging that the bank will never display 
+additional prompts requesting full card details, backup codes, or phone numbers inside an 
+already-authenticated online banking session; any unexpected security prompt during an 
+active login should be treated as a potential web-inject and reported immediately",
+        "Apply browser isolation or remote browser isolation technology for high-risk user 
+segments such as treasury and payments staff, rendering online banking sessions in a 
+cloud-hosted isolated environment where local endpoint trojan hooks cannot reach browser 
+DOM or HTTPS session data",
+        "Maintain an up-to-date asset inventory for all endpoints accessing financial systems; 
+restrict access to online banking and payment platforms to managed, compliant devices 
+enrolled in an endpoint management platform and meeting a minimum security posture baseline"
+    ] ;
+
+    cve_references : [
+        "CVE-2017-11882",
+        "CVE-2018-8174",
+        "CVE-2021-40444"
+    ] ;
+
+    tools_used : [
+        "Dridex banking trojan and web-inject panel (financially motivated criminal groups, active since 2014)",
+        "TrickBot modular trojan with banking module web-inject capability",
+        "BokBot (IcedID) banking trojan with man-in-the-browser web-inject functionality",
+        "Emotet loader used for initial access and banking trojan secondary payload delivery",
+        "Nuclear, RIG, and Fallout exploit kits used for drive-by infection via browser vulnerabilities",
+        "Custom web-inject configuration frameworks sold on underground markets",
+        "Domain generation algorithm infrastructure and bulletproof hosting for C2 rotation"
+    ] ;
+
+    capec_id         : "CAPEC-569" ;
+    kill_chain_phase : ACTIONS_ON_OBJECTIVES ;
+
+    data_sources : [
+        "Endpoint detection and response telemetry covering process injection events, browser 
+API hook installation, and anomalous inter-process memory writes",
+        "Browser process monitoring capturing unexpected DOM modification events and 
+JavaScript injection into banking domain sessions",
+        "Network proxy and DNS logs for connections to known banking trojan C2 infrastructure 
+and DGA-generated domains",
+        "Bank fraud analytics platform session data including device fingerprint deltas, 
+session timing anomalies, and beneficiary substitution detection",
+        "Email gateway sandbox detonation logs for Office macro and dropper delivery artefacts",
+        "Threat intelligence feeds covering active Dridex, TrickBot, BokBot, and Emotet 
+infrastructure IOCs",
+        "Financial CERT and law enforcement sharing platforms such as FS-ISAC for 
+banking trojan campaign IOC distribution"
+    ] ;
+
+    mitigations : [
+        "M1055 - Process injection mitigation: enable Windows Defender Credential Guard and 
+configure EDR to block known injection techniques used by banking trojan families",
+        "M1049 - Antivirus and antimalware: maintain behavioural detection rules for 
+known trojan loader families including Emotet, Dridex, and TrickBot dropper components",
+        "M1031 - Network intrusion prevention: block C2 communication to known banking 
+trojan infrastructure using threat intelligence feed integration at proxy and firewall",
+        "M1054 - Software configuration: disable Office macros for external content by 
+Group Policy; enable Attack Surface Reduction rules in Microsoft Defender targeting 
+Office child process creation and macro-initiated download activity",
+        "M1032 - Multi-factor authentication: deploy dynamic-linking transaction signing 
+at the bank so that stolen OTPs cannot be replayed for substituted transactions",
+        "M1017 - User training: customer education on web-inject warning signs including 
+unexpected in-session prompts for additional credential or card data",
+        "M1047 - Audit: enable comprehensive EDR audit logging on browser process events 
+and alert on hook installation or DOM modification from non-browser processes"
+    ] ;
+
+    platforms : [
+        "Windows",
+        "Web Browser"
+    ] ;
+
+    privilege_required : USER ;
+    impact_type        : FINANCIAL ;
+
+    attribution : "Organised cybercrime groups operating banking trojan-as-a-service business 
+models; primary operators develop and maintain trojan codebases and web-inject panel 
+infrastructure while distributing loader access to affiliates who handle phishing and 
+drive-by campaigns; money mule recruitment and layered laundering operations run as 
+separate criminal service with geographic spread across 10 to 30 countries per campaign 
+window to complicate asset tracing and law enforcement coordination" ;
+
+    notes : "Banking trojans are categorically distinct from credential-phishing pages: 
+where phishing relies on deceiving the user into visiting a fake site, a banking trojan 
+operates entirely inside a legitimate, authenticated session on the real bank domain, 
+making address-bar verification, TLS certificate inspection, and HSTS completely 
+ineffective as defences. The web-inject technique modifies the Document Object Model 
+of the actual bank page in the victim's browser after the page is fetched over a valid 
+HTTPS connection and before it is rendered, so the injected content inherits the full 
+trust context of the authenticated session. Transaction-hijacking variants operate even 
+more covertly: the victim completes what appears to be a normal, authentic payment flow, 
+sees their own beneficiary name and intended amount confirmed on screen, and may receive 
+a genuine bank SMS confirmation for a transaction that has been silently redirected to 
+a mule account at the network layer. The integration of banking trojan initial access 
+into broader malware-delivery ecosystems via Emotet and similar loader platforms means 
+that infection often follows a corporate phishing email campaign days or weeks before 
+the banking fraud event, with the trojan lying dormant until the user visits a monitored 
+banking domain. The money mule layering step is a structurally necessary component: 
+without recruited and managed mule accounts in target-country banks able to receive and 
+rapidly forward proceeds, the fraud revenue cannot be extracted, making mule network 
+disruption a high-impact defensive priority for financial intelligence units" ;
+}

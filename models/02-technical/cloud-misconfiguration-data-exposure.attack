@@ -1,0 +1,221 @@
+attack CloudMisconfigurationDataExposure {
+    mitre_id   : "T1530" ;
+    category   : APPLICATION ;
+    difficulty : EASY ;
+
+    real_world_case {
+        year        : 2021 ;
+        victim      : "A composite of the most significant publicly documented 
+cloud misconfiguration breaches of the 2019-2023 period, representative of 
+a class of incidents occurring daily at organisations of all sizes: 
+the Twitch source code leak (October 2021) exposed 125 GB of proprietary 
+streaming platform source code, internal security tools, and creator revenue 
+data via a misconfigured internal server; the Microsoft Power Apps portal 
+misconfiguration disclosed in August 2021 exposed 38 million records 
+including COVID-19 vaccine opt-in status, employee data, and government 
+programme data from 47 organisations including American Airlines, Ford Motor 
+Company, New York City Metro Transit Authority, and Indiana Department of Health 
+— the misconfiguration was that newly created Power Apps portals defaulted 
+to public data access, and organisations were not aware they needed to 
+manually change this setting; the Pegasus Airlines database misconfiguration 
+(2022) exposed 6.5 TB of flight logs, crew personal data, and source code 
+via a publicly accessible AWS S3 bucket; multiple Capital One-precedent cases 
+in which SSRF against a cloud metadata service combined with an overly 
+permissive IAM role produced credential exfiltration from the instance 
+identity metadata endpoint" ;
+        impact      : "38 million records exposed across 47 organisations 
+in the Microsoft Power Apps case alone; direct regulatory fines under GDPR 
+and US state breach notification laws; ICO (UK) issued fines totalling 
+GBP 17.5 million for cloud misconfiguration-related breaches between 
+2019-2023; reputational damage from public disclosure of sensitive 
+government and healthcare data; incident response and forensic 
+investigation costs averaging USD 250,000-2 million per organisation 
+depending on complexity; legal liability from affected data subjects; 
+the Capital One misconfiguration (2019) resulted in a USD 80 million 
+OCC fine and USD 190 million class action settlement" ;
+        attribution : "Opportunistic external attackers conducting automated 
+scanning of cloud storage namespaces and open database endpoints; in some 
+cases the data was accessed by independent security researchers who 
+disclosed responsibly; in Capital One-style SSRF cases: a former cloud 
+provider employee with specific knowledge of the infrastructure; 
+in many cases the primary cause is internal negligence or lack of 
+security training rather than sophisticated external attack, with 
+opportunistic actors discovering the exposure through automated scanning 
+tools including Shodan, GrayhatWarfare, and Bucket Finder" ;
+    }
+
+    attack_vector : "Cloud misconfiguration data exposure requires no 
+vulnerability exploitation, no malware, and no credentials in the most 
+impactful cases. The attack begins with automated reconnaissance: 
+tools such as GrayhatWarfare, Bucket Finder, and cloud-specific Shodan 
+queries enumerate publicly accessible cloud storage buckets by guessing 
+common naming patterns (company-name-backup, company-name-data, 
+company-name-logs) across all major cloud providers. For databases, 
+Shodan and Censys index unauthenticated MongoDB, Elasticsearch, 
+Redis, and CassandDB instances exposed on default ports with no 
+authentication requirement. For IAM-related exposure, attackers 
+identify cloud instances with SSRF vulnerabilities in web applications 
+and exploit them to reach the internal metadata service (169.254.169.254 
+on AWS EC2), extracting temporary IAM role credentials that may have 
+overly broad permissions. Public cloud storage object enumeration 
+requires only an HTTP GET request to a bucket URL; if the bucket 
+PolicyDocument grants s3:GetObject to Principal:* or AllUsers, 
+all objects are readable without authentication. In AWS, the 
+now-deprecated Account Public Access Block at the bucket level 
+allowed individual buckets to override account-level access controls, 
+and organisations that had not explicitly set bucket-level block 
+public access policies were exposed to public reads by default. 
+The attack surface for pure misconfiguration exposure is therefore 
+the entire internet-accessible configuration surface of the organisation's 
+cloud estate: storage buckets, database instance endpoints, compute 
+instance metadata services, Kubernetes API servers, Docker daemon 
+TCP endpoints, and any cloud-native service with insufficient 
+default access controls" ;
+
+    target_profile : "Any organisation operating public cloud 
+infrastructure without a mature cloud security posture management 
+programme; specifically at highest risk are: organisations that 
+provisioned cloud resources without explicit security review of 
+access policies; development and data science teams that create 
+storage buckets or databases for temporary projects and do not 
+apply organisational security standards; organisations that 
+migrated from on-premises to cloud and applied on-premises 
+security assumptions (e.g. 'if it's internal it's trusted') 
+to cloud resources that are publicly routable by default; 
+organisations using cloud services with permissive defaults 
+such as the Microsoft Power Apps portal public access setting; 
+cloud environments configured by engineers unfamiliar with 
+the shared-responsibility model's implication that access 
+control is the customer's responsibility, not the provider's" ;
+
+    success_rate        : 10-40% ;
+    average_impact      : "Data exposed per incident ranges from thousands 
+to hundreds of millions of records; median affected record count per 
+publicly disclosed cloud misconfiguration incident is approximately 
+2.7 million based on analysis of 2019-2024 disclosed cases; direct costs 
+include regulatory fines averaging EUR 300,000-80 million depending on 
+jurisdiction and data sensitivity; breach notification costs, incident 
+response, and class action exposure; competitive harm where exposed 
+data includes source code, business strategy documents, or trade secrets" ;
+    delivery_method     : "Direct HTTP or HTTPS GET requests to misconfigured 
+public cloud storage bucket URLs, unauthenticated database API endpoints, 
+or exploited SSRF to cloud instance metadata service for IAM credential 
+extraction; no exploit payload required for pure misconfiguration cases" ;
+    detection_difficulty : MEDIUM ;
+
+    prevention_measures : [
+        "Enable cloud provider account-level public access blocks for 
+all storage services (AWS S3 Block Public Access at account level, 
+Azure Storage Account public blob access disabled by default, 
+GCP Uniform Bucket-Level Access enforced) and enforce this 
+via organisation policy in AWS Organizations, Azure Policy, 
+or GCP Organisation Constraints so individual teams cannot 
+create publicly accessible buckets",
+        "Deploy a Cloud Security Posture Management (CSPM) tool 
+such as AWS Security Hub, Microsoft Defender for Cloud, 
+Google Security Command Center, or third-party tools 
+continuously evaluating all cloud resources against 
+CIS benchmark configuration standards; configure 
+automated remediation for clearly defined findings 
+such as public S3 buckets and unauthenticated database instances",
+        "Apply the principle of least privilege to all IAM roles: 
+no EC2 instance role, Lambda execution role, or service account 
+should have permissions beyond those explicitly required for 
+its function; use IAM Access Analyzer to identify overly 
+permissive policies and resources with external access grants; 
+require a formal review process for any policy granting 
+s3:GetObject, s3:ListBucket, or database read permissions 
+to Principal:* or AllUsers",
+        "Implement infrastructure as code (IaC) for all cloud 
+resource provisioning with mandatory security policy checks 
+in CI/CD pipelines using tools such as Checkov, Terrascan, 
+or tfsec that flag public access configurations before 
+deployment; prohibit manual resource creation in production 
+accounts to ensure all resources pass policy gates",
+        "Conduct quarterly automated cloud asset inventory scans 
+using cloud provider APIs to enumerate all storage buckets, 
+database instances, and compute resources, cross-referencing 
+against authorised resource registries to identify shadow IT 
+resources created outside formal provisioning processes"
+    ] ;
+
+    cve_references : [
+        "CVE-2019-3398",
+        "CVE-2021-22986"
+    ] ;
+
+    tools_used : [
+        "GrayhatWarfare public S3 bucket search engine",
+        "Bucket Finder and S3Scanner for automated bucket enumeration",
+        "Shodan and Censys for unauthenticated cloud database discovery",
+        "AWS CLI with unauthenticated s3 ls for public bucket enumeration",
+        "SSRF exploit payloads targeting cloud instance metadata service 
+at 169.254.169.254 for IAM credential extraction",
+        "Pacu AWS exploitation framework for post-credential IAM abuse"
+    ] ;
+
+    capec_id         : "CAPEC-1" ;
+    kill_chain_phase : EXPLOITATION ;
+
+    data_sources : [
+        "Cloud storage access logs (AWS S3 server access logs, 
+Azure Storage Diagnostic Logs, GCP Cloud Storage audit logs) 
+showing access from unexpected external IP addresses or 
+unauthenticated requests to objects in production buckets",
+        "Cloud audit logs (AWS CloudTrail, Azure Activity Log, 
+GCP Cloud Audit Logs) for IAM credential usage from unexpected 
+IP addresses, regions, or service principals inconsistent 
+with normal operations",
+        "CSPM tool findings showing public access configuration 
+on storage buckets, database instances with internet-accessible 
+endpoints and weak or absent authentication, and IAM policies 
+granting overly broad cross-account or public access",
+        "VPC flow logs showing inbound connections to database 
+ports from external IP ranges not in the authorised access 
+list, indicating unauthenticated external access attempts",
+        "Cloud provider built-in security services (AWS Macie, 
+Microsoft Purview, GCP DLP) detecting sensitive data 
+classification in publicly accessible storage objects"
+    ] ;
+
+    mitigations : [
+        "M1018 - User account management: enforce IAM least privilege 
+and block all public access grants via organisation-level policies",
+        "M1022 - Restrict file and directory permissions: apply 
+account-level public access blocks on all cloud storage services",
+        "M1016 - Vulnerability scanning: deploy CSPM with continuous 
+configuration assessment against CIS Cloud Benchmarks",
+        "M1030 - Network segmentation: place database instances 
+in private subnets with no internet gateway routing; 
+restrict access via VPC security groups to authorised 
+application server CIDR ranges only",
+        "M1047 - Audit: enable comprehensive cloud audit logging 
+and configure alerts on public access configuration changes 
+and unauthenticated access attempts to sensitive resources"
+    ] ;
+
+    platforms : [
+        "Cloud",
+        "SaaS"
+    ] ;
+
+    privilege_required : NONE ;
+    impact_type        : DATA_THEFT ;
+
+    notes : "Cloud misconfiguration is the defining data exposure 
+pattern of the public cloud era: it is not an attack against 
+a vulnerability in cloud provider infrastructure but rather 
+exploitation of the gap between the customer's assumed access 
+controls and the actual configuration deployed. Cloud providers 
+have progressively tightened default access controls in response 
+to the scale of incidents: AWS enabled account-level S3 Block 
+Public Access by default for new accounts in 2023, and 
+Microsoft introduced Public Access Level locked to private 
+for Azure Storage Accounts in 2023. However the vast backlog 
+of existing resources provisioned under prior permissive defaults 
+remains exposed until explicitly audited and remediated. 
+The difficulty rating of EASY reflects the attacker's 
+perspective: once a misconfiguration exists, exploitation 
+requires only an HTTP GET request, not any technical 
+exploitation skill" ;
+}

@@ -1,0 +1,101 @@
+attack StrategicSupplyChainAndAptMeta {
+    mitre_id   : "T1195.002" ;
+    category   : SUPPLY_CHAIN ;
+    difficulty : NATION_STATE ;
+
+    real_world_case {
+        year   : 2020 ;
+        victim : "SolarWinds Orion platform customers: 18,000 organisations downloaded trojanised update, including US Treasury, US Commerce, Microsoft, FireEye, and nine federal agencies classified as significantly compromised" ;
+        impact : "SUNBURST backdoor provided persistent access averaging 12.5 days dwell time before first discovery; full scope of data exfiltration never publicly disclosed; remediation cost to US federal government alone estimated above 100 million USD; FireEye red-team tools stolen and subsequently disclosed; cascading trust-chain revocation required across all SolarWinds certificate and code-signing infrastructure. Concurrent Kaseya VSA attack (2021) disrupted 1,500 downstream MSP-managed businesses via a single vendor compromise, demonstrating scaleable multiplier of supply-chain attack vectors." ;
+        attribution : "SUNBURST: APT29 (Cozy Bear, SVR Foreign Intelligence Service of the Russian Federation), confirmed by US CISA Emergency Directive 21-01, NCSC, and NSA. Kaseya VSA: REvil ransomware affiliate; infrastructure overlap with APT connected to Eastern European criminal-state nexus." ;
+    }
+
+    attack_vector : "Strategic operations penetrate target environments not through direct attack but through trusted relationships and the software and hardware supply chains that victims depend on. Software build-system compromise: adversary gains persistent access to a software vendor build environment via spear-phishing or credential theft against a developer account, injects malicious code into a legitimate product codebase, and waits for the vendor to compile and sign the trojanised binary as part of a routine release. The resulting update is cryptographically signed by the legitimate vendor certificate, appears valid to all endpoint security tools, and is distributed to all customers via the vendor update mechanism. This pattern was perfected in SolarWinds SUNBURST (2020), CCleaner (2017), ASUS Live Update (2019, Operation ShadowHammer), and 3CXDesktopApp (2023). Dependency and package poisoning: adversaries register typosquatted packages on PyPI, npm, RubyGems, and Maven to intercept developers who mistype popular library names; alternatively, they register packages with names that match internal-only package names anticipating dependency-confusion attacks against organisations using private registries without namespace isolation. Managed service provider pivot: MSP and IT service provider remote management tools (ConnectWise Automate, Kaseya VSA, TeamViewer, SolarWinds RMM) provide adversaries with authenticated access to all downstream customer environments from a single compromised management console, multiplying the downstream victim count by hundreds to thousands per single root compromise. Cloud control-plane and IdP compromise: targeting identity providers (Okta, Active Directory Federation Services, Azure AD Connect) and cloud management planes to issue forged SAML tokens (Golden SAML attack) providing persistent administrative access to all federated resources without requiring endpoint malware. ICS and OT pathway: prolonged reconnaissance of IT network leads to identification of OT-connected historian servers and HMI workstations; adversary pivots through IT-OT boundary using legitimate remote management protocols (OPC-UA, Modbus bridging) to reach PLCs and safety instrumented systems; Industroyer2 and PIPEDREAM (2022) frameworks demonstrate operational capability to issue direct ICS protocol commands causing physical equipment damage without deploying traditional malware on OT endpoints." ;
+
+    target_profile : "High-value strategic targets selected for intelligence, geopolitical leverage, or destructive effect rather than financial return. Governments and intelligence agencies: ministries of foreign affairs, defence contractors, signals intelligence organisations, and treaty bodies. Critical national infrastructure: electricity generation and distribution operators, water and wastewater utilities, oil and gas pipeline operators, nuclear facility support organisations, and air traffic management systems. Large technology vendors: cloud providers, software vendors with large customer bases, and telecommunication infrastructure operators who serve as force multipliers. Financial market infrastructure: central clearing counterparties, central securities depositories, and correspondent banking networks. Research and development: pharmaceutical companies with vaccine and drug development data, aerospace and defence primes with classified programme information, and semiconductor fabs targeted for IP theft in strategic technology domains. High-value private sector: law firms, management consultancies, and public relations firms serving government or defence clients who hold sensitive client data without equivalent security investment." ;
+
+    success_rate        : 45-85% ;
+    average_impact      : "Strategic intelligence loss: classified programme details and diplomatic communications compromised over multi-year dwell periods; economic damage immeasurable where stolen IP accelerates adversary national technology programmes by years. Operational disruption: Industroyer-class ICS attack on Ukraine power grid (2015, 2016) caused 225,000 customers to lose power; TRITON safety system attack (2017) targeted SIS to enable physical explosion at petrochemical facility. Geopolitical and regulatory: breach notifications required under NIS2 Directive for essential service operators within 24 hours; OFAC secondary sanctions risk for victim organisations transacting with sanctioned jurisdictions during negotiation. Recovery cost: average remediation of a confirmed APT intrusion involving golden-ticket forging or source-code poisoning exceeds 40 million USD when including forensic investigation, legal, regulatory notification, and infrastructure rebuild." ;
+    delivery_method     : "Legitimate software update mechanisms carrying cryptographically signed but trojanised binaries; vendor remote management and monitoring platforms with pre-configured access to customer environments; compromised CI/CD pipeline artefacts delivered through trusted package registries; spear-phishing against build engineers, code reviewers, and DevOps administrators with access to signing infrastructure; hardware implants in network devices and server supply chains; compromised firmware updates for routers, switches, and BMC (baseboard management controllers) enabling persistent access below the operating system layer." ;
+    detection_difficulty : NEARLY_IMPOSSIBLE ;
+
+    prevention_measures : [
+        "Implement a Cyber Supply Chain Risk Management (C-SCRM) programme aligned to NIST SP 800-161r1: evaluate and tier all software and hardware vendors by criticality, require evidence of secure development lifecycle, and include security clauses in procurement contracts",
+        "Require and validate a Software Bill of Materials (SBOM) in CycloneDX or SPDX format for all procured software, enabling rapid identification of vulnerable components following a new CVE disclosure or supply-chain compromise notification",
+        "Enforce build-pipeline integrity: use hermetic builds, reproducible builds where feasible, and cryptographic attestation of each pipeline stage via in-toto framework or SLSA level 3 or higher",
+        "Implement Golden SAML detection: monitor for forged SAML assertions by correlating IdP authentication logs with downstream resource access anomalies; deploy immutable audit logging for all token issuance events",
+        "Apply zero-trust architecture with continuous verification: eliminate implicit trust in remote management tools, require device health attestation and just-in-time privileged access for all administrative sessions with full session recording",
+        "Enforce network segmentation and unidirectional data diodes between IT and OT networks; maintain an asset inventory of all ICS and SCADA components and apply firmware integrity verification before each update cycle",
+        "Monitor code-signing certificate usage anomalies: alert on signing events outside approved build windows, from unauthorised hosts, or signing binaries not produced by the official build pipeline",
+        "Deploy passive DNS and threat-intelligence-enriched SIEM rules to detect beaconing to domain-generation algorithm derived C2 infrastructure and newly registered domains under typosquatted vendor names",
+        "Maintain an out-of-band secure communications capability for incident response coordination that does not depend on potentially compromised enterprise email or collaboration infrastructure",
+        "Conduct annual supply chain security assessments including third-party penetration testing of MSP and critical vendor environments with right-to-audit clauses in service agreements"
+    ] ;
+
+    cve_references : [
+        "CVE-2020-10148",
+        "CVE-2021-30116",
+        "CVE-2023-34362",
+        "CVE-2021-26857",
+        "CVE-2022-26134",
+        "CVE-2023-22515"
+    ] ;
+
+    tools_used : [
+        "SUNBURST (custom SolarWinds-specific backdoor implanted in Orion build pipeline by APT29)",
+        "TEARDROP (in-memory dropper used to load Cobalt Strike beacon in SolarWinds follow-on operations)",
+        "Cobalt Strike (commercial C2 framework used extensively in post-exploitation phase of APT campaigns)",
+        "INDUSTROYER2 (ICS-targeting framework with native IEC-104 protocol commands for power grid manipulation)",
+        "PIPEDREAM/INCONTROLLER (five-module ICS attack framework targeting Schneider Electric and OMRON devices confirmed 2022)",
+        "Impacket (Python Windows protocol library used for Golden Ticket and DCSync attacks against Active Directory)",
+        "Mimikatz (credential extraction and Golden Ticket forgery against Kerberos infrastructure)",
+        "TeamViewer and AnyDesk (legitimate remote access tools abused as living-off-the-land remote management vectors)",
+        "CrowdStrike Falcon RTR (legitimate EDR response tool abused in post-compromise lateral movement)",
+        "Custom firmware implants targeting Cisco IOS, Juniper ScreenOS, and BMC firmware for persistent below-OS access"
+    ] ;
+
+    capec_id         : "CAPEC-438" ;
+    kill_chain_phase : WEAPONIZATION ;
+
+    data_sources : [
+        "Software build server logs: compiler invocations, signing events, artefact hash changes outside scheduled windows",
+        "Code-signing certificate audit logs: alert on issuance or use outside defined CI/CD pipeline hosts and time windows",
+        "Cloud control-plane logs: AWS CloudTrail, Azure Activity Log, GCP Audit Log for IAM privilege escalation and token-issuance anomalies",
+        "Identity provider logs: SAML assertion issuance events, anomalous token lifetimes, IdP connector certificate changes",
+        "OT monitoring and protocol-aware IDS: IEC-104, Modbus, DNP3 command anomaly detection with baseline deviation alerting",
+        "Passive DNS and certificate transparency: new subdomain registrations on vendor domains, unexpected TLS certificate issuance",
+        "Endpoint telemetry from build and signing servers: new process execution, unsigned driver load, LSASS access",
+        "Threat intelligence reports from sector-specific ISACs and vendor advisories correlated with observed network indicators",
+        "Supply chain risk management platform logs: SBOM component vulnerability feeds, vendor security posture scoring"
+    ] ;
+
+    mitigations : [
+        "M1016 - Vulnerability scanning: continuous scanning of all internet-facing and internal assets with verified remediation SLAs",
+        "M1047 - Audit logging: centralised immutable SIEM with 12-month hot retention for all identity, build, and cloud control-plane events",
+        "M1030 - Network segmentation: air-gap or hardware-enforced one-way gateway between IT and OT networks for all critical infrastructure operators",
+        "M1026 - Privileged account management: hardware-backed PAM with just-in-time access, session recording, and break-glass procedures for all build and OT administrative roles",
+        "M1037 - Filter network traffic: egress filtering and deep-packet inspection for all OT and IT boundary traffic with default-deny policy",
+        "M1045 - Code signing: require dual-control on all production signing operations with HSM-backed keys and build-pipeline attestation",
+        "M1018 - User account management: enforce FIDO2 hardware token authentication for all developer, build, and cloud administration accounts with no fallback to SMS or TOTP"
+    ] ;
+
+    platforms : [
+        "Windows",
+        "Windows Server",
+        "Linux",
+        "Network Devices",
+        "ICS/SCADA Controllers",
+        "VMware ESXi",
+        "Azure",
+        "AWS",
+        "Google Cloud Platform",
+        "Firmware/BIOS/UEFI"
+    ] ;
+
+    privilege_required : ADMINISTRATOR ;
+    impact_type        : ESPIONAGE ;
+
+    attribution : "APT29 (Cozy Bear, SVR Foreign Intelligence Service, Russia) confirmed for SolarWinds SUNBURST and multiple Western government intrusions; APT28 (Fancy Bear, GRU Unit 26165, Russia) for election interference and defence contractor breaches; APT40 (TEMP.Periscope, China MSS Hainan State Security Department) for maritime, research, and government sector espionage; APT41 (Double Dragon, China PLA-linked) for dual-purpose espionage and financially motivated operations; Lazarus Group and APT38 (DPRK RGB Bureau 121) for financial-system compromise and cryptocurrency theft; MuddyWater (Iran MOIS) for government and telecoms targeting in Middle East and Central Asia." ;
+
+    notes : "Strategic and supply-chain operations represent the apex of the cyber threat pyramid: long dwell times measured in months to years, minimal operational signature, and geopolitical objectives that transcend financial gain. Three structural shifts are reshaping the landscape. First, the attack surface of software supply chains is widening as organisations adopt more third-party dependencies (an average enterprise Node.js application has over 1,000 transitive dependencies), creating an enormous attack surface for dependency-confusion, typosquatting, and maintainer-account takeover attacks. Second, AI and machine learning systems are themselves becoming both vectors and targets: adversarial ML attacks (data poisoning of training sets, model inversion, membership inference) are being explored by academic researchers and likely operationalised by nation-state actors targeting ML-driven autonomous systems in defence, finance, and critical infrastructure. Third, the long-horizon quantum threat: while current quantum hardware cannot break RSA-2048 or ECC-256 at meaningful scale, harvest-now-decrypt-later operations are plausible, in which adversaries archive encrypted communications and data today for decryption once sufficiently powerful quantum systems are available. NIST published post-quantum cryptography standards (FIPS 203 CRYSTALS-Kyber, FIPS 204 CRYSTALS-Dilithium) in 2024; organisations handling data with a long secrecy lifetime should begin cryptographic agility assessments and migration planning immediately. Regulatory frameworks are catching up: NIS2 Directive (EU, effective 2024) mandates supply chain security assessments for essential and important entities; DORA (EU Digital Operational Resilience Act) imposes specific third-party ICT risk management requirements on financial sector firms; US CISA Secure by Design initiative and Executive Order 14028 mandate software bill of materials for federal procurement. Defenders must operate on the assumption of persistence: sophisticated adversaries with nation-state resources will maintain access through multiple redundant mechanisms, and eradication requires rebuilding trust from the ground up including verified clean build infrastructure, re-issued code signing certificates, and identity provider resets." ;
+}

@@ -1,0 +1,145 @@
+attack DhlDeliveryNotificationPhishing {
+    mitre_id   : "T1566.002" ;
+    category   : SOCIAL_ENGINEERING ;
+    difficulty : EASY ;
+
+    real_world_case {
+        year        : 2023 ;
+        victim      : "Hundreds of thousands of consumers across Germany, the United Kingdom, the Netherlands, 
+Belgium, and Australia receiving fake DHL delivery notification emails and SMS messages during peak 
+e-commerce periods including Black Friday through to Christmas" ;
+        impact      : "DHL ranked as the single most impersonated logistics brand globally in 2022 and 2023, 
+representing over 22 percent of all brand-phishing attempts in Q4 2022 per Check Point Research; 
+individual victims reported card fraud losses between 30 and 500 EUR per incident; aggregate consumer 
+fraud losses attributable to logistics-brand smishing campaigns exceeded 50 million EUR across the EU 
+in 2023 per national CERT and consumer protection body reports; in Australia the ACCC Scamwatch recorded 
+over 40,000 DHL-themed scam reports in 2023 alone" ;
+        attribution : "Organised cybercrime groups operating large-scale commodity phishing and smishing 
+infrastructure targeting logistics customers; kits widely distributed on underground marketplaces and 
+Telegram channels with minimal technical barrier to entry; no attribution to a named APT" ;
+    }
+
+    attack_vector : "Victim receives an SMS or email purporting to be from DHL courier service, typically 
+claiming that a parcel could not be delivered due to an incomplete address, that a customs clearance fee 
+is outstanding, or that a delivery slot must be rescheduled. The message contains a shortened URL or a 
+plausible-looking domain closely resembling dhl.com. On mobile, the sender ID is spoofed to display 
+DHL-Info, DHLExpress, or a similar string, passing visual inspection on the notification lock screen. 
+The linked page is a pixel-perfect clone of the DHL tracking or payment portal, often using a valid 
+TLS certificate issued to the lookalike domain. In the payment variant the victim is asked to provide 
+full card number, expiry, CVV, and billing address to cover a nominal fee of one to five EUR or GBP, 
+providing attackers with valid card data for immediate card-not-present fraud or resale. 
+In the credential variant the victim is prompted to log in to a fake DHL MyDHL+ account portal, 
+yielding account credentials reused across other services. Some variants redirect to a survey or 
+prize page that collects PII including date of birth and national ID for identity theft or account 
+recovery fraud against banking and telco services" ;
+
+    target_profile : "General consumers actively shopping online or expecting deliveries, particularly 
+in regions with high e-commerce volume; seasonal targeting spikes sharply in Q4 around major retail 
+events; also targets small business owners and sole traders awaiting commercial shipments and therefore 
+less likely to dismiss unexpected parcel notifications without investigation. Older demographics and 
+less digitally experienced users have elevated susceptibility due to urgency framing and brand trust" ;
+
+    success_rate        : 15-40% ;
+    average_impact      : "Direct card fraud: 30 to 500 EUR per victim from card-not-present transactions 
+processed within minutes of data submission; secondary identity theft using collected DOB and address 
+data for telco SIM swap and bank account recovery fraud adding further estimated losses of 500 to 5,000 
+EUR per affected individual; aggregate per-campaign revenue for operators using commodity kits estimated 
+in the low millions EUR per active deployment window" ;
+    delivery_method     : "Primary: SMS smishing with spoofed sender ID displaying DHL branding; 
+secondary: HTML email with spoofed From header and DHL logo and tracking-style subject line such as 
+Your DHL parcel 1Z9999W99999999999 is awaiting delivery confirmation; tertiary: automated voice 
+robocall directing recipients to call back a premium-rate number or visit a URL for delivery 
+rescheduling in some regional variants" ;
+    detection_difficulty : LOW ;
+
+    prevention_measures : [
+        "Apply telco-level filtering and SMS firewall rules to block messages with spoofed sender IDs 
+mimicking logistics brand names; work with carriers and regulators on grey-route SMS traffic blocking",
+        "Educate consumers and employees never to click links in unsolicited delivery notification SMS 
+or email messages and instead to navigate directly to the courier official website using a 
+bookmarked or independently typed URL",
+        "Deploy brand monitoring services to identify phishing domains imitating logistics brands, 
+enabling rapid takedown requests through domain registrars and hosting providers",
+        "Implement bank and payment network fraud detection rules triggering on small card-not-present 
+transactions from newly registered e-commerce domains followed by immediate full-card-detail submission",
+        "Configure mobile security software and browser safe-browsing protections to flag known 
+smishing domains and warn users before page load",
+        "Encourage users to verify delivery status via the official carrier app or website using 
+the tracking number from the original order confirmation rather than from any inbound message"
+    ] ;
+
+    brand_impersonation {
+        real_brand    : "DHL" ;
+        spoof_variant : "dh1-tracking[.]com (numeral 1 replacing letter l), dhl-express-update[.]info 
+(keyword stuffing with alternative TLD), dhl-paket-service[.]net (German language variant), 
+dhl-delivery-notice[.]co (country code TLD abuse), track-dhl-parcel[.]com (reversed word order), 
+and SMS sender IDs including DHL-Info, DHLExpress, and DHL-DE spoofed via grey-route aggregators 
+that bypass carrier sender ID verification; homoglyph variants substituting Cyrillic l in some 
+Unicode-capable mail clients" ;
+    }
+
+    cve_references : [] ;
+
+    tools_used : [
+        "Commodity smishing kits distributed on Telegram and underground forums with pre-built DHL 
+and FedEx and USPS page templates",
+        "SMS gateway grey-route aggregators enabling spoofed sender ID at scale for minimal cost",
+        "Website mirroring tools for cloning legitimate carrier tracking and payment portal pages",
+        "Basic PHP or Python card-harvesting scripts with immediate exfiltration to Telegram bots 
+or operator-controlled panels",
+        "URL shorteners and redirect chains through compromised legitimate sites to defeat 
+reputation-based SMS filtering"
+    ] ;
+
+    capec_id         : "CAPEC-98" ;
+    kill_chain_phase : DELIVERY ;
+
+    data_sources : [
+        "Telco SMS gateway logs and grey-route monitoring feeds for spoofed sender ID traffic",
+        "Web server access logs for fake delivery tracking and payment portal domains",
+        "Bank and payment network fraud monitoring systems flagging anomalous card-not-present transactions",
+        "Email gateway logs for delivery-themed HTML phishing messages",
+        "Consumer fraud report databases at national CERTs and consumer protection bodies",
+        "Certificate transparency logs for newly issued TLS certificates on lookalike logistics domains",
+        "Brand protection monitoring feeds tracking domain registrations matching logistics brand keywords"
+    ] ;
+
+    mitigations : [
+        "M1017 - User training: consumer awareness campaigns on logistics-brand smishing patterns 
+and safe delivery notification habits",
+        "M1021 - Restrict web-based content: browser safe-browsing and mobile security filtering 
+on known smishing domains",
+        "M1031 - Network intrusion prevention: ISP and carrier-level blocking of known smishing 
+infrastructure IP ranges",
+        "M1049 - Antivirus and antimalware: mobile security suites detecting known smishing kit 
+redirect URLs on device"
+    ] ;
+
+    platforms : [
+        "Mobile",
+        "Web Browser",
+        "iOS",
+        "Android"
+    ] ;
+
+    privilege_required : NONE ;
+    impact_type        : FINANCIAL ;
+
+    attribution : "Large-scale commodity cybercrime operations with no confirmed APT affiliation; 
+infrastructure hosted across bulletproof hosting providers in Eastern Europe and Southeast Asia; 
+operator communications primarily via Telegram; kit resellers and affiliates operating on a 
+commission-per-successful-fraud model" ;
+
+    notes : "Logistics and courier brands including DHL, FedEx, UPS, USPS, Royal Mail, and 
+Australia Post are among the most heavily impersonated in consumer-facing phishing and smishing 
+campaigns globally. Attack volume spikes sharply during high-parcel-volume periods including 
+Black Friday, Cyber Monday, Christmas, and Chinese New Year when consumer expectation of 
+delivery notifications is at its highest and critical-thinking thresholds are reduced by 
+purchase volume and urgency. The low cost of commodity smishing kits and grey-route SMS 
+aggregator services makes the economics highly favourable for criminal operators: a single 
+focused campaign of 50,000 SMS messages costing under 500 USD can yield thousands of valid 
+card numbers reselling for 5 to 20 USD each on underground markets. Regulators and logistics 
+companies have introduced brand-protection programmes and consumer warning campaigns but 
+adoption of telco-level sender ID verification remains inconsistent across jurisdictions, 
+leaving grey-route spoofing viable at scale" ;
+}

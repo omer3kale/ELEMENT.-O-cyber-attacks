@@ -1,0 +1,104 @@
+attack SocialEngineeringMeta {
+    mitre_id   : "T1566.001" ;
+    category   : SOCIAL_ENGINEERING ;
+    difficulty : HARD ;
+
+    real_world_case {
+        year        : 2019 ;
+        victim      : "FACC AG (Austrian aerospace supplier, 14,000 employees) and multiple multinational BEC victims across EU and North America" ;
+        impact      : "FACC: 50 million EUR wired to attacker-controlled accounts in a single BEC transaction; CEO and CFO subsequently dismissed. Aggregate BEC losses across the 2018-2020 campaign window estimated at 1.7 billion USD per FBI IC3 annual report." ;
+        attribution : "Unattributed criminal syndicate with Eastern European infrastructure; secondary campaigns linked to Nigeria-based Yahoo Boys and West African fraud networks operating BEC-as-a-service infrastructure." ;
+    }
+
+    attack_vector : "Human-centric deception executed across multiple channels and pretext models. Phishing and spear-phishing: bulk credential-harvest pages mimicking Microsoft 365, Google Workspace, Okta, and banking portals; spear-phishing variants use open-source intelligence to craft role-specific lures referencing real project names, supplier invoices, and colleague identities. Business Email Compromise: attacker either compromises a legitimate executive mailbox via credential theft or registers a typosquatted domain to impersonate a CFO, CEO, or trusted supplier, then redirects wire transfers or payroll deposits. Vishing and smishing: voice calls impersonating IT helpdesk, bank fraud teams, or government tax agencies; SMS lures carrying shortened URLs to AiTM (adversary-in-the-middle) proxy pages that capture both credentials and live MFA tokens, fully bypassing TOTP-based two-factor authentication. QRishing: malicious QR codes placed on physical signage, embedded in PDF attachments, or sent in messaging apps to redirect victims to credential-harvest or malware-delivery sites while bypassing email URL-scanning controls. Deepfake video and audio social engineering: AI-synthesised voice clones of executives issued via WhatsApp and Signal voice notes authorising urgent wire transfers or credential resets; confirmed incidents in the financial sector since 2022. Social media impersonation: fake LinkedIn recruiter profiles harvesting employee credentials, extracting contract details, identifying high-value targets, and conducting watering-hole attacks against employees of target organisations." ;
+
+    target_profile : "Any human with access to financial systems, identity credentials, or sensitive data. Highest-value targets: CFOs and finance staff with wire-transfer authority; HR managers with access to payroll and PII; IT administrators and helpdesk staff who can reset MFA or elevate privileges; C-suite executives whose identities are spoofed in BEC campaigns. Sector breadth: SMEs in manufacturing, professional services, and retail with immature security cultures; large financial institutions and insurers for high-yield BEC; healthcare and public sector organisations for PII and follow-on extortion; educational institutions for credential-harvesting and FERPA-regulated data theft. Geographic spread: global, with elevated frequency in English-speaking markets and Western Europe; campaigns frequently pivot across jurisdictions to complicate law enforcement response." ;
+
+    success_rate        : 5-40% ;
+    average_impact      : "Financial: 130,000 USD median BEC loss per incident (FBI IC3 2023); aggregate annual global BEC loss above 2.9 billion USD. Credential theft: follow-on ransomware deployment raises median total cost to 1.85 million USD per organisation (Sophos 2023). Reputational and regulatory: GDPR Article 33 mandatory breach notification within 72 hours; fines up to 4 percent of global annual turnover for failure to protect personal data obtained through phishing-enabled breaches." ;
+    delivery_method     : "Primary: email (HTML with embedded tracking pixel, weaponised Office documents with macro or template-injection, PDF with embedded hyperlink, calendar invites with malicious conference links). Secondary: SMS (smishing with URL shorteners), voice call (vishing with spoofed caller ID), messaging platforms (Microsoft Teams, Slack, WhatsApp, Telegram). Tertiary: QR codes in physical printouts and electronic documents, USB drops, tailgating combined with social pretext, and adversarial synthetic media shared via encrypted messaging applications." ;
+    detection_difficulty : HIGH ;
+
+    prevention_measures : [
+        "Deploy DMARC, DKIM, and SPF with a reject policy on all owned sending domains and monitor third-party domains for lookalike registrations",
+        "Enforce phishing-resistant MFA on all privileged and internet-facing accounts, preferring FIDO2 hardware keys or passkeys over TOTP or SMS OTP",
+        "Implement an email security gateway with sandboxing, URL rewriting, and real-time detonation of attachments, configured to strip HTML email by default for non-business subscribers",
+        "Require dual-authorisation callbacks over a separate verified telephone number for any wire transfer request or payroll change above a defined threshold",
+        "Run quarterly phishing simulation campaigns using an automated platform, tracking click rates, credential submission rates, and time-to-report metrics per department",
+        "Deliver role-based security awareness training that specifically covers BEC, vishing, smishing, and deepfake scenarios, with mandatory refresher after any simulated failure",
+        "Monitor for lookalike and typosquatted domain registrations against all owned brand names using continuous domain-monitoring feeds with alert thresholds on new MX record activation",
+        "Apply conditional access policies that enforce managed-device requirements and anomalous-login risk scoring at the identity provider before granting access to finance and HR applications",
+        "Segregate wire-transfer and payroll systems behind out-of-band approval workflows that do not rely solely on email authorisation",
+        "Maintain and regularly test an incident response playbook specifically covering BEC and credential-compromise scenarios, including legal hold, law enforcement notification, and bank-recall procedures",
+        "Enable advanced audit logging in Microsoft 365 and Google Workspace, alerting on mail-forwarding rule creation, mass-download events, and OAuth application grants"
+    ] ;
+
+    brand_impersonation {
+        real_brand    : "Microsoft" ;
+        spoof_variant : "Micr0soft (digit substitution o to 0), micosoft.com (character deletion), microsoft-securityalert.com (subdomain and keyword stuffing), m\u0069crosoft.com (Punycode homoglyph substituting Latin i with Cyrillic Ukrainian i), and paypal-secure-login.net representing PayPal with TLD swap and keyword insertion; also covers Google Workspace, Amazon AWS billing, DHL parcel-delivery, HMRC tax-refund, and LinkedIn recruiter impersonation variants using similar homoglyph and subdomain-abuse patterns" ;
+    }
+
+    cve_references : [
+        "CVE-2023-23397",
+        "CVE-2022-30190"
+    ] ;
+
+    tools_used : [
+        "GoPhish (open-source phishing simulation and campaign infrastructure)",
+        "Evilginx2 (AiTM reverse-proxy framework for real-time MFA token capture)",
+        "Modlishka (alternative AiTM proxy with TLS support)",
+        "Zphisher (commodity phishing-as-a-service kit with 30+ prebuilt brand templates)",
+        "SniperPhish (campaign orchestration and analytics framework used by red teams)",
+        "EvilProxy (commercially sold AiTM phishing-as-a-service platform active since 2022)",
+        "BulletProofLink (PhaaS: Phishing-as-a-Service provider distributing 100+ phishing kits)",
+        "Raccoon Stealer (commodity infostealer harvesting browser-stored credentials post-click)",
+        "Rhadamanthys Stealer (next-generation infostealer with AI-assisted parsing of OCR-extracted secrets)"
+    ] ;
+
+    capec_id            : "CAPEC-98" ;
+    kill_chain_phase    : DELIVERY ;
+
+    data_sources : [
+        "Email gateway logs (SMTP connection metadata, SPF/DKIM/DMARC verdict, attachment hash)",
+        "DNS query logs (resolution of newly registered lookalike domains, DGA detection)",
+        "Proxy and web-filtering logs (URL category, file-download events, certificate transparency)",
+        "Identity provider and SSO logs (failed authentications, new device enrollments, MFA bypass events)",
+        "Endpoint detection and response telemetry (browser process spawning Office children, macro execution, credential-store access)",
+        "User-submitted phishing reports from internal reporting buttons or abuse mailboxes",
+        "Network flow records (C2 beacon periodicity, large outbound data transfers following login events)",
+        "Cloud access security broker (CASB) logs for anomalous SaaS data access and OAuth grants",
+        "Financial system audit logs (wire-transfer instructions, payroll-amendment requests with originating IP)"
+    ] ;
+
+    mitigations : [
+        "M1049 - Antivirus and antimalware to detect known phishing kit dropper components",
+        "M1031 - Network intrusion prevention to block communication to known phishing infrastructure",
+        "M1017 - User training via continuous phishing simulation and awareness programmes",
+        "M1032 - Multi-factor authentication enforced on all identity provider and email access paths",
+        "M1054 - Software configuration hardening: disable Office macros by default via Group Policy and Intune",
+        "M1021 - Restrict web-based content through proxy controls and safe-links rewriting",
+        "M1018 - User account management: principle of least privilege, periodic access reviews, and separation of duties for financial approvals",
+        "M1047 - Audit logging: enable unified audit log in Microsoft 365 and equivalent in Google Workspace for all mailbox and admin actions",
+        "M1030 - Network segmentation: isolate financial and HR systems from general corporate network with strict east-west firewall policy"
+    ] ;
+
+    platforms : [
+        "Windows",
+        "macOS",
+        "Linux",
+        "SaaS",
+        "iOS",
+        "Android",
+        "Office 365",
+        "Google Workspace",
+        "Slack",
+        "Microsoft Teams"
+    ] ;
+
+    privilege_required : NONE ;
+    impact_type        : FINANCIAL ;
+
+    attribution : "Financially motivated criminal groups including Scattered Spider (UNC3944), Lapsus$ collective, Nigeria-based BEC syndicates, and initial access broker networks that auction compromised credentials to ransomware affiliates." ;
+
+    notes : "The social engineering threat landscape is being rapidly transformed by three converging forces. First, generative AI (large language models, voice synthesis, and real-time video deepfake tools) eliminates the grammatical errors and accent markers that historically aided detection, enabling hyper-personalised lures at scale and synthetic executive voices indistinguishable from authentic audio in controlled listening tests. Second, Phishing-as-a-Service platforms such as EvilProxy and BulletProofLink lower the barrier to entry for adversaries with no technical coding ability, providing subscription-based access to AiTM infrastructure, pre-built brand templates, and analytics dashboards. Third, initial access brokering has industrialised the conversion of phished credentials into ransomware deployment: access to a Fortune 500 network sells for 2,000 to 150,000 USD on underground forums within hours of compromise. Secondary impacts beyond direct financial loss include: regulatory exposure under GDPR, HIPAA, and NIS2 Directive for organisations that fail to implement proportionate technical and organisational measures; reputational damage from public brand-impersonation campaigns undermining customer trust; and intellectual property theft when spear-phishing precedes targeted data exfiltration operations. Organisations should treat social engineering not as an awareness problem alone but as a control-design problem, building technical compensating controls (FIDO2, conditional access, dual-authorisation workflows) that remain effective even after a user is successfully deceived." ;
+}

@@ -1,0 +1,220 @@
+attack DeepfakeVoiceBec {
+    mitre_id   : "T1566" ;
+    category   : SOCIAL_ENGINEERING ;
+    difficulty : HARD ;
+
+    real_world_case {
+        year        : 2019 ;
+        victim      : "CEO of a UK-based energy company subsidiary 
+whose finance team transferred EUR 220,000 (approximately USD 243,000) 
+to a Hungarian bank account in March 2019 after the CEO received a 
+phone call from a voice he recognised as his German parent company's 
+CEO, requesting an urgent wire transfer to a supplier; subsequent 
+calls attempting to initiate a second transfer were recognised as 
+suspicious and the fraud was reported; the initial transfer was 
+forwarded to a Mexican bank account before recovery was attempted; 
+this case was reported by Euler Hermes (the insurer) and widely 
+cited as the first publicly confirmed AI voice synthesis fraud case; 
+a subsequent 2020 case involved a bank branch manager in Hong Kong 
+who authorised USD 35 million in transfers following a call from 
+a voice identified as a company director with whom the manager 
+had spoken previously" ;
+        impact      : "EUR 220,000 transferred and not recovered in 
+the first documented case; USD 35 million transferred in the 2020 
+Hong Kong bank case; the UK-2019 case demonstrated that AI 
+voice synthesis had reached commercial-grade quality sufficient 
+to deceive individuals with a prior personal relationship with 
+the cloned speaker; aggregate BEC (Business Email Compromise) 
+fraud losses reported to the FBI IC3 in 2023 totalled USD 2.9 
+billion, with voice-based deepfake BEC representing an emerging 
+subset; established the viability of AI voice cloning as a 
+social engineering tool for high-value financial fraud" ;
+        attribution : "Unknown organised criminal actors with access 
+to commercially available AI voice synthesis technology; voice 
+synthesis quality consistent with ElevenLabs, Resemble AI, 
+or Azure Neural TTS technology available at the time; deepfake 
+BEC operations are typically conducted by organised fraud rings 
+operating Business Email Compromise as a service" ;
+    }
+
+    brand_impersonation {
+        real_brand    : "GlobalManufacturingCorp" ;
+        spoof_variant : "Attacker uses AI voice synthesis to clone the 
+voice of the company's Chief Executive Officer or CFO, then calls the 
+finance team or an individual authorised to initiate wire transfers, 
+impersonating the executive and providing a fabricated urgent business 
+justification for an immediate wire transfer to an attacker-controlled 
+account under time pressure to prevent the target from independently 
+verifying through normal channels" ;
+    }
+
+    attack_vector : "Deepfake voice BEC combines social engineering 
+with AI audio synthesis to overcome the telephone-verification 
+control that many organisations use as a second-factor check on 
+large wire transfer requests. The attacker first harvests audio 
+samples of the target executive's voice from publicly available 
+sources: earnings call recordings, investor day presentation videos, 
+conference keynote recordings, podcast appearances, and YouTube 
+interviews. Modern voice synthesis platforms such as ElevenLabs 
+Instant Voice Cloning require as little as 30 seconds of clean 
+audio to produce a convincing voice model. The attacker trains 
+a voice model and conducts a test call, adjusting synthesis 
+parameters to match the target's speaking cadence, accent, 
+and trademark verbal mannerisms. The fraud call is placed 
+to a specific finance or treasury employee identified through 
+LinkedIn research as having wire transfer authorisation, during 
+a period when the genuine executive is known to be unavailable 
+for verification (travelling internationally is optimal). 
+The script establishes urgency and authority while specifically 
+preventing or delegitimising standard verification steps: 
+'I need you to keep this confidential until the deal closes', 
+'I know this is unusual but our legal team has confirmed', 
+'There is no time to go through the normal approval process'. 
+Multi-modal attacks pair the voice call with a spoofed email 
+from a look-alike domain or compromised email account to 
+provide written 'corroboration'. Follow-up voice calls to 
+apply pressure and simulate the executive monitoring progress 
+are common in high-value campaigns" ;
+
+    target_profile : "Finance department employees with wire 
+transfer authority; treasury teams at large enterprises; 
+accounts payable staff at subsidiaries of international 
+corporations (where the parent company executive voice 
+is known but the individual may have a less personal 
+relationship); any employee with financial authorisation 
+whose role involves receiving instructions from senior 
+executives not physically present, especially in 
+multinational organisations where cross-border transfers 
+are routine" ;
+
+    success_rate        : 20-60% ;
+    average_impact      : "Wire transfer amounts typically range 
+from USD 50,000 to several million dollars per incident; 
+average BEC transfer amount per FBI IC3 report 2023 is 
+approximately USD 128,000; recovery rate is low once 
+funds reach foreign accounts with intermediate transfers; 
+in multi-stage campaigns the attacker may successfully 
+initiate multiple transfers before detection" ;
+    delivery_method     : "Real-time AI voice synthesis call 
+to target finance employee impersonating known executive; 
+paired with look-alike domain email or compromised email 
+account providing written transfer instructions; 
+WhatsApp or Signal voice message using pre-synthesised 
+audio in some variants to avoid interactive call detection" ;
+    detection_difficulty : HIGH ;
+
+    prevention_measures : [
+        "Establish and enforce a mandatory dual-authorisation 
+callback verification protocol for all wire transfers above 
+a defined threshold (e.g. USD 10,000): the receiving employee 
+must independently initiate a call back to the requesting 
+executive using a pre-verified phone number from the 
+company directory, not any number provided in the request; 
+this single control defeats all voice deepfake BEC scenarios",
+        "Implement a pre-agreed code word or challenge-response 
+protocol between executives and finance teams for 
+out-of-band wire transfer authorisation; the code word 
+must be communicated verbally in advance through 
+an established channel and changed periodically; 
+an AI voice synthesis cannot know the current session 
+code word",
+        "Conduct regular BEC simulation exercises including 
+deepfake voice scenarios to train finance and treasury 
+staff to recognise social engineering pressure tactics, 
+resist urgency pressure, and consistently follow 
+verification procedures regardless of perceived 
+seniority of the requester",
+        "Implement anomaly detection on wire transfer requests 
+flagging: transfers to new payee accounts not previously 
+used, transfers above a defined threshold without 
+dual-approval workflow completion, and same-day 
+requests for new large transfers following verbal-only 
+instruction without written corroboration",
+        "Reduce the publicly available audio footprint of 
+executives by reviewing and limiting the availability 
+of high-quality audio recordings on investor relations, 
+marketing, and media channels; train executives on 
+the voice cloning risk so they understand why minimising 
+long-duration public audio exposure is operationally relevant"
+    ] ;
+
+    tools_used : [
+        "ElevenLabs Instant Voice Cloning or ElevenLabs 
+Professional Voice Clone API",
+        "Resemble AI voice clone generation platform",
+        "Microsoft Azure Neural TTS with custom voice model",
+        "RVC (Retrieval-based Voice Conversion) open source 
+voice conversion for lower-cost synthesis",
+        "VoIP spoofing services allowing caller ID display 
+of the legitimate executive's office or mobile number",
+        "Look-alike domain email accounts for written 
+corroboration (e.g. company-name.finance-dept.com)"
+    ] ;
+
+    capec_id         : "CAPEC-173" ;
+    kill_chain_phase : DELIVERY ;
+
+    data_sources : [
+        "Wire transfer audit trail review showing requests 
+initiated without dual-approval workflow completion 
+or callback verification log entry",
+        "Finance team incident reports of unusual executive 
+call requests that deviated from normal authorisation 
+channels",
+        "Phone system call detail records (CDR) showing 
+inbound calls from external numbers spoofed to match 
+internal executive numbers or unexpected international 
+origins",
+        "Email gateway logs for messages from look-alike 
+domains containing wire transfer instructions 
+corroborating a concurrent phone request",
+        "Voice analysis tools applied to recorded calls 
+detecting AI synthesis artefacts including 
+spectral inconsistencies, formant irregularities, 
+and background noise patterns inconsistent with 
+genuine calling environments"
+    ] ;
+
+    mitigations : [
+        "M1017 - User training: conduct BEC simulation 
+training including deepfake voice scenarios for 
+all employees with financial authorisation",
+        "M1018 - User account management: implement 
+dual-authorisation controls on wire transfer 
+systems requiring two named approvers",
+        "M1047 - Audit: maintain complete wire transfer 
+audit logs with approval chain documentation 
+for forensic review",
+        "M1054 - Software configuration: configure 
+email gateway to flag and quarantine messages 
+from domains similar to the corporate domain 
+(look-alike domain detection)"
+    ] ;
+
+    platforms : [
+        "VoIP",
+        "Mobile",
+        "Web Application"
+    ] ;
+
+    privilege_required : NONE ;
+    impact_type        : FINANCIAL ;
+
+    notes : "Deepfake voice BEC represents the convergence of 
+two separately effective fraud techniques: voice impersonation 
+social engineering (previously limited to skilled impersonators) 
+and the established BEC pattern of manipulating wire transfers 
+by impersonating executives. AI voice synthesis has democratised 
+what previously required exceptional social engineering talent, 
+making it accessible to any organised criminal group willing 
+to invest in tooling and target research. The fundamental 
+vulnerability this attacks is the human assumption that a 
+recognised voice constitutes proof of identity — an assumption 
+that was reasonable for decades but is no longer technically 
+valid. The control architecture must therefore not rely on 
+voice recognition for authorisation decisions. The documented 
+2019 EUR 220,000 case was widely predicted to be a preview 
+of a high-frequency fraud category; multi-million dollar AI 
+voice BEC cases have now been reported in Asia-Pacific, 
+Europe, and North America confirming this trajectory" ;
+}

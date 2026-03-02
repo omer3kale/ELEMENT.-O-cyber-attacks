@@ -1,0 +1,232 @@
+attack DeepfakeVideoAccountReset {
+    mitre_id   : "T1566" ;
+    category   : SOCIAL_ENGINEERING ;
+    difficulty : HARD ;
+
+    real_world_case {
+        year        : 2024 ;
+        victim      : "An employee at Arup (multinational 
+engineering and design firm, Hong Kong office) participated 
+in a video conference call in January 2024 in which all other 
+participants except the employee were AI-generated deepfakes 
+impersonating the company's Chief Financial Officer and 
+several other colleagues; the employee was directed to 
+transfer HKD 200 million (approximately USD 25.6 million) 
+to five bank accounts; the fraud was not identified until 
+the employee checked with the head office; per Hong Kong 
+police the deepfakes were 
+created from prior publicly available video footage of the 
+impersonated individuals; six individuals were arrested in 
+connection with the same campaign using deepfake video for 
+account manipulations, demonstrating the operational pattern 
+had been used at scale for lower-value targets including 
+account takeovers via identity verification calls with 
+financial institutions" ;
+        impact      : "HKD 200 million (USD 25.6 million) 
+transferred in the Arup case representing the largest single 
+deepfake fraud event publicly confirmed as of mid-2024; 
+additional lower-value account takeovers confirmed in parallel 
+operations by the same group; in account reset scenarios 
+the impact is full account access enabling downstream 
+financial fraud or data exfiltration; the case established 
+proof-of-concept for multi-person deepfake video conference 
+attacks as a delivery mechanism for high-value fraud" ;
+        attribution : "Organised criminal group (unattributed 
+by name); operations centred in Hong Kong and mainland China 
+per South China Morning Post reporting; group operated at 
+industrial scale with multiple simultaneous targets at 
+different value tiers" ;
+    }
+
+    brand_impersonation {
+        real_brand    : "GlobalEnterpriseIT" ;
+        spoof_variant : "Attacker uses AI-generated deepfake video 
+of a company IT administrator or IT helpdesk manager to conduct 
+a live video call with a target user, impersonating IT staff 
+requesting the user to authenticate or reset credentials, 
+provide MFA one-time passcodes, or approve an account recovery 
+flow, bypassing facial-recognition and liveness-check-style 
+verification controls that organisations have adopted in 
+response to phishing" ;
+    }
+
+    attack_vector : "Deepfake video account reset attacks use 
+real-time or near-real-time AI video generation to conduct 
+fraudulent identity verification calls. In IT helpdesk 
+scenarios the attacker identifies a target employee who 
+holds access to a high-value system (cloud admin, financial 
+platform, or privileged account). The attacker either: 
+cold-calls the target impersonating IT support requesting 
+an account password reset due to a fabricated security 
+incident; or conducts a pre-texting phone call or email 
+establishing a context (your account has been flagged 
+for suspicious activity, we need to verify your identity) 
+then schedules a video call for identity verification. 
+During the video call, a deepfake avatar generated from 
+publicly available photographs and videos of the impersonated 
+IT staff member is rendered in real time through tools such 
+as DeepFaceLive or commercial API services, displayed 
+as the webcam input. The attacker conducts a 
+naturalistic identity verification dialogue, directing 
+the target to provide their current password, enter 
+an MFA code from their authenticator app, approve 
+a push notification, or click an attacker-controlled 
+link while the attacker observes. The deepfake video 
+legitimises the request by providing apparent visual 
+confirmation of the requester's identity. In the Arup 
+variant, multiple deepfakes participate simultaneously 
+in a Microsoft Teams or Zoom call to simulate a 
+legitimate business meeting context" ;
+
+    target_profile : "Any employee with access to high-value 
+accounts targeted by an organised attacker with sufficient 
+motivation to invest in deepfake preparation; at highest 
+risk are: IT administrators with privileged account access; 
+finance employees with payment platform access; executives 
+or executive assistants targeted for account access that 
+provides downstream financial or sensitive data access; 
+customer-facing identity verification agents at financial 
+institutions who conduct video-based KYC (Know Your Customer) 
+calls where deepfake identity fraud enables account creation 
+or takeover in the victim's name" ;
+
+    success_rate        : 15-50% ;
+    average_impact      : "Full account access for targeted 
+SaaS, cloud, or on-premises systems with complete loss 
+of all data stored, processed, or accessible via the 
+account; in financial scenarios: transfers equivalent 
+to aggregate account balances or credit limits; 
+in the highest documented case: USD 25.6 million 
+single transaction; in KYC bypass scenarios: 
+fraudulent account creation enabling downstream 
+financial fraud in victim's name" ;
+    delivery_method     : "Real-time AI deepfake video call via 
+Microsoft Teams, Zoom, or Google Meet using virtual camera 
+input from deepfake rendering tool; pre-recorded deepfake 
+video used in asynchronous verification flows; paired 
+with spoofed email from look-alike corporate domain 
+or compromised helpdesk email account" ;
+    detection_difficulty : HIGH ;
+
+    prevention_measures : [
+        "Replace video-call-based identity verification for 
+high-risk account actions (password reset, account recovery, 
+large financial transactions) with hardware security key 
+challenges, device-bound passkey authentication, or 
+out-of-band push notifications to a previously registered 
+device; a deepfake video call cannot satisfy a FIDO2 
+challenge-response that requires the registered 
+physical device",
+        "Train all employees and IT helpdesk staff never to 
+accept inbound calls requesting credential input, 
+approval of push notifications, or MFA code sharing 
+regardless of the visual identity of the caller; 
+establish a policy that IT will never ask for 
+passwords or MFA codes in any channel, and that 
+any such request is definitionally a social 
+engineering attempt",
+        "Implement a silent verification code system for 
+IT-to-employee communications: when IT legitimately 
+initiates contact, they must provide a session-specific 
+code generated from an internal ticketing system; 
+employees are instructed to request this code before 
+providing any credentials or taking any account action, 
+and to verify the code exists in the ticketing system 
+independently",
+        "Apply liveness detection scrutiny to video verification 
+calls by requiring the other party to perform specific 
+random gestures, turn their head, or hold up a written 
+session code visible in the video frame; current real-time 
+deepfake rendering tools have difficulty with 
+complex head rotation and object-in-frame challenges, 
+providing a usable detection opportunity",
+        "Implement a strict approval chain for privileged 
+account recovery operations requiring a manager 
+co-approval and audit trail, ensuring no single 
+employee can complete an account reset action 
+unilaterally in response to an inbound request"
+    ] ;
+
+    tools_used : [
+        "DeepFaceLive real-time face swap for webcam input 
+during live video calls",
+        "Reface or HeyGen API for near-real-time deepfake 
+video rendering from reference photographs",
+        "OBS Studio with virtual camera output for routing 
+deepfake video stream into Teams/Zoom/Meet",
+        "Custom commercial deepfake generation services 
+offering real-time streaming face swap",
+        "VoIP voice synthesis to match deepfake video with 
+synthesised voice of the impersonated person"
+    ] ;
+
+    capec_id         : "CAPEC-194" ;
+    kill_chain_phase : DELIVERY ;
+
+    data_sources : [
+        "Video call recording review for visual artefacts 
+consistent with AI rendering: face boundary irregularities, 
+unnatural eye blink patterns, temporal jitter in facial 
+features, and background rendering anomalies",
+        "IT service desk ticketing system audit showing 
+account reset completions without a corresponding 
+internally-initiated ticket from a verified employee",
+        "Privileged account management system audit logs 
+for credential resets or access changes not following 
+the standard verified dual-approval workflow",
+        "Employee incident reports filed following unusual 
+inbound calls requesting authentication actions 
+or credential input from unexpected IT staff identities",
+        "EDR logs on corporate devices showing new browser 
+sessions or authentication tokens established 
+shortly following video calls with unrecognised 
+external participants"
+    ] ;
+
+    mitigations : [
+        "M1017 - User training: train all staff that inbound 
+requests for credentials or MFA codes in any channel 
+including video are definitionally fraudulent",
+        "M1032 - Multi-factor authentication: use device-bound 
+FIDO2 passkeys for all privileged account access — 
+cannot be phished or hijacked via deepfake social engineering",
+        "M1047 - Audit: require full audit trail and dual 
+approval for all privileged account recovery operations",
+        "M1054 - Software configuration: block virtual camera 
+input from non-corporate trusted applications in 
+managed endpoint video call software configurations 
+where technically feasible"
+    ] ;
+
+    platforms : [
+        "Web Application",
+        "SaaS",
+        "Windows",
+        "macOS",
+        "Mobile"
+    ] ;
+
+    privilege_required : NONE ;
+    impact_type        : DATA_THEFT ;
+
+    notes : "The 2024 Arup USD 25.6 million deepfake video 
+fraud case is the most significant single public confirmation 
+that real-time multi-participant deepfake video attacks are 
+operationally deployed against enterprise targets. The case 
+is significant not because the technology used was novel — 
+real-time face swap has been available since 2019 — but 
+because it demonstrated that organised criminal groups have 
+industrialised the process to the point of multi-target 
+simultaneous operation at different fraud value tiers. 
+The identity verification use case for video calls 
+(both helpdesk account reset and KYC onboarding) is 
+broadly deployed precisely because it was previously 
+more reliable than voice-only or document-only 
+verification, creating a category-specific risk: 
+the thing organisations adopted to improve verification 
+security has become an attack surface as deepfake 
+technology commoditises. The defensive response 
+must move from 'verify who they are' to 
+'verify what they know or possess' (FIDO2/passkeys), 
+which is not spoofable by visual or audio synthesis" ;
+}

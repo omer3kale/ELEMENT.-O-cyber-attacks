@@ -1,0 +1,168 @@
+attack BrowserBasedCryptojacking {
+    mitre_id   : "T1496" ;
+    category   : APPLICATION ;
+    difficulty : EASY ;
+
+    real_world_case {
+        year        : 2017 ;
+        victim      : "Hundreds of millions of website visitors during the Coinhive 
+era (2017-2019) including visitors to high-traffic legitimate websites whose 
+advertising networks delivered injected mining scripts, approximately 500 million 
+users estimated by AdGuard during the peak period of Q4 2017; high-profile victims 
+included visitors to Showtime, Starbucks Wi-Fi portal in Argentina, the UK National 
+Health Service website, and thousands of government websites across the United 
+States, United Kingdom, and Australia that were compromised through a single 
+injected copy of the Browsealoud accessibility plugin used on all affected sites" ;
+        impact      : "CPU resources consumed at 80-100% during mining sessions 
+causing device performance degradation, battery drain on mobile devices, and 
+elevated electricity costs on desktop systems; no data exfiltration or persistent 
+compromise; browser-based mining generates Monero (XMR) distributed to operator 
+wallets; Coinhive service generated an estimated 1-2% of all circulating Monero 
+before shutdown in March 2019 due to combination of browser vendors blocking 
+the service and the sharp decline in Monero price; the Browsealoud 
+supply-chain injection estimated to have affected approximately 4,200 websites 
+simultaneously, generating mining revenue for attackers over multiple hours 
+before discovery" ;
+        attribution : "Coinhive (legitimate mining-as-a-service provider, widely 
+abused by website operators and attackers); specific Browsealoud supply chain 
+injection attributed to unknown actors who compromised the TextHelp content 
+delivery network; widespread abuse by criminal actors embedding modified 
+Coinhive scripts on compromised shared hosting environments" ;
+    }
+
+    attack_vector : "Browser-based cryptojacking operates by embedding a 
+JavaScript mining client directly into a web page, either through direct 
+compromise of the target website, injection via a compromised third-party 
+script loaded by the page (advertising network, analytics provider, CDN-hosted 
+library, accessibility tool), or through advertisement networks that 
+inadvertently or deliberately serve mining script payloads. When a visitor 
+loads the affected page, the JavaScript executes in the browser's JS engine 
+and begins iterating on the Monero (XMR) proof-of-work algorithm using the 
+WebAssembly instruction set for maximum CPU efficiency, solving hashes and 
+submitting work to a mining pool via WebSocket connection. The operation 
+requires no installation, no browser extension, no user consent, and no 
+elevated permissions; it exploits the inherent trust model of executing 
+JavaScript from any origin the page loads. More sophisticated implementations 
+throttle CPU usage to 30-50% to avoid obvious performance degradation, use 
+domain fronting or CDN-hosted endpoints for pool connectivity to evade 
+network-level blocking, and may persist beyond the visible browser tab 
+by opening hidden pop-under windows or abusing the Service Worker API to 
+continue mining after the user closes the originating tab. The attack 
+is self-contained: the only detectable artifact in transit is WebSocket 
+traffic to a mining pool endpoint and elevated CPU utilisation on the 
+client device" ;
+
+    target_profile : "Any internet user visiting a compromised or malicious 
+website; high-value targets for the attacker are high-traffic websites 
+with long average session times (news sites, streaming platforms, online 
+games, forums) since mining revenue is proportional to cumulative CPU-minutes 
+contributed; supply-chain injection attacks prioritise third-party scripts 
+loaded by many websites simultaneously to maximise aggregate compute contribution" ;
+
+    success_rate        : 95-99% ;
+    average_impact      : "Per-victim impact is minor: elevated CPU and battery 
+drain during the browser session, no persistent harm or data loss; aggregate 
+impact across millions of visitors is meaningful: at peak Coinhive activity 
+an estimated USD $250,000 per month was mined by website operators using the 
+service; for compromised high-traffic sites the attacker may earn thousands 
+of dollars in Monero per day from aggregate compute" ;
+    delivery_method     : "Malicious JavaScript injected into compromised website 
+source code or loaded via a compromised third-party script dependency; delivered 
+via advertising network as a malicious ad payload; embedded in fake browser 
+extension distributed through unofficial extension stores" ;
+    detection_difficulty : MEDIUM ;
+
+    prevention_measures : [
+        "Deploy browser extensions or endpoint security software capable of 
+detecting and blocking known WebAssembly-based mining script fingerprints 
+and mining pool WebSocket connection endpoints; major browser security 
+products including uBlock Origin and browser built-in protection block 
+most known Coinhive-derivative mining libraries by default",
+        "Implement a strong Content Security Policy on all web properties 
+including a strict script-src directive allowing only explicitly allowlisted 
+script origins and disabling inline script execution, preventing injected 
+mining scripts unless the attacker also compromises an allowlisted origin",
+        "Monitor third-party script dependencies loaded by your web properties 
+using Subresource Integrity (SRI) hash verification to detect unauthorised 
+modifications to CDN-hosted scripts; implement automated SRI hash checking 
+in CI/CD pipelines",
+        "Monitor server-side files for modifications using file integrity 
+monitoring and deploy web application firewall rules that detect 
+characteristic CoinHive, CoinIMP, Crypto-Loot and similar mining 
+library patterns in HTTP responses",
+        "Institute a DNS-based or network perimeter block of known 
+cryptocurrency mining pool domains and IP ranges at the corporate 
+network level to prevent mining activity from corporate endpoints 
+connecting to any pool"
+    ] ;
+
+    cve_references : [
+        "CVE-2018-6341"
+    ] ;
+
+    tools_used : [
+        "Coinhive JavaScript Monero miner (service shut down March 2019, 
+widely cloned and redistributed)",
+        "CoinIMP, Crypto-Loot, CoinNebula, JSECoin derivative JavaScript 
+mining libraries",
+        "WebAssembly (WASM) port of XMRig mining engine for browser execution",
+        "Service Worker API abuse for persistent mining beyond tab close",
+        "Pop-under window technique for maintaining mining context"
+    ] ;
+
+    capec_id         : "CAPEC-442" ;
+    kill_chain_phase : ACTIONS_ON_OBJECTIVES ;
+
+    data_sources : [
+        "Browser developer tools CPU and network activity monitoring for 
+unusually high JavaScript CPU consumption and unexpected WebSocket 
+connections to unknown endpoints",
+        "Content Security Policy violation reporting logs detecting 
+attempts to load scripts from unlisted origins",
+        "Web application firewall logs for HTTP responses containing 
+known mining library JavaScript patterns",
+        "Network DNS query logs for known cryptocurrency mining pool 
+domain resolution from client endpoints",
+        "File integrity monitoring alerts on web server static file 
+and template modifications inserting script tags"
+    ] ;
+
+    mitigations : [
+        "M1021 - Restrict web-based content: deploy browser-level 
+mining script blockers and configure CSP script-src policies",
+        "M1037 - Filter network traffic: block DNS resolution and 
+TCP connections to known mining pool hostnames and IP ranges at 
+the network perimeter",
+        "M1031 - Network intrusion prevention: implement IDS/IPS 
+signatures for CryptoNight and RandomX mining pool protocol 
+communications over WebSocket",
+        "M1022 - Restrict file and directory permissions: apply 
+least-privilege web server file permissions to reduce ability 
+of attackers to inject mining scripts into web server static files"
+    ] ;
+
+    platforms : [
+        "Web Browser",
+        "Windows",
+        "macOS",
+        "Linux",
+        "iOS",
+        "Android"
+    ] ;
+
+    privilege_required : NONE ;
+    impact_type        : SERVICE_DISRUPTION ;
+
+    notes : "Browser-based cryptojacking is classified under SERVICE_DISRUPTION 
+in this model rather than a dedicated resource abuse category, reflecting that 
+the primary harm is unauthorised consumption of CPU, battery, and electricity 
+resources on victim devices — a form of service degradation from the victim's 
+perspective. At the individual level this is nearly trivial harm; the attack's 
+economic model is a large-scale aggregation of many small compute contributions 
+across a massive visitor population. The shutdown of Coinhive in 2019 
+significantly reduced the operational convenience of this attack class, but 
+the underlying technique remains viable through Coinhive forks and XMRig WASM 
+ports. Post-2019 browser-based mining is primarily observed in supply-chain 
+attacks, fake browser extensions, and persistent pop-under abuse rather than 
+legitimate-site compromise at the scale of the 2017-2018 peak" ;
+}

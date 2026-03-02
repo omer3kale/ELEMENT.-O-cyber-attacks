@@ -1,0 +1,188 @@
+attack IcsOtSabotage {
+    mitre_id   : "T0831" ;
+    category   : PHYSICAL ;
+    difficulty : NATION_STATE ;
+
+    real_world_case {
+        year        : 2015 ;
+        victim      : "Ukrainian power distribution companies Prykarpattyaoblenergo, 
+Chernivtsioblenergo, and Kyivoblenergo; approximately 225,000 customers lost power 
+for one to six hours in December 2015 in the first confirmed cyberattack to cause 
+a power outage; a second and more sophisticated attack on Ukrenergo in December 2016 
+targeted high-voltage transmission substations and included a custom ICS-targeting 
+malware component capable of directly issuing circuit breaker commands" ;
+        impact      : "2015 attack: approximately 225,000 customers without power 
+for one to six hours across three distribution companies; attackers simultaneously 
+disabled UPS systems and corrupted MBRs of SCADA workstations to impede recovery, 
+extending manual restoration time to several hours; 2016 attack: outage affecting 
+approximately one fifth of Kyiv's total power capacity for over an hour; ICS-specific 
+Industroyer/Crashoverride malware capable of autonomous circuit breaker manipulation 
+without operator action represented a significant escalation in ICS weaponisation; 
+composite remediation and hardening costs across the Ukrainian power sector estimated 
+in the tens of millions USD" ;
+        attribution : "Sandworm Team (attributed to GRU Unit 74455 of the Russian 
+Federation's military intelligence directorate) by the United States Department of 
+Justice indictment in October 2020 and independently confirmed by multiple 
+cybersecurity organisations including ESET, Dragos, and iSIGHT Partners; same 
+group attributed to NotPetya 2017 and multiple subsequent ICS-targeting campaigns" ;
+    }
+
+    attack_vector : "Nation-state ICS/OT sabotage campaigns against power and 
+industrial infrastructure typically proceed through multiple phases spanning months 
+of preparation. Initial access is achieved via spearphishing emails targeting 
+corporate IT staff at the utility, delivering macro-enabled documents that install 
+a remote access trojan providing persistent access to the IT network. Over subsequent 
+weeks, the attackers conduct reconnaissance across the IT network to identify the 
+IT/OT boundary, locate historian and SCADA workstations, and extract VPN credentials 
+and engineering workstation access paths. Lateral movement from IT to the OT network 
+exploits weak network segmentation at the IT/OT boundary, credential reuse between 
+domains, or trusted connections from engineering workstations to OT systems. 
+Once in the OT environment, the attackers gain access to energy management systems 
+and SCADA HMIs, learning the plant or grid topology and the procedure for executing 
+specific physical operations such as circuit breaker open/close commands. In the 
+most advanced variants, an ICS-specific payload such as Industroyer or Triton is 
+deployed directly to industrial control components, issuing autonomous commands to 
+field devices that cause physical process disruption independent of HMI operator 
+action. Concurrent wiper components targeting SCADA workstation master boot records 
+and remote terminal unit firmware are deployed at the moment of the attack to 
+prevent rapid recovery by operator staff, compounding the physical disruption" ;
+
+    target_profile : "Electric power transmission and distribution operators, 
+particularly those with known legacy network architectures offering IT/OT 
+convergence paths exploitable from the corporate network; water treatment and 
+distribution systems; oil and gas pipeline SCADA systems; manufacturing 
+facilities with network-connected PLCs and safety instrumentation systems; 
+transport network control infrastructure; organisations in geopolitically 
+contested regions or providing critical infrastructure to adversary-nation 
+adjacent populations represent the highest priority targeting for nation-state 
+ICS operations" ;
+
+    success_rate        : 20-70% ;
+    average_impact      : "Physical process disruption ranging from hours-long 
+outages to permanent equipment damage; for power grid attacks: thousands to 
+hundreds of thousands of customers without service for hours to days with 
+cascading economic and humanitarian consequences; Triton framework attacks 
+targeting safety instrumentation systems create potential for personnel injury 
+or fatality if safety systems are compromised during a process fault; 
+remediation requiring rebuild of OT network architecture, firmware replacement 
+on compromised field devices, and full incident response ranging from weeks 
+to months; reputational and geopolitical consequences for the targeted state 
+extending well beyond direct operational costs" ;
+    delivery_method     : "Multi-stage: initial spearphishing delivering IT 
+network backdoor; lateral movement to OT enclaves via credential theft and 
+network path exploitation; ICS payload deployment to engineering workstations 
+and directly to field devices via native OT protocols including IEC 104, 
+IEC 61850, GOOSE, and ICCP in the most advanced attacks" ;
+    detection_difficulty : NEARLY_IMPOSSIBLE ;
+
+    prevention_measures : [
+        "Implement strict network segmentation between IT and OT environments 
+using a dedicated security zone architecture with unidirectional security 
+gateways (data diodes) for data flows from OT to IT, and no direct interactive 
+sessions from IT to OT without a jump server in a demilitarised zone",
+        "Deploy ICS-aware network monitoring on all OT network segments using 
+passive sensors capable of detecting anomalous protocol commands, unexpected 
+device communications, and deviations from known process state baselines",
+        "Maintain up-to-date asset inventories of all ICS components including 
+PLCs, RTUs, HMIs, and historian systems; baseline all expected communications 
+between components and alert on any deviation",
+        "Apply allowlist-based communications controls on engineering workstations 
+permitting only documented process protocols and blocking all external network 
+communication from workstations with direct connections to field devices",
+        "Implement and rehearse manual operation procedures for all critical 
+process steps so that operators can safely manage facilities during a 
+cyberattack causing loss of SCADA system access; ensure manual fallback 
+procedures are documented and field staff are trained to execute them",
+        "Conduct regular ICS-specific incident response exercises including 
+tabletop scenarios simulating loss of visibility, loss of control, and 
+simultaneous IT network compromise to develop muscle memory and coordination 
+between IT and OT operations teams",
+        "Require multi-factor authentication for all remote access to 
+engineering workstations and SCADA systems; restrict remote access to 
+defined maintenance windows with out-of-band approval and logging"
+    ] ;
+
+    cve_references : [
+        "CVE-2015-5374",
+        "CVE-2015-1049"
+    ] ;
+
+    tools_used : [
+        "BlackEnergy 3 and Sandworm-lineage remote access trojan for 
+initial IT network access and persistence",
+        "Industroyer (Crashoverride) ICS-specific malware directly 
+commanding circuit breakers via IEC 104, IEC 61850, and GOOSE protocols",
+        "KillDisk wiper for destroying MBRs on SCADA workstations to 
+prevent rapid recovery",
+        "Triton (TRISIS) safety instrumentation system targeting framework 
+in related ICS attack infrastructure",
+        "VPNFilter modular router malware for persistent ICS network 
+access and traffic interception"
+    ] ;
+
+    capec_id         : "CAPEC-692" ;
+    kill_chain_phase : ACTIONS_ON_OBJECTIVES ;
+
+    data_sources : [
+        "OT network monitoring sensors detecting anomalous ICS protocol 
+commands and unexpected device-to-device communications",
+        "Historian logs capturing unexpected changes in process state 
+values inconsistent with operator actions",
+        "Engineering workstation audit logs for unexpected software 
+installations and outbound network connections",
+        "Firewall and segmentation device logs for IT-to-OT lateral 
+movement attempts across zone boundaries",
+        "Physical alarm and SCADA event logs capturing unexpected 
+control system state changes",
+        "Threat intelligence from ICS-specific sharing organisations 
+including E-ISAC, WaterISAC, and government CERT programmes"
+    ] ;
+
+    mitigations : [
+        "M1030 - Network segmentation: strict IT/OT zone separation 
+with unidirectional gateways; no direct IT-to-OT interactive access",
+        "M1032 - Multi-factor authentication: enforce on all remote 
+access paths to OT network and engineering workstations",
+        "M1047 - Audit: ICS-aware passive monitoring on all OT segments 
+with baseline deviation alerting",
+        "M1037 - Filter network traffic: allowlist-only communications 
+on engineering workstation network interfaces",
+        "M1049 - Antivirus and antimalware: deploy ICS-compatible 
+endpoint protection on SCADA HMIs and engineering workstations",
+        "M1018 - User account management: strict least privilege on 
+all accounts with any IT/OT boundary crossing capability"
+    ] ;
+
+    platforms : [
+        "Windows",
+        "Network Devices"
+    ] ;
+
+    privilege_required : ADMINISTRATOR ;
+    impact_type        : SABOTAGE ;
+
+    attribution : "Sandworm Team (GRU Unit 74455), formally attributed 
+to Russian military intelligence by US Department of Justice indictment 
+October 2020 and independently corroborated by ESET, Dragos, iSIGHT 
+Partners, and multiple national cybersecurity agencies" ;
+
+    notes : "ICS/OT sabotage campaigns against power and industrial 
+infrastructure represent the highest consequence class of cyber attacks, 
+with the potential to cause physical harm including loss of life when 
+safety systems are targeted, as demonstrated by the Triton/TRISIS attack 
+on a petrochemical facility's safety instrumentation system in 2017. 
+The Ukrainian power grid attacks established that nation-state adversaries 
+are both willing and capable of using cyber means to cause physical 
+infrastructure outages as a geopolitical coercive instrument, setting a 
+precedent for escalating ICS-targeting operations observed in subsequent 
+years across multiple countries. The multi-month dwell time required to 
+conduct IT-to-OT lateral movement, learn plant topology, and develop or 
+adapt ICS-specific tools means that the most sophisticated attacks of 
+this class involve months of undetected presence before any physical 
+effect occurs, making retrospective detection and attribution dependent 
+on forensic investigation after the damage has been done. Organisations 
+operating critical infrastructure should treat network detection of 
+anomalous IT/OT boundary traffic as a potential precursor to an 
+active ICS attack campaign rather than waiting for physical process 
+disruption to confirm an incident" ;
+}

@@ -1,0 +1,141 @@
+attack Microsoft365AccountSecurityPhishing {
+    mitre_id   : "T1566.002" ;
+    category   : SOCIAL_ENGINEERING ;
+    difficulty : MEDIUM ;
+
+    real_world_case {
+        year        : 2024 ;
+        victim      : "European mid-sized enterprises (50 to 2,000 employees) using Microsoft 365 for email, SharePoint, and OneDrive; 
+sector spread across professional services, manufacturing, and legal firms" ;
+        impact      : "Campaigns operating AiTM kits such as EvilProxy in 2023-2024 compromised over 120,000 Microsoft 365 accounts 
+across more than 100 organisations in a single reported wave; median direct financial loss from BEC follow-on fraud estimated at 
+87,000 USD per incident with aggregate campaign losses in the low hundreds of millions USD across the 12-month window" ;
+        attribution : "Commodity phishing kits and Phishing-as-a-Service platforms including EvilProxy and BulletProofLink; kits 
+distributed on underground forums and Telegram channels, not attributed to a single named APT; operator profiles consistent with 
+financially motivated initial access brokers and BEC syndicates" ;
+    }
+
+    attack_vector : "Victim receives an HTML email bearing Microsoft corporate branding and an urgent security pretext such as 
+unusual sign-in activity detected on your account, your password will expire in 24 hours, or your account will be locked, 
+with a prominent call-to-action button linking to a counterfeit Microsoft 365 login page. The phishing domain uses 
+homoglyph substitution, Punycode encoding, or keyword-stuffed subdomains to appear legitimate at a glance. More sophisticated 
+variants deploy an adversary-in-the-middle reverse-proxy kit such as Evilginx2 or EvilProxy that relays authentication sessions 
+in real time, capturing both the user credential and the issued session cookie after successful MFA completion, effectively 
+rendering TOTP-based two-factor authentication fully transparent to the attacker. Post-compromise the attacker creates 
+persistent inbox rules to hide replies and forward mail, harvests contacts for downstream BEC, and in some cases grants 
+an attacker-controlled OAuth application full mailbox and calendar access to maintain long-term silent access" ;
+
+    target_profile : "Corporate employees at organisations dependent on Microsoft 365 for business operations; highest-value 
+sub-targets are finance staff with wire-transfer or payment authority, HR administrators with access to payroll and 
+employee PII, IT administrators and helpdesk personnel capable of resetting MFA devices, and C-suite executives whose 
+compromised accounts are used to impersonate authority in internal BEC chains. SMEs with Microsoft 365 tenants and no 
+dedicated security team represent the highest-volume target segment due to weaker conditional access and monitoring posture" ;
+
+    success_rate        : 10-35% ;
+    average_impact      : "Per-BEC-incident median loss 87,000 USD; aggregate annual BEC losses attributable to Microsoft 
+365 credential theft campaigns exceeded 2.9 billion USD globally in 2023 per FBI IC3; secondary costs include SharePoint 
+data exfiltration, OneDrive ransomware staging, and identity propagation to connected SaaS services via OAuth token abuse" ;
+    delivery_method     : "Email with spoofed Microsoft sender display name and From header closely matching microsoft.com; 
+HTML body replicates Microsoft 365 transactional security alert template with embedded tracking pixel; call-to-action URL 
+uses a redirect chain through a legitimate CDN or URL shortener before landing on the phishing page to defeat static URL 
+reputation checks; some variants arrive via Microsoft Teams external-user message or as a SharePoint document-share 
+notification from a previously compromised tenant" ;
+    detection_difficulty : MEDIUM ;
+
+    prevention_measures : [
+        "Enforce phishing-resistant MFA across all Microsoft 365 accounts, prioritising FIDO2 hardware security keys or 
+Microsoft Authenticator with number matching and additional context; disable legacy authentication protocols that 
+bypass modern MFA entirely",
+        "Deploy DMARC with a reject policy on all owned sending domains and monitor certificate transparency logs and 
+newly registered domains for lookalike registrations mimicking your brand",
+        "Implement Microsoft Entra ID conditional access policies requiring compliant managed devices and restricting 
+high-risk sign-in attempts; enable identity protection risk-based policies to block or step-up authentication for 
+medium and high risk sign-in events",
+        "Configure Microsoft Defender for Office 365 Safe Links with URL detonation and Safe Attachments with 
+dynamic delivery; enable the Report Phishing add-in and measure user report rates as a programme health metric",
+        "Audit OAuth application consents and restrict user-level OAuth grant permissions; review and revoke 
+third-party application grants periodically and alert on new OAuth grants to sensitive scopes",
+        "Enable unified audit logging in Microsoft 365 and alert on creation of inbox forwarding rules, 
+mass download events, external calendar sharing, and new admin role assignments",
+        "Run quarterly phishing simulation campaigns specifically using Microsoft 365 security alert templates 
+to train users to verify legitimate security communications via the Microsoft account portal directly rather 
+than clicking email links",
+        "Apply zero-trust network access controls so that access to financial and HR applications requires both 
+a compliant device and a low identity risk score, reducing the blast radius of credential compromise alone"
+    ] ;
+
+    brand_impersonation {
+        real_brand    : "Microsoft 365" ;
+        spoof_variant : "Micnosoft (n substitution), m\u0069crosoft.com (Cyrillic small i homoglyph replacing Latin i), 
+microsoft-account-security[.]support (keyword stuffing with suspicious TLD), login-micr0soft365[.]net 
+(digit 0 replacing letter o), secure-microsoftonline[.]com (plausible subdomain abuse), 
+and microsoft-secure-signin[.]org using lookalike TLD to pass visual inspection; 
+Punycode encoded domains rendering as authentic Microsoft addresses in some mail clients" ;
+    }
+
+    cve_references : [
+        "CVE-2023-23397"
+    ] ;
+
+    tools_used : [
+        "Evilginx2 (AiTM reverse-proxy framework capturing session cookies after MFA completion)",
+        "EvilProxy (commercially operated AiTM Phishing-as-a-Service platform, active since 2022)",
+        "Modlishka (alternative AiTM proxy with TLS interception support)",
+        "GoPhish (open-source phishing campaign orchestration used in red team and criminal operations)",
+        "BulletProofLink (PhaaS distributing over 100 Microsoft and other brand phishing kit templates)",
+        "Raccoon Stealer (infostealer harvesting browser-stored Microsoft 365 session tokens post-click)",
+        "Zphisher (commodity kit with pre-built Microsoft 365 login page templates)"
+    ] ;
+
+    capec_id         : "CAPEC-98" ;
+    kill_chain_phase : DELIVERY ;
+
+    data_sources : [
+        "Microsoft 365 unified audit log (sign-in events, MFA outcomes, inbox rule creation, OAuth grants)",
+        "Azure AD Identity Protection risk event feed (anonymised IP, impossible travel, leaked credential signals)",
+        "Email gateway logs (SMTP metadata, SPF and DKIM and DMARC verdicts, URL extraction and detonation results)",
+        "DNS query logs (resolution of newly registered lookalike domains and phishing infrastructure)",
+        "Proxy and web filtering logs (URL category verdict, certificate transparency feed, file download telemetry)",
+        "Endpoint detection and response telemetry (browser spawning Office child processes, credential store access)",
+        "CASB logs (anomalous SaaS data access patterns, bulk download events, anomalous OAuth scope grants)"
+    ] ;
+
+    mitigations : [
+        "M1032 - Multi-factor authentication: enforce phishing-resistant MFA on all accounts",
+        "M1049 - Antivirus and antimalware: detect known phishing kit components and stealers on endpoints",
+        "M1031 - Network intrusion prevention: block known EvilProxy and Evilginx2 infrastructure IOCs",
+        "M1017 - User training: phishing simulation targeting Microsoft 365 security alert lure templates",
+        "M1021 - Restrict web-based content: Safe Links URL rewriting and detonation in Defender for Office 365",
+        "M1054 - Software configuration: disable legacy authentication protocols in Exchange Online and Entra ID",
+        "M1047 - Audit: enable unified audit logging and alert on anomalous inbox rule and OAuth grant events",
+        "M1018 - User account management: restrict OAuth application consent to admin-approved apps only"
+    ] ;
+
+    platforms : [
+        "SaaS",
+        "Windows",
+        "macOS",
+        "iOS",
+        "Android",
+        "Office 365",
+        "Google Workspace"
+    ] ;
+
+    privilege_required : NONE ;
+    impact_type        : FINANCIAL ;
+
+    attribution : "Financially motivated cybercriminal operators using Phishing-as-a-Service infrastructure; 
+not attributed to a specific named APT; consistent with initial access broker activity selling compromised 
+Microsoft 365 sessions on underground forums for onward BEC and ransomware operations" ;
+
+    notes : "Microsoft is consistently ranked as the most impersonated brand in phishing campaigns globally, 
+representing over 30 percent of all brand-phishing attempts in multiple annual threat intelligence reports. 
+The widespread adoption of Microsoft 365 across SMEs and enterprises, combined with the prevalence of 
+Phishing-as-a-Service kits providing pre-built Microsoft login page templates and AiTM infrastructure, 
+makes this attack pattern one of the highest-volume threats in the corporate email threat landscape. 
+AI-generated phishing emails trained on legitimate Microsoft transactional templates now exhibit 
+zero grammatical errors and correct localisation, removing a historically reliable detection heuristic. 
+Organisations that rely solely on legacy TOTP-based MFA without phishing-resistant equivalents remain 
+fully vulnerable to session-cookie-hijacking via AiTM proxies even after users correctly complete 
+the second factor" ;
+}

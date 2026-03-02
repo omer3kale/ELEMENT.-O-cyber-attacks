@@ -1,0 +1,182 @@
+attack ServerSideCryptominerCloud {
+    mitre_id   : "T1496" ;
+    category   : MALWARE ;
+    difficulty : MEDIUM ;
+
+    real_world_case {
+        year        : 2021 ;
+        victim      : "Thousands of cloud environments across AWS, GCP, and Azure 
+compromised during the 2020-2022 wave of cloud cryptomining campaigns, with 
+the most significant documented campaign being TeamTNT's cloud-targeting 
+operation that compromised an estimated 50,000 Kubernetes clusters, Docker 
+daemon endpoints, and cloud VMs between 2020 and 2022; a Google Threat 
+Horizons report (November 2021) found that 86 percent of compromised GCP 
+instances within their Case Study sample were used for cryptocurrency 
+mining; additional high-profile victims include organisations with exposed 
+Jupyter Notebook servers used by data science teams, Redis instances with 
+no authentication, and Kubernetes clusters with unauthenticated API server 
+access from the internet" ;
+        impact      : "Unexpected cloud compute billing increases of hundreds 
+to tens of thousands of dollars per month; significant degradation of 
+legitimate workload performance while mining processes compete for CPU 
+and memory; in TeamTNT campaigns: persistent access via installed backdoors 
+and credential theft from instance metadata APIs and local configuration 
+files; in some cases attackers also extracted discovered cloud API keys 
+and credentials to escalate access further or sell credential access; 
+one organisation reported a single month of undetected mining costing 
+USD $45,000 in unexpected AWS EC2 billing before discovery" ;
+        attribution : "TeamTNT threat group (active 2020-2022, likely 
+German-speaking based on code analysis by Trend Micro and Cado Security); 
+WatchDog group; Kinsing malware operator; multiple independent criminal 
+actors deploying XMRig forks via opportunistic cloud misconfiguration 
+exploitation" ;
+    }
+
+    attack_vector : "Server-side cloud cryptomining exploits misconfigured 
+or unpatched cloud infrastructure to deploy a cryptocurrency miner as 
+a persistent process. Entry vectors include: unauthenticated Docker 
+daemon TCP port 2375 exposed to the internet, allowing arbitrary container 
+creation with host filesystem bind mounts; exposed Kubernetes API server 
+with default or stolen credentials, enabling pod creation with hostPath 
+mounts and privileged security contexts; Redis instances accessible without 
+authentication accepting SLAVEOF or CONFIG SET commands that write an 
+SSH public key or cron job to the server filesystem; exposed Jupyter 
+Notebook servers without authentication allowing arbitrary Python code 
+execution; and exploitation of unpatched vulnerabilities in web applications 
+running on cloud instances. Once initial access is obtained, the attacker 
+deploys XMRig or a compatible CryptoNight or RandomX miner binary, often 
+pulling a container image or downloading a statically linked binary to 
+avoid dependency issues. Persistence is established through cron jobs, 
+systemd unit installation, or container restart policies. Defensive 
+evasion includes: setting the miner process name to a legitimate-looking 
+string, killing competing miner processes from other attacker groups, 
+disabling cloud monitoring agent processes, and in TeamTNT campaigns, 
+specifically targeting and disabling AWS CloudWatch and Alibaba Cloud 
+Monitor agent processes" ;
+
+    target_profile : "Organisations operating cloud infrastructure with 
+misconfigured container orchestration platforms, exposed management APIs, 
+or unauthenticated data store services; particularly at risk are 
+development and data science teams that spin up cloud instances or 
+containers with reduced security controls for convenience; cloud deployments 
+with overly permissive IAM roles, missing security group egress rules, 
+and disabled audit logging are primary targets as they're easily 
+discoverable via cloud provider-specific Shodan queries and mass 
+internet scanning" ;
+
+    success_rate        : 70-85% ;
+    average_impact      : "Ongoing unauthorised compute consumption 
+generating 0.5-2 XMR per compromised high-vCPU instance per month 
+at current difficulty; cloud billing impact of USD $500-5,000 per 
+compromised instance per month at on-demand rates; performance 
+degradation of 60-100% for CPU-bound legitimate workloads; risk 
+of secondary impact if stored cloud credentials are exfiltrated 
+and used for broader cloud account takeover" ;
+    delivery_method     : "Container deployed via exposed Docker daemon 
+or Kubernetes API; shell command execution via unauthenticated Redis 
+CONFIG SET or SLAVEOF; direct shell access via exposed Jupyter Notebook; 
+SSH key injection via writable cloud metadata or filesystem access; 
+binary download via curl or wget following initial foothold" ;
+    detection_difficulty : MEDIUM ;
+
+    prevention_measures : [
+        "Enforce cloud security posture management (CSPM) to continuously 
+scan for publicly accessible management endpoints including Docker daemon 
+port 2375, Kubernetes API server port 6443, Redis port 6379, and 
+Jupyter Notebook port 8888; remediate all findings within a defined 
+SLA using automated remediation for clearly defined misconfiguration patterns",
+        "Enable VPC flow logs, CloudTrail (AWS), Cloud Audit Logs (GCP), 
+or Activity Log (Azure) and alert on unusual compute instance 
+creation patterns, unexpected container image pulls, and high outbound 
+data transfer to external IPs consistent with mining pool communication",
+        "Deploy cloud workload protection platform (CWPP) agents on all 
+cloud VMs and container hosts to detect process execution anomalies 
+including unexpected binary downloads, cron modification, and 
+processes communicating with known mining pool IP ranges and domains",
+        "Implement network-level egress filtering at the VPC/VNet perimeter 
+blocking outbound connections to known Monero and other cryptocurrency 
+mining pool port and domain combinations, preventing any deployed 
+miner from submitting work even if initial deployment is not detected",
+        "Require authentication and TLS on all internal service endpoints 
+including Docker daemon, Kubernetes API server, Redis, and Jupyter 
+instances; enforce network policy restricting access to these services 
+to authorised management CIDR ranges only"
+    ] ;
+
+    cve_references : [
+        "CVE-2019-5736",
+        "CVE-2021-25741",
+        "CVE-2022-0811"
+    ] ;
+
+    tools_used : [
+        "XMRig Monero miner (statically linked binaries for Linux/Alpine)",
+        "TeamTNT shell scripts for Docker daemon exploitation and 
+credential harvesting",
+        "Kinsing malware Linux binary with XMRig miner and rootkit 
+process-hiding components",
+        "Masscan and ZGrab2 for rapid internet-scale scanning for 
+exposed Docker and Redis endpoints",
+        "Docker Hub public images pre-loaded with mining payloads and 
+pull-and-execute entrypoints"
+    ] ;
+
+    capec_id         : "CAPEC-551" ;
+    kill_chain_phase : ACTIONS_ON_OBJECTIVES ;
+
+    data_sources : [
+        "Cloud billing anomaly detection alerts for unexpected compute 
+spend increases beyond baseline thresholds",
+        "VPC flow logs showing high-volume egress TCP connections to 
+external IP ranges associated with Monero mining pools on ports 
+3333, 4444, 5555, 7777, and 14444",
+        "Container registry audit logs showing unexpected image pulls 
+from public registries not in the approved image allowlist",
+        "Cloud workload protection platform process execution logs 
+showing unexpected binaries including xmrig, kinsing, or 
+processes with mining-tool process names",
+        "Kubernetes audit logs showing pod creation with privileged 
+security contexts, hostPath volume mounts, or by service accounts 
+not authorised to create workloads"
+    ] ;
+
+    mitigations : [
+        "M1030 - Network segmentation: restrict management port access 
+to authorised CIDR ranges using security groups and network policies",
+        "M1026 - Privileged account management: require authentication 
+on all management endpoints; disable unauthenticated Docker daemon TCP",
+        "M1037 - Filter network traffic: block egress to known mining 
+pool IP ranges and domains at VPC perimeter",
+        "M1018 - User account management: apply least-privilege IAM 
+roles to cloud instances, preventing credential-based lateral movement",
+        "M1035 - Limit access to resource over network: implement 
+Kubernetes NetworkPolicy restricting pod egress to authorised 
+external endpoints only"
+    ] ;
+
+    platforms : [
+        "Cloud",
+        "Linux",
+        "Containers"
+    ] ;
+
+    privilege_required : USER ;
+    impact_type        : SERVICE_DISRUPTION ;
+
+    notes : "Cloud cryptomining has become one of the most economically 
+significant misuse categories for cloud infrastructure. From the attacker's 
+perspective it is a low-risk, steady-revenue model: unlike ransomware or 
+data theft there is no victim notification event, no negotiation, and 
+law enforcement interest is lower. The mining revenue stream continues 
+indefinitely on undetected compromises. The financial harm to victims 
+is indirect (billing) and often initially attributed to legitimate 
+workload growth, providing extended dwell time. The TeamTNT group notably 
+combined cryptomining with credential harvesting — stealing AWS IAM 
+credentials from instance metadata and local .aws/credentials files — 
+demonstrating that even nominally simple cryptomining attacks should 
+be treated as full intrusions with credential exposure risk. 
+SERVICE_DISRUPTION is used as the impact classification here, reflecting 
+that the primary measurable harm is unauthorised resource consumption 
+degrading legitimate service performance and generating unexpected 
+billing costs" ;
+}

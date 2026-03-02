@@ -1,0 +1,165 @@
+attack DdosBotnetAgainstOnlineServices {
+    mitre_id   : "T1498" ;
+    category   : NETWORK ;
+    difficulty : MEDIUM ;
+
+    real_world_case {
+        year        : 2016 ;
+        victim      : "Dyn DNS infrastructure serving as DNS resolver for major internet 
+platforms including Twitter, Reddit, GitHub, Netflix, Spotify, CNN, and the New York 
+Times; downstream impact affected tens of millions of users across the eastern United 
+States and Europe who experienced complete inability to resolve DNS for affected domains 
+over a period of approximately ten hours across two attack waves" ;
+        impact      : "Peak traffic estimated at 1.2 Tbps, at the time the largest 
+recorded DDoS attack in history; Dyn reported significant infrastructure strain leading 
+to service outages for downstream customers; economic impact to affected platforms 
+estimated in tens of millions USD in lost revenue and mitigation costs; the Mirai botnet 
+used in the attack was composed of approximately 100,000 to 400,000 compromised IoT 
+devices including IP cameras and DVRs running default credentials; Mirai source code 
+was publicly released shortly after the attack, enabling hundreds of derivative botnets" ;
+        attribution : "Three individuals responsible for creating and operating the 
+original Mirai botnet pleaded guilty in US federal court in 2017; the specific DDoS 
+attack against Dyn was contracted via a criminal DDoS-for-hire service; broader 
+botnet-for-hire market enables criminal operators with no technical skill to purchase 
+attack capacity for fees as low as 10 to 200 USD per attack" ;
+    }
+
+    attack_vector : "A distributed denial-of-service botnet operates by coordinating 
+large numbers of compromised or rented hosts to simultaneously send traffic to a 
+target, exceeding its capacity to process legitimate requests. Volumetric attack 
+vectors include UDP flood, DNS amplification (abusing open resolvers to reflect and 
+amplify traffic up to 50 times), NTP amplification, SSDP amplification, and 
+memcached amplification reaching peak rates exceeding 1 Tbps in documented incidents. 
+Protocol-layer attacks such as SYN floods exhaust TCP connection state tables on 
+firewalls and load balancers. Application-layer attacks send semantically valid but 
+computationally expensive HTTP requests targeting search functions, login pages, 
+or API endpoints requiring back-end database queries, evading volumetric-only 
+detection. IoT botnets specifically target devices with default or weak credentials 
+exposed to the internet, infecting them via Telnet or SSH brute force, and use them 
+as attack nodes due to their abundance, always-on connectivity, and lack of security 
+monitoring. DDoS-for-hire services (booters and stressers) commoditise attack 
+capability, enabling any actor to rent botnet capacity for targeted attacks without 
+operating any infrastructure personally" ;
+
+    target_profile : "Online platforms dependent on continuous availability including 
+gaming platforms, e-commerce sites, financial services, media streaming, online 
+betting, DNS providers, content delivery networks, and critical internet infrastructure; 
+organisations operating without upstream DDoS scrubbing services or anycast network 
+distribution are most vulnerable; DNS infrastructure represents a particularly 
+high-value target due to the cascading impact on all services dependent on the 
+affected resolver; extortion-driven attacks frequently target organisations with 
+revenue directly tied to uptime including online gaming, sportsbook, and trading platforms" ;
+
+    success_rate        : 50-90% ;
+    average_impact      : "Revenue loss per hour of downtime: 50,000 to 5,000,000 USD 
+depending on sector and service scale; extortion-driven DDoS demands typically range 
+from 1 to 200 Bitcoin with follow-on ransom escalation on non-payment; reputational 
+damage and SLA penalties for cloud and hosting providers; DNS infrastructure attacks 
+produce cascading outages across all services using affected resolvers, multiplying 
+the economic impact well beyond the direct target" ;
+    delivery_method     : "Malicious traffic from globally distributed compromised 
+devices and rented botnet capacity directed at target IP ranges and DNS names; 
+attack traffic often amplified via reflection through misconfigured open resolvers, 
+NTP servers, and memcached instances; application-layer attacks sent via HTTP/S 
+using compromised residential IP addresses to evade IP-reputation blocking" ;
+    detection_difficulty : LOW ;
+
+    prevention_measures : [
+        "Subscribe to upstream DDoS mitigation services offering traffic scrubbing 
+and anycast network diffusion with the capacity to absorb sustained multi-Tbps 
+attacks; ensure mitigation provider SLAs guarantee detection and diversion within 
+defined detection windows",
+        "Implement rate limiting and traffic shaping at the network edge and 
+application layer to throttle traffic exceeding baseline thresholds per source 
+IP, geographic region, autonomous system number, and request type",
+        "Deploy anycast DNS and application infrastructure distributing service 
+capacity across multiple geographically diverse points of presence so that 
+volumetric attacks are absorbed across the network rather than concentrated at 
+a single target",
+        "Use a content delivery network for static and dynamic content to 
+distribute request load and absorb volumetric traffic before it reaches origin 
+infrastructure",
+        "Establish upstream agreements with internet service providers for 
+out-of-band BGP blackholing of attack traffic at the network level before it 
+reaches the target autonomous system during active attacks",
+        "For IoT devices on network: change default credentials immediately on 
+deployment, apply firmware updates, place IoT devices on isolated VLANs with 
+filtered outbound access, and monitor for unusual outbound traffic volumes 
+indicative of botnet participation",
+        "Develop and rehearse a DDoS runbook specifying escalation paths, 
+mitigation provider activation procedures, and customer communication templates 
+to reduce response time during active incidents"
+    ] ;
+
+    cve_references : [] ;
+
+    tools_used : [
+        "Mirai botnet and its derivatives (Satori, Okiru, Masuta) targeting IoT 
+devices with default credentials",
+        "Botnet-for-hire services (booters and stressers) providing attack capacity 
+as a commodity service",
+        "DNS amplification via open recursive resolvers",
+        "NTP monlist amplification exploiting misconfigured NTP servers",
+        "Memcached UDP amplification achieving up to 50,000 times amplification factor",
+        "LOIC and HOIC for coordinated voluntary-participant HTTP flood attacks"
+    ] ;
+
+    capec_id         : "CAPEC-125" ;
+    kill_chain_phase : ACTIONS_ON_OBJECTIVES ;
+
+    data_sources : [
+        "NetFlow and sFlow telemetry showing volumetric traffic anomalies and 
+source IP distribution patterns",
+        "ISP upstream telemetry and BGP routing data for traffic volume at 
+network borders",
+        "DDoS mitigation platform dashboards and attack traffic classification feeds",
+        "DNS resolver query logs for amplification traffic patterns",
+        "Web application firewall and load balancer logs for application-layer 
+flood detection",
+        "SIEM correlation rules alerting on traffic volume anomalies and 
+connection-rate threshold breaches"
+    ] ;
+
+    mitigations : [
+        "M1037 - Filter network traffic: implement ingress and egress filtering 
+(BCP38) to block spoofed source IP addresses used in amplification attacks",
+        "M1030 - Network segmentation: isolate critical DNS and authentication 
+infrastructure with dedicated rate limiting and scrubbing paths",
+        "M1035 - Limit access to resource over network: rate-limit DNS, NTP, 
+and memcached responses to prevent amplification relay",
+        "M1031 - Network intrusion prevention: upstream scrubbing with 
+behavioral traffic classification at ISP border"
+    ] ;
+
+    platforms : [
+        "Network Infrastructure",
+        "Cloud"
+    ] ;
+
+    privilege_required : NONE ;
+    impact_type        : SERVICE_DISRUPTION ;
+
+    attribution : "Open criminal market: DDoS-for-hire services enable any actor 
+to purchase volumetric attack capacity without technical knowledge; botnet 
+operators include organised criminal groups monetising compromised IoT devices 
+as a rental service; specific high-profile attacks have been attributed to 
+individuals and hacking groups but the broader botnet ecosystem is functionally 
+unattributed criminal infrastructure" ;
+
+    notes : "The economics of DDoS attacks are structurally asymmetric: an attacker 
+can sustain a multi-Gbps attack for tens or hundreds of dollars per hour using 
+rented botnet capacity, while the defender must absorb mitigation costs that can 
+reach thousands of dollars per hour for scrubbing services and may also face 
+SLA penalties and revenue loss orders of magnitude larger. Amplification attacks 
+compound this asymmetry by allowing the attacker to send a small volume of 
+spoofed traffic that is reflected and amplified by third-party misconfigured 
+infrastructure at multiplication ratios reaching 50,000:1 for memcached. 
+IoT devices represent a self-replenishing botnet substrate: billions of devices 
+with default credentials, minimal update mechanisms, and no security monitoring 
+are deployed annually, ensuring that nation-sized botnets can be assembled 
+rapidly after any high-profile takedown. The Mirai source code release in 2016 
+industrialised IoT botnet creation, producing hundreds of derivative botnets 
+each targeting specific device vulnerabilities and credential combinations, 
+and demonstrated that sophisticated DDoS capability is no longer restricted 
+to well-resourced adversaries" ;
+}

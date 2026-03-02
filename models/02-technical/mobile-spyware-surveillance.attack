@@ -1,0 +1,193 @@
+attack MobileSpywareSurveillance {
+    mitre_id   : "T1437" ;
+    category   : MALWARE ;
+    difficulty : NATION_STATE ;
+
+    real_world_case {
+        year        : 2021 ;
+        victim      : "Journalists, human rights activists, political opposition figures, 
+lawyers, heads of state, and business executives across 50 countries identified in 
+the Pegasus Project forensic investigation published by Forbidden Stories and Amnesty 
+International Security Lab in July 2021; victims confirmed in at least 10 countries 
+including France, India, Mexico, Morocco, Rwanda, Hungary, Azerbaijan, Kazakhstan, 
+Bahrain, and Saudi Arabia; targets included heads of state, cabinet ministers, 
+journalists from major news organisations, and heads of intergovernmental organisations" ;
+        impact      : "Complete compromise of target mobile devices including real-time 
+access to all messaging applications including WhatsApp, Signal, iMessage, Telegram, 
+and SMS; activation of microphone and camera without user notification; extraction of 
+all stored contacts, call logs, email, photographs, and documents; persistent access 
+maintained across device reboots and application updates; forensic analysis confirmed 
+zero-click exploitation with no user interaction required on some targets using 
+iMessage and FaceTime processing vulnerabilities; diplomatic consequences including 
+recall of ambassadors following confirmed targeting of heads of state by allied nations; 
+NSO Group placed on US Entity List in November 2021 prohibiting US technology exports" ;
+        attribution : "NSO Group Technologies (Israel) as developer and licensor of 
+Pegasus spyware; deployed exclusively to vetted nation-state government customers 
+per NSO Group's stated licensing model; specific deployment decisions attributed 
+to licensing governments including confirmed government entities in Saudi Arabia, 
+Bahrain, Hungary, India, and Mexico based on infrastructure and targeting victim 
+analysis" ;
+    }
+
+    attack_vector : "High-end commercial mobile spyware platforms such as Pegasus 
+operate through multiple infection vectors including zero-click exploits requiring 
+no user interaction, one-click SMS and messaging app links, and network injection 
+via agreements with telecommunications providers. Zero-click exploitation in the 
+most advanced deployments triggers code execution by sending a specially crafted 
+iMessage or WhatsApp message that is processed by the target device's media 
+parsing libraries without the user opening or interacting with the message, 
+exploiting memory corruption vulnerabilities in image, audio, or video parsing 
+code. Once the kernel-level exploit chain completes, the spyware payload is 
+installed with the highest available system privileges, bypassing iOS or Android 
+sandboxing models and achieving persistence across device reboots using undisclosed 
+kernel-level persistence mechanisms. The fully deployed implant provides the 
+operator with: real-time interception of all messaging applications including 
+end-to-end encrypted platforms by reading plaintext from application memory 
+before encryption; activation of the device microphone and camera at operator 
+command; continuous GPS location tracking; extraction of all stored content 
+including photographs, contacts, call logs, browser history, and application data; 
+and keylogging across all applications. C2 communication uses domain generation 
+algorithm infrastructure with traffic designed to blend with normal application 
+network activity, rotating through operator-controlled domain infrastructure 
+registered with privacy-protecting registrars" ;
+
+    target_profile : "Individuals of strategic intelligence value to nation-state 
+customers of commercial spyware vendors: journalists investigating government 
+corruption or human rights abuses; political dissidents, opposition politicians, 
+and activists in countries with authoritarian tendencies; lawyers and NGO 
+representatives involved in cases against state actors; close associates of 
+individuals already under surveillance as relationship mapping targets; business 
+executives involved in high-value acquisitions, sensitive negotiations, or sectors 
+of strategic economic interest to the targeting government; foreign government 
+officials and heads of state in allied nations where intelligence collection is 
+conducted by client states" ;
+
+    success_rate        : 85-99% ;
+    average_impact      : "Complete surveillance of target's digital communications 
+for the duration of the infection, typically weeks to months; on confirmed zero-click 
+targets: all encrypted communications read in plaintext, precise physical location 
+tracking, and ambient audio surveillance; for journalist targets: source identities 
+and unpublished investigation details compromised; for legal targets: privileged 
+attorney-client communications exposed; for political targets: private communications 
+and political strategy accessible to adversary governments; no direct financial 
+impact to the individual, but profound physical safety risk for activists in 
+countries where disclosed communications have preceded detention or harm" ;
+    delivery_method     : "Zero-click exploitation via iMessage, FaceTime, or 
+WhatsApp message processing; one-click SMS or messaging links to exploit server 
+triggering browser or application vulnerability; operator network injection via 
+rogue access point or telecommunications provider cooperation redirecting target 
+HTTP traffic to an exploit server" ;
+    detection_difficulty : NEARLY_IMPOSSIBLE ;
+
+    prevention_measures : [
+        "Apply iOS and Android security updates within 24 hours of release, 
+prioritising patches for vulnerabilities in media processing, iMessage, Safari, 
+and Chrome as these represent the primary zero-click attack surface; enrol 
+in Apple Lockdown Mode for high-risk individuals, which disables 
+functionality exploited by most known zero-click chains",
+        "Enable iMessage and FaceTime contact filtering to receive messages 
+only from known contacts on iOS devices, eliminating the unauthenticated 
+message processing attack surface used by iMessage zero-click exploits",
+        "Conduct periodic mobile device forensic checks using open-source 
+tools such as Amnesty International MVT (Mobile Verification Toolkit) 
+for high-risk individuals, examining device indicators of compromise 
+including traces of known spyware infrastructure domains and process 
+anomalies",
+        "Use dedicated devices not associated with personal identity or 
+regular SIM cards for sensitive communications when operating in 
+high-risk contexts, limiting the intelligence value of a single 
+device compromise",
+        "Implement a mobile device management policy that enforces 
+minimum patch level requirements and detects jailbroken or rooted 
+devices which may indicate prior compromise or reduced security posture",
+        "Educate high-risk individuals about one-click attack vectors 
+including unexpected SMS links and messaging connections from unknown 
+senders; establish a verification protocol for any unsolicited link 
+including calling the sender via a separate verified channel before 
+clicking",
+        "Coordinate with telecommunications providers to implement SS7 
+security improvements and network-level monitoring for abnormal 
+subscriber location requests and traffic redirection patterns 
+associated with network injection attacks"
+    ] ;
+
+    cve_references : [
+        "CVE-2021-30860",
+        "CVE-2021-30858",
+        "CVE-2021-1879"
+    ] ;
+
+    tools_used : [
+        "Pegasus spyware (NSO Group Technologies) deployed on iOS and Android",
+        "KISMET zero-click iMessage exploit chain used in 2020-2021 campaigns",
+        "NSO Group FORCEDENTRY exploit targeting Apple CoreGraphics JBIG2 parser",
+        "Candiru (Saito Tech) DevilsTongue Windows and mobile spyware platform",
+        "FinSpy (Gamma Group) commercial surveillance software",
+        "Domain generation algorithm C2 infrastructure with privacy-registered domains"
+    ] ;
+
+    capec_id         : "CAPEC-657" ;
+    kill_chain_phase : ACTIONS_ON_OBJECTIVES ;
+
+    data_sources : [
+        "Mobile device forensic analysis using MVT (Mobile Verification 
+Toolkit) examining process artifacts, network connection logs, and 
+crash reports on target devices",
+        "Network traffic analysis for known spyware C2 infrastructure 
+domain patterns and DNS resolution history on device",
+        "Apple iOS crash log analysis revealing unexpected process 
+execution associated with zero-click exploit delivery attempts",
+        "Telecommunications SS7 and Diameter protocol monitoring 
+for abnormal subscriber location requests and traffic steering",
+        "Threat intelligence from Citizen Lab, Amnesty International 
+Security Lab, and national cybersecurity agencies tracking 
+commercial spyware infrastructure"
+    ] ;
+
+    mitigations : [
+        "M1051 - Update software: apply iOS and Android patches within 
+24 hours, especially for media processing and messaging vulnerabilities",
+        "M1056 - Pre-compromise: enable iOS Lockdown Mode for 
+maximum attack surface reduction for high-risk individuals",
+        "M1011 - Mobile device management: enforce policy requiring 
+minimum patch level and detection of jailbroken devices",
+        "M1049 - Antivirus and antimalware: mobile security solutions 
+including MVT-based forensic scanning for known spyware IOCs"
+    ] ;
+
+    platforms : [
+        "iOS",
+        "Android"
+    ] ;
+
+    privilege_required : NONE ;
+    impact_type        : ESPIONAGE ;
+
+    attribution : "Nation-state government customers of commercial 
+spyware vendors including NSO Group (Pegasus), Candiru (DevilsTongue), 
+and Gamma Group (FinSpy); specific targeting decisions attributed to 
+confirmed government clients in Saudi Arabia, Bahrain, Hungary, India, 
+Mexico, and other states based on forensic infrastructure analysis by 
+Citizen Lab and Amnesty International Security Lab" ;
+
+    notes : "Commercial mobile spyware represents a distinct threat model 
+from commodity malware: it is developed with intelligence-service 
+operational security, deployed exclusively by vetted government customers, 
+targets specific high-value individuals rather than mass populations, 
+and exploits zero-day vulnerability chains in the most hardened consumer 
+devices available, including fully patched iPhones used by security-conscious 
+targets. The fundamental policy challenge this class of tooling creates is 
+that it is commercially produced, sold with the legal fiction of lawful 
+interception licensing, and deployed by governments that are simultaneously 
+signatories to international human rights frameworks. The Pegasus Project 
+revelations in 2021 established that zero-click spyware had been deployed 
+against heads of state, senior politicians, and journalists in democratic 
+ally nations, demonstrating that commercial spyware proliferation has 
+outpaced the legal and technical governance frameworks intended to constrain 
+it. For organisations and individuals in high-risk categories, the practical 
+defensive posture must acknowledge that a sufficiently resourced and 
+motivated nation-state adversary with access to current zero-click exploit 
+chains cannot be reliably defended against through technical controls alone, 
+making physical communications security, device isolation, and operational 
+security practices essential complements to technical hardening" ;
+}

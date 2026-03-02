@@ -1,0 +1,173 @@
+attack SolarwindsStyleSupplyChain {
+    mitre_id   : "T1195.002" ;
+    category   : SUPPLY_CHAIN ;
+    difficulty : NATION_STATE ;
+
+    real_world_case {
+        year        : 2020 ;
+        victim      : "Approximately 18,000 organisations globally that installed 
+the trojanized SolarWinds Orion Platform update, including nine US federal agencies 
+(Treasury, Commerce, Homeland Security, State, Defense, and others), the majority 
+of the Fortune 500, and major defence contractors; of those, approximately 100 
+organisations were subjected to deeper hands-on compromise with data exfiltration" ;
+        impact      : "US government agencies: months of covert access to email 
+and document systems including networks belonging to the US Treasury and Department 
+of Homeland Security; SolarWinds reported direct costs exceeding 40 million USD 
+in remediation and legal expenses in 2021 alone; estimated total cascading 
+remediation cost across all affected organisations in the billions USD; diplomatic 
+and intelligence consequences of state-level disclosure of classified communications 
+remain classified but broadly acknowledged as severe; the incident triggered an 
+executive order on cybersecurity supply chain security and mandatory SBOM requirements" ;
+        attribution : "APT29 (Cozy Bear), attributed by the United States, United 
+Kingdom, Canada, Australia, and the European Union to the Foreign Intelligence 
+Service of the Russian Federation (SVR); attribution formally stated by US CISA, 
+FBI, NSA, and ODNI in a joint advisory in January 2021" ;
+    }
+
+    attack_vector : "The attackers, operating with long-term patient intent consistent 
+with nation-state intelligence collection objectives, compromised the SolarWinds 
+Orion software build environment prior to the release cycle for versions 
+2019.4 through 2020.2.1 HF1. A malicious component designated SUNBURST was 
+inserted into the legitimate Orion DLL, digitally signed by SolarWinds's 
+authentic code-signing certificate, and distributed to customers via the 
+official SolarWinds update channel over a period from March to June 2020. 
+The SUNBURST implant included a two-week dormancy period after installation 
+to evade analysis by automated sandbox systems, then began beaconing to 
+attacker-controlled C2 infrastructure using DNS-based communication that 
+mimicked normal Orion telemetry traffic. C2 communication was designed to 
+blend with expected SolarWinds service traffic by using subdomains of the 
+attacker-registered domain avsvmcloud[.]com and encoding victim environment 
+identifiers and commands in DNS query strings. On selected high-value victims 
+a second-stage TEARDROP loader was deployed to deliver a Cobalt Strike 
+beacon for interactive hands-on keyboard operations, lateral movement via 
+forged SAML tokens exploiting federated identity trust chains, and targeted 
+data exfiltration from email and document systems. The use of forged SAML 
+tokens allowed the attackers to access cloud services without triggering 
+standard MFA or password controls, as the attacker impersonated legitimate 
+service accounts already trusted by identity providers" ;
+
+    target_profile : "Any organisation deploying SolarWinds Orion for network 
+and infrastructure monitoring; primary high-value targets were US federal 
+government agencies with national security relevance, defence contractors, 
+cybersecurity companies, and technology providers whose compromise would 
+yield downstream access to their own customers; secondary exposure to any 
+organisation where an Orion-monitoring service account held elevated privileges 
+in Active Directory or federated cloud identity providers" ;
+
+    success_rate        : 60-100% ;
+    average_impact      : "For the approximately 100 organisations subjected to 
+second-stage compromise: months of undetected access to email, classified and 
+sensitive documents, and internal identity infrastructure; discovery of the 
+compromise at FireEye in December 2020 suggests median dwell time of six to 
+nine months across affected organisations; remediation requiring complete 
+rebuild of identity infrastructure including ADFS, Azure AD, and code-signing 
+environments, with costs per major affected organisation in the tens of 
+millions USD" ;
+    delivery_method     : "Legitimate vendor software update channel: the Orion 
+update was delivered via the official SolarWinds customer portal and update 
+mechanism, signed with a valid code-signing certificate, with no indication 
+to automated security tooling or human reviewers that the update was 
+malicious" ;
+    detection_difficulty : NEARLY_IMPOSSIBLE ;
+
+    prevention_measures : [
+        "Implement a cyber supply chain risk management framework covering all 
+network management, monitoring, and security software vendors; require vendors 
+to attest to build pipeline security practices including code signing key 
+protection and build environment integrity monitoring",
+        "Deploy a software bill of materials requirement for all critical vendor 
+products and integrate SBOM analysis into the procurement and update approval 
+workflow to identify unexpected library or component changes between releases",
+        "Monitor all privileged service accounts associated with network 
+management and monitoring tools for anomalous activity patterns including 
+unexpected SAML token generation, cross-domain authentication, and access 
+to resources outside their baseline operational scope",
+        "Implement a privileged access workstation model for managing critical 
+monitoring infrastructure, isolating Orion-class management platforms from 
+general corporate networks and restricting their outbound internet access to 
+explicitly approved update and telemetry endpoints",
+        "Deploy DNS monitoring and anomaly detection alerting on newly observed 
+domains in outbound DNS query patterns from monitoring infrastructure, 
+particularly queries with variable subdomain structures consistent with 
+DNS-based C2 covert channel traffic",
+        "Apply the principle of least privilege to network monitoring service 
+accounts, restricting their Active Directory and Azure AD permissions to 
+the minimum required for operational function and conducting quarterly 
+access reviews",
+        "Maintain a process for out-of-band verification of critical software 
+updates by comparing installer hashes against vendor-published hash values 
+via a separate communication channel before deployment to production"
+    ] ;
+
+    cve_references : [
+        "CVE-2020-10148"
+    ] ;
+
+    tools_used : [
+        "SUNBURST trojanized DLL embedded in SolarWinds Orion update package",
+        "TEARDROP in-memory loader for delivering second-stage Cobalt Strike beacon",
+        "Cobalt Strike Beacon for interactive hands-on keyboard operations",
+        "SAML token forgery for authenticated access to cloud services bypassing MFA",
+        "GoldMax and GoldFinder second-stage backdoors observed in some victim environments",
+        "Custom DNS tunnelling protocol using avsvmcloud[.]com for covert C2 communication"
+    ] ;
+
+    capec_id         : "CAPEC-438" ;
+    kill_chain_phase : INSTALLATION ;
+
+    data_sources : [
+        "Build pipeline integrity logs and code signing certificate audit trails",
+        "DNS query telemetry for outbound queries from monitoring infrastructure 
+to externally registered domains",
+        "SAML and OAuth token issuance logs in Active Directory Federation 
+Services and Azure AD",
+        "Network proxy logs for outbound HTTPS connections from monitoring 
+platform hosts to unexpected external destinations",
+        "Cloud audit logs for anomalous resource access by service accounts 
+outside their established baseline",
+        "Endpoint detection and response telemetry for in-memory loader 
+activity on monitoring platform hosts"
+    ] ;
+
+    mitigations : [
+        "M1016 - Vulnerability scanning: extend to include build pipeline and 
+software supply chain components",
+        "M1047 - Audit: monitor service account SAML token generation and 
+cross-domain authentication events",
+        "M1030 - Network segmentation: isolate network monitoring platforms 
+from general corporate and cloud access",
+        "M1031 - Network intrusion prevention: DNS monitoring for covert 
+channel patterns from management infrastructure",
+        "M1018 - User account management: enforce least privilege on all 
+monitoring service accounts and review quarterly"
+    ] ;
+
+    platforms : [
+        "Windows",
+        "Windows Server"
+    ] ;
+
+    privilege_required : ADMINISTRATOR ;
+    impact_type        : ESPIONAGE ;
+
+    attribution : "APT29 (Cozy Bear), attributed to the Foreign Intelligence 
+Service of the Russian Federation (SVR) by Five Eyes governments and the 
+European Union in formal joint advisories published January to April 2021" ;
+
+    notes : "SolarWinds Orion demonstrated that supply chain compromise at 
+a widely deployed IT management platform can provide simultaneous silent 
+access to the most security-conscious organisations in the world, including 
+major cybersecurity vendors and intelligence-adjacent government agencies, 
+at a scale unreachable by traditional intrusion techniques. The attack 
+exploited the fundamental trust organisations place in signed software from 
+established vendors, a trust the attacker subverted not by breaking 
+cryptographic protections but by compromising the build process before 
+signing occurred. The SUNBURST dormancy period, traffic mimicry, and 
+SAML token abuse for lateral movement collectively represent a tier of 
+operational security and tradecraft consistent with a well-resourced 
+national intelligence service operating under strict detection-avoidance 
+disciplines rather than a financially motivated criminal group. The incident 
+directly accelerated legislative and regulatory requirements for software 
+supply chain security including mandatory SBOM in US federal procurement 
+and equivalent EU Cyber Resilience Act provisions" ;
+}

@@ -1,0 +1,199 @@
+attack IotCryptominingBotnet {
+    mitre_id   : "T1496" ;
+    category   : NETWORK ;
+    difficulty : MEDIUM ;
+
+    real_world_case {
+        year        : 2019 ;
+        victim      : "Hundreds of thousands of IoT devices and home routers 
+compromised by the Hide and Seek (HNS) and Muhstik botnets between 2018 
+and 2020, targeting MikroTik routers (estimated 200,000+ specifically 
+compromised by Coinhive-injecting campaigns in 2018), ASUS routers with 
+default credentials, CCTV cameras, DVR systems, and NAS devices; 
+the Mozi botnet (2019-2021) grew to an estimated 1.5 million IoT 
+devices at peak, deploying XMRig on capable devices while using 
+underpowered devices purely for DDoS; affected organisations include 
+businesses where IoT devices are on the same network segment as 
+corporate systems and residences where compromised routers invisibly 
+degraded internet service" ;
+        impact      : "CPU-constrained IoT devices experience severe 
+performance degradation under full mining load: routers lose packet 
+forwarding capacity, DVR systems drop recording frames, CCTV cameras 
+experience video lag; home internet connections become unstable due 
+to mining pool WebSocket traffic competing with legitimate traffic; 
+in MikroTik router campaigns the router firmware was modified to 
+inject Coinhive scripts into all HTTP traffic passing through the 
+router, affecting every unencrypted HTTP session for all devices 
+behind the router; device lifespan may be shortened by sustained 
+high CPU temperature from continuous mining loads; Mozi botnet 
+disrupted by Chinese authorities in 2021 with sudden kill switch 
+command, demonstrating the command-and-control infrastructure was 
+under active government monitoring" ;
+        attribution : "Muhstik and HNS botnet operators (unattributed, 
+likely financially motivated criminal groups based on operational 
+security patterns); Mozi botnet attributed to Chinese national 
+arrested in 2021 per Netlab 360 and Slovak authorities" ;
+    }
+
+    attack_vector : "IoT cryptomining botnets spread through automated 
+scanning and exploitation of internet-facing IoT devices, primarily 
+targeting: default or weak username/password combinations on Telnet 
+(port 23) and SSH (port 22) management interfaces; known CVE exploits 
+for unpatched router, NAS, and IP camera firmware, particularly 
+targeting Realtek SDK, Netgear, D-Link, ASUS, and MikroTik 
+vulnerabilities; and UPnP-exposed devices that accept protocol 
+manipulation commands from the internet. Exploitation delivers 
+a shell command that downloads and executes a multi-architecture 
+dropper (compiled for x86, x86-64, ARM, MIPS, MIPS-BE, PowerPC) 
+that identifies the device architecture, downloads the matching 
+binary, establishes persistence via init.d script or cron, attempts 
+to remove competing malware and miners, and joins the botnet C2 
+network using either a hardcoded pool address or a DHT-based 
+peer-to-peer C2 like Mozi's BitTorrent DHT bootstrap. Higher-powered 
+devices (MIPS or ARM Cortex-A with >128MB RAM) are assigned mining 
+tasks; lower-powered devices (8051, simple MIPS with limited RAM) 
+may receive only scanning or DDoS tasks from the botnet operator. 
+The most impactful documented variant (MikroTik Winbox CVE-2018-14847 
+exploitation) modified RouterOS to inject JavaScript into all 
+HTTP responses forwarded by the router for visited sites, 
+transforming every compromised router into an HTTP-level 
+man-in-the-middle injecting Coinhive mining scripts into 
+unencrypted traffic for all clients behind it" ;
+
+    target_profile : "Consumer and small business IoT devices 
+manufactured without security-by-design principles: home routers 
+with default credentials and no automatic firmware update mechanism; 
+IP cameras and DVR systems running Linux firmware with internet-exposed 
+RTSP and management interfaces; NAS devices with default admin passwords; 
+smart TVs and set-top boxes with SSH enabled; any device running 
+BusyBox or uClibc-based Linux firmware discoverable via Shodan or 
+Censys scanning for open Telnet, SSH, or known management ports" ;
+
+    success_rate        : 60-80% ;
+    average_impact      : "Per-device mining contribution is very low 
+(MIPS at 200-300 H/s vs GPU at 30+ MH/s for Monero); economic 
+value of IoT mining is achieved only at scale of hundreds of thousands 
+of devices; primary measurable victim harm is device performance 
+degradation, service interruption, and in router-compromise scenarios, 
+HTTP injection affecting all users behind the router; secondary risk 
+is the same botnet infrastructure being repurposed for DDoS campaigns 
+as-a-service alongside mining" ;
+    delivery_method     : "Telnet/SSH brute force of default or weak 
+credentials followed by wget/curl download and execution of 
+multi-architecture dropper binary; exploitation of firmware CVEs 
+for pre-authentication remote code execution; UPnP-based command 
+injection; HTTP response injection via compromised router deep 
+packet inspection" ;
+    detection_difficulty : MEDIUM ;
+
+    prevention_measures : [
+        "Change all default credentials on IoT devices immediately 
+at deployment; use unique strong passwords for each device 
+management interface; disable Telnet and enable SSH-only access 
+with key-based authentication where the device firmware supports it",
+        "Disable internet-facing management interfaces entirely for 
+IoT devices that do not require remote management; restrict 
+management access to a dedicated management VLAN that does not 
+have internet routing; block inbound TCP 23, 22, 80, 443, 8080, 
+and 8443 to all IoT device IP ranges at the perimeter firewall",
+        "Apply firmware updates to all IoT devices on a defined schedule; 
+replace devices whose vendors have ceased providing security updates 
+with actively maintained alternatives; prioritise patching for 
+devices with known exploited CVEs (MikroTik, Netgear, D-Link, 
+ASUS device families have multiple critical CVEs with public exploit code)",
+        "Implement network-level monitoring for anomalous outbound 
+traffic patterns from IoT device IP segments including unexpected 
+high-volume TCP connections to external endpoints, unusual DNS 
+queries to dynamic DNS providers, and sustained high-bandwidth 
+egress inconsistent with device function",
+        "Segregate IoT devices onto a dedicated VLAN with strict 
+inter-VLAN routing policies preventing IoT-segment devices from 
+initiating connections to corporate systems or sensitive network 
+segments; apply egress filtering allowing only the specific 
+external endpoints required for device function"
+    ] ;
+
+    cve_references : [
+        "CVE-2018-14847",
+        "CVE-2021-20090",
+        "CVE-2021-41773",
+        "CVE-2021-35394"
+    ] ;
+
+    tools_used : [
+        "XMRig Monero miner compiled for MIPS, ARM, and x86 architectures",
+        "Mirai-derived scanner modules for Telnet credential brute force 
+using embedded default credentials dictionary",
+        "Mozi botnet DHT-based P2P command and control infrastructure",
+        "Muhstik IRC-based C2 with web shell deployment capability",
+        "Multi-architecture dropper/downloader similar to Mirai-Go",
+        "RouterOS HTTP injection module for Coinhive script delivery 
+via MikroTik router deep packet inspection"
+    ] ;
+
+    capec_id         : "CAPEC-697" ;
+    kill_chain_phase : ACTIONS_ON_OBJECTIVES ;
+
+    data_sources : [
+        "Network flow records showing high-frequency outbound TCP 
+connections from IoT device IP ranges to external endpoints on 
+mining pool ports (3333, 4444, 5555, 7777, 14444)",
+        "Router and firewall authentication logs showing Telnet and 
+SSH brute force attempts from external IPs targeting IoT 
+management ports",
+        "DNS query logs showing IoT device DNS lookups for 
+dynamic DNS, cryptocurrency mining pool, or known botnet 
+C2 domain names",
+        "SNMP and device monitoring showing sustained high CPU 
+utilisation on routers, NAS, or camera devices inconsistent 
+with their normal operational load profile",
+        "HTTP proxy or SSL inspection logs showing client devices 
+receiving injected JavaScript mining scripts in HTTP responses 
+from trusted external domains (indicating router-level injection)"
+    ] ;
+
+    mitigations : [
+        "M1026 - Privileged account management: change all default 
+IoT device credentials at deployment; disable unnecessary 
+management protocols",
+        "M1030 - Network segmentation: isolate IoT devices on 
+dedicated VLANs with strict inter-segment routing policies",
+        "M1051 - Update software: apply IoT device firmware 
+updates on a defined schedule, prioritising known exploited CVEs",
+        "M1037 - Filter network traffic: block egress from IoT 
+segments to known mining pool IP ranges and ports at the 
+network perimeter firewall",
+        "M1031 - Network intrusion prevention: implement IDS 
+signatures for IoT botnet scanning traffic patterns 
+including Mirai-style Telnet brute force and known 
+Mozi DHT communication signatures"
+    ] ;
+
+    platforms : [
+        "Network Infrastructure",
+        "IoT",
+        "Embedded Linux"
+    ] ;
+
+    privilege_required : NONE ;
+    impact_type        : SERVICE_DISRUPTION ;
+
+    notes : "IoT cryptomining botnets represent the intersection of 
+the Mirai-class IoT malware ecosystem and the cryptocurrency mining 
+economic model. The per-device mining contribution of an IoT device 
+is economically marginal compared to cloud instances, but the scale 
+achievable through automated scanning of the internet's permanently 
+exposed default-credential IoT population makes the aggregate 
+economically viable. The more significant risk to organisations and 
+individuals from IoT botnet compromise is not the mining itself but 
+the persistent backdoor access installed alongside the miner, the 
+potential for the same botnet to be retasked for DDoS as a service, 
+and in router-compromise scenarios, the complete traffic interception 
+capability that gives the attacker visibility into all unencrypted 
+communications of devices behind the router. The widespread adoption 
+of HTTPS has significantly reduced the impact of HTTP injection from 
+compromised routers, but DNS-over-plaintext traffic and unencrypted 
+IoT device protocol traffic remain exposed to a compromised router. 
+SERVICE_DISRUPTION captures the performance and availability 
+degradation impact of IoT mining" ;
+}

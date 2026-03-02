@@ -1,0 +1,196 @@
+attack SqlInjectionEcommerce {
+    mitre_id   : "T1190" ;
+    category   : APPLICATION ;
+    difficulty : MEDIUM ;
+
+    real_world_case {
+        year        : 2021 ;
+        victim      : "Hundreds of e-commerce platforms running on 
+Magento, WooCommerce, and custom-built PHP/MySQL stacks; among the 
+most significant documented SQL injection-related breaches of recent 
+years, the 2021 Carding Mafia forum SQL injection and data breach 
+exposed 297,000+ records and hashed creds; Peloton API SQL injection 
+discovery in 2021 exposed customer PII; ClubHouse SQL injection 
+exposed 3.8M user records in 2021; the broader Magecart ecosystem 
+routinely uses SQL injection as the entry vector for web skimmer 
+implantation on e-commerce platforms, with Group-IB estimating 
+over 4,700 e-commerce websites compromised by Magecart skimmers 
+at any single point in time between 2019-2022; in 2023 the 
+MOVEit Transfer SQL injection (CVE-2023-34362) was exploited 
+by the Cl0p ransomware group affecting 2,500+ organisations 
+and 62M+ individuals" ;
+        impact      : "Extraction of customer PII databases including 
+names, email addresses, physical addresses, and order history; 
+extraction of hashed or plaintext stored passwords enabling 
+credential stuffing attacks against other services; in some 
+cases extraction of stored partial or full payment card data; 
+administrative access via extracted admin credentials enabling 
+web skimmer implantation (Magecart-style) to capture payment 
+data from live transactions; secondary impact through regulatory 
+fines under GDPR (EU), PCI DSS penalties, and legal liability 
+from affected customers; reputational damage and customer 
+churn following public breach disclosure" ;
+        attribution : "Magecart affiliated groups (primarily 
+financially motivated criminal syndicate) targeting e-commerce 
+platforms; individual criminal actors using automated SQLMap 
+scanning; Cl0p ransomware group for the MOVEit CVE-2023-34362 
+exploitation" ;
+    }
+
+    attack_vector : "SQL injection against e-commerce applications 
+occurs wherever user-controlled input is incorporated into SQL 
+query strings without parameterisation. In modern e-commerce 
+platforms the attack surface includes: product search parameters, 
+category and filter query strings, customer account login and 
+registration forms, order lookup by ID or tracking number, 
+coupon code validation, and API endpoint parameters. A classic 
+error-based or UNION-based injection in a search parameter ('or 
+1=1 -- appended to disrupt query logic) allows the attacker to 
+probe database schema by inducing verbose error messages or 
+inferring schema via boolean-blind or time-based blind techniques 
+when error output is suppressed. Once table names, column names, 
+and row counts are enumerated via information_schema queries, 
+the attacker issues UNION SELECT queries to extract customer PII, 
+credential hashes, payment tokens, and admin accounts from the 
+database. Out-of-band exfiltration using DNS or HTTP requests 
+triggered by database functions (xp_cmdshell on SQL Server, 
+LOAD_FILE and INTO OUTFILE on MySQL with appropriate permissions, 
+UTL_HTTP on Oracle) provides a covert extraction channel that 
+bypasses many WAF inspections focused on in-band responses. 
+File write capabilities on MySQL with misconfigured permissions 
+allow writing a web shell to the web root, providing persistent 
+command execution. Automated tools such as SQLMap dramatically 
+reduce the skill required by automating parameter discovery, 
+injection technique selection, and data extraction" ;
+
+    target_profile : "E-commerce platforms built on PHP/MySQL stacks 
+including Magento, WooCommerce, OpenCart, and custom-built stores; 
+platforms with legacy codebases predating secure coding practices, 
+third-party plugins adding injection-vulnerable query paths, 
+or insufficient input validation in custom extension code; 
+applications without a WAF or with a WAF bypass using encoding 
+variations; platforms processing live payment card data as a 
+very high-value target for skimmer implantation" ;
+
+    success_rate        : 50-80% ;
+    average_impact      : "Extraction of full customer database 
+including PII for 10,000-10,000,000 customers depending on 
+platform size; credential hash extraction for offline cracking; 
+in Magecart scenarios: persistent payment skimmer generating 
+live card data capture for the duration until discovery; 
+average time-to-discovery for Magecart-style compromises is 
+22 days based on RiskIQ research; regulatory fines for GDPR 
+violations can reach 4% of annual global revenue" ;
+    delivery_method     : "Automated parameter injection via SQLMap 
+or similar tooling against exposed GET/POST parameters; manual 
+targeted injection against specific high-value platform 
+functionality; API endpoint injection via crafted JSON/XML 
+body parameters bypassing query string WAF rules" ;
+    detection_difficulty : MEDIUM ;
+
+    prevention_measures : [
+        "Exclusively use parameterised queries (prepared statements) 
+or stored procedures for all database interactions in application 
+code; ORM frameworks (Eloquent, Doctrine, Django ORM) are 
+parameterised by default and should be preferred over raw 
+query construction; never concatenate user input into SQL 
+query strings regardless of prior validation steps",
+        "Implement a web application firewall with SQL injection 
+detection signatures in enforcement mode; deploy WAF rules 
+covering UNION, information_schema, benchmark(), sleep(), 
+and encoding-bypassed variants; review WAF bypass techniques 
+quarterly and update signatures accordingly",
+        "Apply principle of least privilege to database accounts: 
+the application database account should have only SELECT, 
+INSERT, UPDATE, DELETE on required tables — no FILE, 
+EXECUTE, CREATE, or DROP privileges; configure MySQL 
+to deny INTO OUTFILE and LOAD_FILE operations from 
+the application account",
+        "Implement comprehensive input validation at the application 
+layer as a defence-in-depth measure (not a replacement for 
+parameterisation): allowlist expected character sets for each 
+input field, reject inputs containing SQL metacharacter sequences, 
+and enforce length limits",
+        "Conduct regular DAST (dynamic application security testing) 
+using automated scanners and penetration testing against all 
+input surfaces of the e-commerce platform, including API 
+endpoints and custom plugin code, prior to production deployment 
+and after significant codebase changes"
+    ] ;
+
+    cve_references : [
+        "CVE-2023-34362",
+        "CVE-2022-24086",
+        "CVE-2021-3007"
+    ] ;
+
+    tools_used : [
+        "SQLMap automated SQL injection detection and exploitation framework",
+        "Burp Suite Pro active scanner for parameter injection discovery",
+        "Havij (legacy) and DSSS for targeted manual-assisted injection",
+        "Metasploit modules for known CVE SQL injection exploitation",
+        "Custom PHP web shells (b374k, p0wny-shell) deployed via 
+INTO OUTFILE or file-write post-exploitation"
+    ] ;
+
+    capec_id         : "CAPEC-66" ;
+    kill_chain_phase : EXPLOITATION ;
+
+    data_sources : [
+        "Web application firewall logs for requests containing 
+SQL injection pattern signatures including UNION, SELECT, 
+information_schema, sleep(), benchmark(), WAITFOR DELAY, 
+and hexadecimal encoding variants",
+        "Database audit logs for unusual query patterns including 
+information_schema queries, high-frequency UNION SELECT 
+statements, and queries returning anomalously large result sets",
+        "Web server access logs showing automated parameter fuzzing 
+patterns: high request rate with varying parameter values 
+from a single IP or IP range, sequential numeric parameter 
+enumeration, and error-inducing payloads generating HTTP 500 responses",
+        "File integrity monitoring alerts for new PHP files 
+created in web root directories, particularly with 
+obfuscated file content or eval()-based code execution patterns",
+        "Database user privilege audit showing application 
+account being used for FILE, EXECUTE, or CREATE operations"
+    ] ;
+
+    mitigations : [
+        "M1051 - Update software: apply patches for all known 
+SQL injection CVEs in e-commerce platform and plugin dependencies",
+        "M1016 - Vulnerability scanning: conduct regular DAST 
+scanning of all application input surfaces and API endpoints",
+        "M1026 - Privileged account management: apply least-privilege 
+database account permissions, denying FILE and DDL privileges",
+        "M1050 - Exploit protection: deploy and tune WAF in 
+enforcement mode with SQL injection signatures",
+        "M1035 - Limit access to resource over network: restrict 
+database server network accessibility to application servers only; 
+deny direct internet routing to database port"
+    ] ;
+
+    platforms : [
+        "Web Application",
+        "Linux",
+        "Windows"
+    ] ;
+
+    privilege_required : NONE ;
+    impact_type        : DATA_THEFT ;
+
+    notes : "SQL injection remains one of the most consistently 
+exploited web application vulnerability classes despite being 
+in the OWASP Top 10 for over 15 consecutive years and having 
+a thoroughly understood and simple countermeasure (parameterisation). 
+Its persistence is attributable to: legacy codebases with embedded 
+string concatenation query patterns that are expensive to refactor; 
+third-party plugins and themes with injection-vulnerable code that 
+platform operators cannot directly control; developers bypassing 
+ORM parameterisation when writing custom query logic for performance; 
+and the long tail of small e-commerce operators without the security 
+engineering resources to maintain secure development practices. 
+The MOVEit CVE-2023-34362 exploitation demonstrates that SQL injection 
+in enterprise file transfer middleware can be just as catastrophic 
+as e-commerce platform injection, producing the largest breach event 
+of 2023 by affected organisation count" ;
+}

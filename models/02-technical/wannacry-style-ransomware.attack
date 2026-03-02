@@ -1,0 +1,146 @@
+attack WannacryStyleRansomware {
+    mitre_id   : "T1486" ;
+    category   : MALWARE ;
+    difficulty : HARD ;
+
+    real_world_case {
+        year        : 2017 ;
+        victim      : "Global organisations across 150 countries including the UK National Health 
+Service (NHS), Telefonica, FedEx, Deutsche Bahn, and hundreds of thousands of Windows endpoints 
+in manufacturing, logistics, government, and healthcare sectors" ;
+        impact      : "NHS UK: an estimated 92 million GBP in direct costs and cancelled 
+appointments, 80 NHS trusts affected, over 19,000 appointments cancelled in the first week; 
+global economic damage estimates range from 4 billion USD to 8 billion USD across the full 
+incident window; FedEx subsidiary TNT reported 400 million USD in direct losses; recovery 
+timelines for unpatched organisations extended to several weeks with permanent data loss 
+in cases without viable backups" ;
+        attribution : "Lazarus Group (APT38), attributed by the United States, United Kingdom, 
+Canada, Australia, and New Zealand to the Democratic People's Republic of Korea in formal 
+government statements published in late 2017 and 2018; EternalBlue exploit component 
+derived from NSA tooling disclosed by the Shadow Brokers in April 2017" ;
+    }
+
+    attack_vector : "WannaCry combines an initial infection vector with a self-propagating worm 
+component that operates without requiring any user interaction on vulnerable hosts. Initial 
+exposure occurs via phishing emails delivering dropper payloads, or directly via port 445 
+exposed to the internet on unpatched Windows systems. Once a single host is compromised, 
+the worm uses the EternalBlue exploit targeting the SMBv1 vulnerability CVE-2017-0144 to 
+propagate laterally across any reachable network segment containing unpatched Windows machines, 
+installing a DoublePulsar-style kernel backdoor to load the ransomware payload without touching 
+disk in the initial stage. The ransomware component then enumerates local and network drives, 
+encrypts files using AES-128 per file with RSA-2048 key wrapping, appends the .WNCRY extension, 
+drops ransom notes in all encrypted directories, and displays a ransom demand UI requesting 
+300 to 600 USD in Bitcoin. A kill-switch domain check was embedded in the binary; registration 
+of this domain by a security researcher halted new infections but did not decrypt already-affected 
+systems. Organisations with flat network architectures that had not segregated clinical, 
+operational, or production systems from general corporate networks experienced cascading 
+propagation across entire estates within minutes of initial entry" ;
+
+    target_profile : "Unpatched Windows environments in any sector; highest exposure in 
+organisations that had deferred the MS17-010 patch released in March 2017 due to change 
+management constraints, legacy system compatibility concerns, or operational continuity 
+requirements; healthcare, manufacturing, logistics, and government entities with large 
+Windows XP and Windows 7 estates were disproportionately affected; organisations with 
+flat or poorly segmented internal networks and no east-west traffic monitoring experienced 
+the most extensive lateral propagation" ;
+
+    success_rate        : 40-80% ;
+    average_impact      : "Per-organisation: operational shutdown lasting days to weeks; 
+median ransom demand 300 to 600 USD per endpoint though most victims could not recover 
+files even after payment due to a flaw in the ransomware key management; total remediation 
+cost including forensics, rebuild, and operational disruption estimated at 50,000 to 
+5,000,000 USD per affected organisation depending on scale and backup posture" ;
+    delivery_method     : "Dual vector: opportunistic internet-facing SMB scanning targeting 
+port 445 on hosts directly reachable from the internet; and lateral movement via SMBv1 
+EternalBlue exploit propagating across internal networks from any initially compromised host 
+without requiring phishing or further user interaction after the first foothold" ;
+    detection_difficulty : MEDIUM ;
+
+    prevention_measures : [
+        "Apply MS17-010 patch immediately and enforce a documented maximum patch lag of 
+30 days for critical remote-code-execution vulnerabilities across the entire Windows estate 
+including legacy systems; where patching is not feasible, disable SMBv1 at the OS and 
+firewall level as an immediate compensating control",
+        "Disable SMBv1 across all Windows hosts using Group Policy and PowerShell automation; 
+block inbound and outbound TCP port 445 at the network perimeter and between internal 
+network segments unless explicitly required for authenticated file sharing",
+        "Implement network segmentation separating clinical, operational, production, and 
+administrative zones with default-deny east-west firewall policies, preventing a single 
+compromised host from propagating to unrelated systems via SMB",
+        "Maintain tested offline or air-gapped backups for all critical systems on a cycle 
+not exceeding 24 hours for production data; verify restore procedures quarterly; ensure 
+backup systems are isolated from production networks to prevent co-encryption",
+        "Deploy endpoint detection and response tooling with behavioral rules detecting 
+mass file encryption activity, rapid SMB connection attempts, and process injection 
+patterns characteristic of EternalBlue and DoublePulsar exploitation",
+        "Monitor for outbound connections to known ransomware C2 infrastructure and 
+unexpected SMB traffic patterns using network detection tools and SIEM correlation rules 
+alerting on scanning behaviour from internal hosts",
+        "Maintain a current asset inventory of all Windows systems including end-of-life 
+machines; treat any system that cannot receive patches as a high-risk asset requiring 
+compensating controls including network isolation and enhanced monitoring"
+    ] ;
+
+    cve_references : [
+        "CVE-2017-0144",
+        "CVE-2017-0145",
+        "CVE-2017-0143"
+    ] ;
+
+    tools_used : [
+        "EternalBlue SMBv1 remote code execution exploit derived from NSA tooling",
+        "DoublePulsar kernel-mode backdoor used for in-memory payload injection",
+        "WannaCry ransomware encryptor with Bitcoin payment UI",
+        "Tor-based C2 for payment verification and key delivery",
+        "Mimikatz-style credential harvesting in post-exploitation variants"
+    ] ;
+
+    capec_id         : "CAPEC-150" ;
+    kill_chain_phase : EXPLOITATION ;
+
+    data_sources : [
+        "Network telemetry and flow records showing mass SMB connection attempts on port 445",
+        "Endpoint detection and response telemetry for process injection, file system 
+mass-encryption events, and Volume Shadow Copy deletion commands",
+        "Windows Event Logs capturing SMB authentication events and lateral movement patterns",
+        "SIEM correlation rules for ransomware indicators including rapid file extension 
+changes and ransom note file creation",
+        "Threat intelligence feeds for WannaCry and EternalBlue-lineage infrastructure IOCs"
+    ] ;
+
+    mitigations : [
+        "M1051 - Update software: enforce critical patch deployment within 30-day maximum lag",
+        "M1031 - Network intrusion prevention: block SMBv1 traffic at perimeter and zone boundaries",
+        "M1049 - Antivirus and antimalware: behavioral detection of mass file encryption and 
+process injection patterns",
+        "M1053 - Data backup: maintain tested offline backups on a sub-24-hour RPO cycle",
+        "M1030 - Network segmentation: default-deny east-west policies between network zones",
+        "M1047 - Audit: monitor for Volume Shadow Copy deletion and file encryption activity"
+    ] ;
+
+    platforms : [
+        "Windows",
+        "Windows Server"
+    ] ;
+
+    privilege_required : USER ;
+    impact_type        : SERVICE_DISRUPTION ;
+
+    attribution : "Lazarus Group (APT38), formally attributed to the Democratic People's 
+Republic of Korea by Five Eyes governments; EternalBlue exploit derived from NSA 
+Tailored Access Operations toolset leaked by Shadow Brokers" ;
+
+    notes : "WannaCry remains the most economically damaging worm-ransomware hybrid in 
+recorded history and demonstrated three systemic vulnerabilities simultaneously: widespread 
+delayed patch adoption on critical systems, flat internal network architectures with 
+minimal east-west controls, and insufficient backup and recovery testing. The presence of 
+the kill-switch domain was a design artifact rather than a defensive feature, and its 
+registration halted propagation only for new infections - all already-encrypted systems 
+remained unrecoverable through the ransomware payment path due to a key management flaw. 
+The exploit chain was not novel at time of deployment; MS17-010 had been publicly available 
+for two months before the attack, meaning the entire incident was preventable through 
+timely patching. Healthcare organisations that could not patch Windows XP systems 
+embedded in medical imaging and diagnostic equipment demonstrated the specific challenge 
+of operational technology-adjacent Windows deployments where vendor support constraints 
+override standard patch management timelines" ;
+}

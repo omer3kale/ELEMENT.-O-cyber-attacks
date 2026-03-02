@@ -1,0 +1,236 @@
+attack WateringHoleTargetedSector {
+    mitre_id   : "T1189" ;
+    category   : APPLICATION ;
+    difficulty : HARD ;
+
+    real_world_case {
+        year        : 2020 ;
+        victim      : "The most extensively documented watering hole campaigns 
+of the 2019-2023 period target specific professional populations: 
+Operation AppleJeus (Lazarus Group, 2019-2021) compromised cryptocurrency 
+industry conference websites and developer forums to deliver macOS and 
+Windows backdoors specifically to cryptocurrency exchange employees and developers; 
+the Holy Water watering hole campaign (Qihoo 360, 2020) targeted religious and 
+ethnic minority communities in Asia via compromised faith-organisation websites 
+delivering GODLIKE12 malware; the SolarWinds investigation revealed parallel 
+watering hole infrastructure operated by APT29 against US government contractor 
+portals and think tank websites; in 2021 a coordinated campaign compromised 
+multiple US defence and aerospace industry supplier websites (CVE-2021-26855 
+and CVE-2021-27065, Exchange ProxyLogon) to deliver targeted implants to 
+visiting employees of prime defence contractors; the most technically elaborate 
+example remains Operation LuckyMouse's compromise of an international civil 
+aviation organisation website where geolocation filtering served 
+exploit content only to visitors from specific country IP ranges" ;
+        impact      : "Initial footholds established across multiple target 
+organisations through a single compromised website, producing strategic 
+access at scale with minimal per-target operational cost; in APT29 
+watering hole operations: persistent access in multiple US government 
+contractor networks used for intelligence collection over months; 
+in cryptocurrency-targeting campaigns: theft of private keys and 
+exchange credentials from developer endpoints; average dwell time 
+before discovery for watering hole-delivered implants is 
+approximately 200 days based on Mandiant M-Trends data; 
+targeted organisations typically discovered the compromise 
+only after threat intelligence publication by security researchers 
+or notification by the compromised website owner" ;
+        attribution : "Nation-state and state-aligned advanced persistent 
+threat groups including Lazarus Group (DPRK), APT29 (SVR Russia), 
+APT32 (Vietnam), LuckyMouse/APT27 (China); the watering hole technique 
+is strongly associated with nation-state actors because it requires 
+significant reconnaissance to identify the correct target-population 
+websites, technical skill to compromise them without immediate detection, 
+and selective delivery logic to avoid burning the operation by 
+infecting non-target visitors; some financially motivated groups 
+have adopted the technique for cryptocurrency and financial 
+sector targeting" ;
+    }
+
+    attack_vector : "A watering hole attack begins with reconnaissance 
+to identify websites reliably visited by the target population: 
+industry association news portals, sector-specific forum software, 
+professional conference registration pages, government contractor 
+portal pages, NGO and civil society organisation websites for 
+activist-targeting, or niche software vendor sites for 
+developer-targeting. The attacker then compromises the 
+identified website using one of several methods: exploiting 
+vulnerabilities in the CMS (WordPress, Drupal, Joomla plugin 
+vulnerabilities), obtaining FTP or CPanel credentials through 
+credential stuffing or phishing the site owner, or compromising 
+a CDN or third-party analytics provider whose script is 
+loaded by many sites simultaneously. Once the site is under 
+attacker control, a malicious injection is added to the site's 
+JavaScript or HTML: either a redirect to an exploit server, 
+an iframe loading attacker-controlled content, or direct 
+injection of a browser exploit payload. Advanced operations 
+implement visitor filtering logic before serving the payload, 
+checking: User-Agent string to target specific browser/OS 
+combinations with available exploits; IP geolocation to 
+restrict payload delivery to target country ranges; 
+referrer header to serve exploits only to visits arriving 
+from the target organisation's internal search or intranet 
+link-sharing; and sometimes cookie presence to fingerprint 
+returning visitors. Delivered payloads range from drive-by 
+browser exploits using unpatched browser and plugin 
+vulnerabilities to fake software update prompts pulling 
+signed-looking installers from attacker CDN infrastructure, 
+to credential-harvesting login page overlays for specific 
+professional platforms" ;
+
+    target_profile : "Professionals in specific verticals who share 
+a small set of industry-specific websites as regular information 
+sources: defence and aerospace employees who read defence industry 
+news portals; cryptocurrency and blockchain developers who visit 
+developer forums and exchange operator communities; researchers 
+and academics in sensitive fields who read pre-publication paper 
+repositories and field-specific conference sites; government 
+officials and contractors who access certain inter-agency or 
+contractor portal sites; journalists and civil society workers 
+in specific geographic regions who read particular news 
+aggregators or advocacy sites; the defining characteristic 
+is that the attacker knows the target population's 
+browsing behaviour well enough to predict which website 
+will reliably deliver visits from high-value targets" ;
+
+    success_rate        : 5-30% ;
+    average_impact      : "Multiple simultaneous initial footholds 
+across different target organisations from a single compromised 
+site; infection of high-value individuals who apply strong 
+email filtering but browse the web from corporate endpoints; 
+strategic intelligence access or financial theft depending 
+on target sector; high-value because the attack bypasses 
+the email perimeter that blocks spear-phishing against 
+the same targets" ;
+    delivery_method     : "Malicious JavaScript injection into a 
+compromised trusted website delivering browser exploits, 
+malicious download prompts, or credential harvesting overlays 
+to targeted visitors; payload delivery conditioned on visitor 
+filtering logic checking User-Agent, geolocation, and visit 
+referrer" ;
+    detection_difficulty : HIGH ;
+
+    prevention_measures : [
+        "Maintain consistent and rapid patching of browsers 
+and all browser extensions on all corporate endpoints; 
+the watering hole technique depends on unpatched browser 
+vulnerabilities; most documented watering hole exploits 
+target N-1 or N-2 browser versions, meaning current-version 
+browsers are typically immune to the specific exploit chain 
+in use at the time of the campaign",
+        "Deploy threat intelligence feeds covering known 
+compromised domains and watering hole infrastructure 
+at the DNS and proxy filtering layer; major threat 
+intelligence providers (Recorded Future, Crowdstrike, 
+MSTIC) publish IOCs for active watering hole campaigns 
+enabling preemptive blocking before endpoints are exposed",
+        "Apply browser isolation technology for high-risk 
+internet browsing sessions: remote browser isolation 
+renders web content in an isolated cloud environment 
+and streams only the visual output to the endpoint, 
+preventing any exploit code from reaching the 
+local browser engine regardless of website compromise state",
+        "Enable browser exploit mitigation controls including 
+JIT compiler hardening, heap spray mitigations, and 
+browser-level sandboxing; on Windows endpoints ensure 
+Exploit Protection (EMET successor) and Exploit Guard 
+policies are applied to browser processes; 
+on macOS ensure SIP and Gatekeeper are enabled",
+        "Monitor web proxy logs for anomalous JavaScript 
+download patterns from known-benign domains, 
+unexpected iframe loading chains to external domains 
+not consistent with the site's normal content 
+delivery structure, and endpoint EDR alerts 
+for browser child processes spawning unexpected 
+shell or PowerShell activity following a web browsing session"
+    ] ;
+
+    cve_references : [
+        "CVE-2021-26855",
+        "CVE-2021-30563",
+        "CVE-2022-41128"
+    ] ;
+
+    tools_used : [
+        "Custom browser exploit frameworks targeting unpatched 
+browser and WebKit/V8 engine vulnerabilities",
+        "BeEF (Browser Exploitation Framework) for in-browser 
+JavaScript hook-based initial access and fingerprinting",
+        "Cobalt Strike or similar C2 frameworks for post-exploitation 
+following watering hole implant delivery",
+        "Geolocation and User-Agent filtering middleware 
+for selective payload delivery to target visitors only",
+        "Compromised website infrastructure as delivery vehicle 
+(WordPress/Drupal sites with injected malicious scripts)",
+        "Signed or convincingly named Windows or macOS installer 
+packages as social engineering payloads for non-exploit delivery"
+    ] ;
+
+    capec_id         : "CAPEC-96" ;
+    kill_chain_phase : DELIVERY ;
+
+    data_sources : [
+        "Web proxy logs showing browser sessions loading 
+unexpected cross-domain JavaScript or iframe content 
+from domains not consistent with the visited site's 
+content delivery network",
+        "EDR telemetry showing browser process spawning 
+unexpected child processes (cmd.exe, PowerShell, 
+bash, Python) immediately following a specific 
+external web browsing session",
+        "DNS query logs showing endpoints resolving 
+threat-intelligence-flagged domains following 
+browsing activity",
+        "Threat intelligence platform indicators for 
+known watering hole domains and exploit infrastructure 
+operator IP ranges from active campaigns",
+        "Network intrusion detection signatures matching 
+known browser exploit payload patterns in HTTP 
+response bodies from external web servers"
+    ] ;
+
+    mitigations : [
+        "M1051 - Update software: apply browser and OS 
+patches within 24 hours of release; exploit chains 
+depend on specific version-targeted vulnerabilities",
+        "M1021 - Restrict web-based content: deploy 
+remote browser isolation for high-risk internet 
+browsing on sensitive endpoints",
+        "M1037 - Filter network traffic: apply threat 
+intelligence-based domain blocking at DNS and 
+proxy layer for known watering hole infrastructure",
+        "M1050 - Exploit protection: enable browser-level 
+exploit mitigations and sandbox enforcement on 
+all corporate endpoint browsers",
+        "M1019 - Threat intelligence program: subscribe 
+to sector-specific threat intelligence feeds 
+providing early warning of watering hole 
+campaigns targeting your industry vertical"
+    ] ;
+
+    platforms : [
+        "Web Browser",
+        "Windows",
+        "macOS"
+    ] ;
+
+    privilege_required : NONE ;
+    impact_type        : ESPIONAGE ;
+
+    notes : "Watering hole is one of the most operationally sophisticated 
+delivery techniques in the threat actor toolkit because it inverts the 
+risk model of spear-phishing: instead of the attacker delivering a 
+suspicious artefact directly to the target (where email filtering and 
+security awareness training can intervene), the target browses 
+voluntarily to a trusted site and receives the exploit passively 
+as part of normal browsing behaviour. This makes it highly 
+effective against organisations with strong email perimeter 
+controls and security-aware staff who correctly distrust 
+email attachments. The technique requires significant 
+upfront investment in target population reconnaissance 
+and website compromise, which limits it primarily to 
+nation-state actors and sophisticated financially 
+motivated groups with patient operational planning 
+capability. The small number of compromised sites 
+required to achieve broad coverage of a target 
+population (sometimes a single industry news site) 
+is the defining efficiency property of the attack" ;
+}

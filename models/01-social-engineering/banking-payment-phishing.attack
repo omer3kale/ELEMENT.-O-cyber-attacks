@@ -1,0 +1,191 @@
+attack BankingAndPaymentCredentialPhishing {
+    mitre_id   : "T1566.002" ;
+    category   : SOCIAL_ENGINEERING ;
+    difficulty : MEDIUM ;
+
+    real_world_case {
+        year        : 2024 ;
+        victim      : "Tens of thousands of retail banking customers and payment service users across 
+Germany, France, Spain, the United Kingdom, and the United States; targeted institutions included 
+large retail banks, building societies, and PayPal-style online payment accounts; also affected 
+small business finance and accounting staff deceived into authorising fraudulent domestic and 
+international wire transfers" ;
+        impact      : "Banking and financial services brands collectively account for over 27 percent 
+of all phishing attempts globally per Q1 2024 threat intelligence data; a single multi-brand banking 
+phishing campaign active across the EU in 2023 generated over 8 million EUR in unauthorised card and 
+wire transfer losses across approximately 18,000 confirmed victims before coordinated law enforcement 
+takedown; average per-victim direct loss for credential-and-OTP phishing sits at 1,200 to 4,500 EUR; 
+BEC-driven wire fraud variants targeting business accounts produce median losses of 60,000 to 
+130,000 EUR per incident" ;
+        attribution : "Financially motivated cybercriminal networks operating banking phishing kits 
+targeting over 100 financial brands simultaneously; infrastructure hosted on bulletproof providers 
+with rapid domain rotation; activities consistent with large Eastern European and West African 
+fraud organisations but no confirmed single APT designation; kit distribution via underground 
+Telegram channels and forum marketplaces with affiliate commission models" ;
+    }
+
+    attack_vector : "Victim receives an email or SMS purporting to be from their bank or payment 
+service, bearing an urgent fraud or security pretext: suspicious login detected on your account, 
+unusual card transaction requires your immediate confirmation, your account access will be suspended 
+unless you verify your identity within 24 hours, or a pending payment must be approved or declined. 
+The message links to a pixel-perfect clone of the bank or payment provider login page, served from 
+a plausible lookalike domain over a valid TLS connection that displays a padlock in the browser 
+address bar. The attacker's page captures the username, password, and in some variants a 
+one-time passcode entered by the user after the attacker, in real time, replays the stolen 
+credentials against the legitimate banking site and triggers the OTP delivery to the victim's 
+phone, which the victim then enters into the fake page believing they are completing a security check. 
+More sophisticated variants incorporate a hybrid vishing step: after the victim clicks the link and 
+lands on the fake page a follow-up phone call arrives from a spoofed bank number, with a caller 
+posing as the bank fraud team to add urgency and coach the victim through additional verification 
+steps including providing their full card number, sort code, and account number, or authorising 
+a so-called protective transfer to an attacker-controlled money-mule account. 
+In business targeting contexts the attack is extended into BEC: a compromised or impersonated 
+supplier or executive email account instructs finance staff to change payment details on a 
+scheduled wire transfer, routing funds to a mule account controlled by the fraud network" ;
+
+    target_profile : "Retail banking customers of large consumer banks and building societies; 
+users of online payment platforms and digital wallets; small and medium business owners using 
+online banking for payroll and supplier payments; finance and accounts-payable staff at 
+organisations susceptible to invoice fraud and payment redirection; elderly and digitally 
+less-experienced individuals with higher brand trust and lower phishing recognition rates; 
+high-net-worth individuals targeted in more selective spear-phishing variants with 
+personalised lure content drawn from public data sources" ;
+
+    success_rate        : 5-25% ;
+    average_impact      : "Direct financial fraud: 1,200 to 4,500 EUR per consumer victim from 
+unauthorised card transactions and account takeover-driven transfers; business BEC variants 
+produce median losses of 60,000 to 130,000 EUR per incident; secondary identity theft and 
+account takeover across other services using reused credentials adds further unquantified loss; 
+aggregate annual losses from banking phishing in the EU alone estimated at 500 million EUR 
+per EBA and national fraud monitoring organisation reports" ;
+    delivery_method     : "Primary: HTML email with spoofed From header closely matching the 
+target bank domain, including security-alert template branding, call-to-action button, and 
+urgent subject line; secondary: SMS smishing with spoofed bank sender ID injected into 
+existing legitimate SMS conversation threads on Android devices via SIM-swap or grey-route 
+aggregator abuse; tertiary: hybrid vishing call placed to the victim immediately after 
+initial phishing page visit, using caller-ID spoofing to display the genuine bank customer 
+service number" ;
+    detection_difficulty : MEDIUM ;
+
+    prevention_measures : [
+        "Implement out-of-band transaction confirmation requiring customers to approve high-value 
+or new payee transactions through the bank mobile app using biometric or push notification 
+approval rather than OTP entered on a web page",
+        "Enforce strong customer authentication compliant with PSD2 requirements for all payment 
+initiation and account changes; use dynamic linking tying the authentication code to the 
+specific transfer amount and recipient so that a stolen OTP cannot be replayed for a 
+different transaction",
+        "Deploy real-time fraud scoring on all login and payment events, flagging anomalous 
+device fingerprints, new geolocation, unusual transaction patterns, and rapid access to 
+transfer functions immediately after login",
+        "Apply DMARC reject policy on all bank-owned sending domains and operate continuous 
+domain monitoring for lookalike registrations; pursue rapid takedown of phishing domains 
+through registrar abuse contacts and national CERT coordination",
+        "Educate customers through in-app and statement messaging that the bank will never ask 
+for login credentials, OTP codes, or card details over the phone or via email, and provide 
+a verified callback number prominently for customers to initiate contact",
+        "Implement call-line authentication programmes that enable customers to verify whether 
+a call claiming to originate from the bank is genuine before disclosing any information",
+        "For business banking: enforce dual-authorisation workflows for any payment above a 
+defined threshold, requiring a second named authoriser on a separate device and out-of-band 
+approval; block changes to beneficiary details without a mandatory review delay",
+        "Monitor for AiTM proxy infrastructure and OTP-replay patterns in authentication logs; 
+alert on sign-in events where the session token issued after MFA completion is immediately 
+replayed from a different IP address or device fingerprint"
+    ] ;
+
+    brand_impersonation {
+        real_brand    : "GlobalPay Online Banking" ;
+        spoof_variant : "globai-pay[.]com (substituting letter l with letter i), 
+secure-globalpay-login[.]net (security subdomain keyword stuffing), 
+support-globalpay[.]help (unusual TLD variant), 
+globalpay-accountsecurity[.]com (compound keyword domain), 
+email sender addresses such as security@globalpay.support and 
+noreply@alert-globalpay.com mimicking transactional fraud alert addresses; 
+TLS certificates issued to lookalike domains presenting a valid padlock 
+that does not indicate the domain is genuine" ;
+    }
+
+    cve_references : [] ;
+
+    tools_used : [
+        "Banking phishing kits targeting over 100 financial brands, sold as subscription or 
+per-use packages on underground forums with admin panels and harvested credential exports",
+        "AiTM reverse-proxy frameworks enabling real-time OTP relay to defeat standard 
+TOTP-based two-factor authentication on banking login flows",
+        "Web inject overlays delivered via banking malware on compromised mobile devices 
+that overlay fake authentication dialogs on top of the legitimate banking app",
+        "Vishing call-centre toolkits including VoIP spoofing services and caller-ID 
+manipulation platforms enabling attackers to display verified bank numbers to victims",
+        "Money mule network infrastructure and cash-out services for converting stolen 
+account funds into cryptocurrency or cash via rapid transaction chains",
+        "SIM-swap services purchased from corrupt telco insiders or via social engineering 
+of carrier customer service staff, enabling OTP interception on victim phone numbers"
+    ] ;
+
+    capec_id         : "CAPEC-98" ;
+    kill_chain_phase : ACTIONS_ON_OBJECTIVES ;
+
+    data_sources : [
+        "Bank fraud analytics platform events: failed login, new device, anomalous IP, 
+rapid transfer-initiation post-login",
+        "Authentication system logs capturing OTP request and validation timing, 
+device fingerprint, and IP geolocation per session",
+        "Web server and hosting logs for phishing domain infrastructure obtained via 
+abuse report or law enforcement request",
+        "Email gateway and anti-phishing platform logs capturing banking-themed lure messages",
+        "Customer and business fraud reports submitted to bank fraud teams and national 
+financial crime bodies such as Action Fraud and BaFin",
+        "CERT and national cybersecurity agency feeds for active banking phishing campaign 
+IOCs including phishing domain lists and kit hashes",
+        "Telco fraud management system logs for SIM-swap events and grey-route SMS traffic 
+from spoofed bank sender IDs"
+    ] ;
+
+    mitigations : [
+        "M1032 - Multi-factor authentication: deploy phishing-resistant MFA and dynamic 
+linking OTP tied to specific transaction parameters per PSD2 SCA requirements",
+        "M1017 - User training: customer awareness campaigns on banking fraud social 
+engineering patterns, OTP sharing risks, and safe banking habits",
+        "M1047 - Audit: real-time fraud scoring on authentication and payment events 
+with automated step-up or block on anomalous session characteristics",
+        "M1031 - Network intrusion prevention: bank fraud intelligence sharing feeds 
+enabling rapid blocking of active phishing domain infrastructure",
+        "M1049 - Antivirus and antimalware: mobile security solutions detecting 
+banking trojan web overlays and smishing link interception on device",
+        "M1018 - User account management: enforce dual-authorisation for high-value 
+payments and new payee additions; mandatory review delay on beneficiary changes"
+    ] ;
+
+    platforms : [
+        "Web Browser",
+        "Mobile",
+        "iOS",
+        "Android"
+    ] ;
+
+    privilege_required : NONE ;
+    impact_type        : FINANCIAL ;
+
+    attribution : "Predominantly financially motivated organised crime with no single 
+named APT designation; large multi-brand banking phishing operations show characteristics 
+of professional fraud-as-a-service organisations offering kit licensing, money mule 
+network access, and cash-out services as modular components; secondary actors include 
+small-scale opportunistic operators purchasing ready-made kits and mule services" ;
+
+    notes : "Banking and payment brands collectively represent the largest single vertical 
+targeted by phishing campaigns globally, with financial services accounting for more than 
+one quarter of all brand-phishing attempts across major annual threat intelligence surveys. 
+The threat is structurally self-sustaining: the direct and immediate financial return from 
+banking credential theft and OTP relay attacks makes this one of the most economically 
+efficient criminal activities relative to technical complexity, and the modular availability 
+of phishing kits, AiTM infrastructure, OTP-relay tools, and money mule networks as 
+separately purchasable services from underground markets means that operators require 
+minimal technical skill. PSD2 Strong Customer Authentication mandates in the EU and equivalent 
+initiatives in other jurisdictions have pushed attackers toward real-time OTP-relay and 
+vishing hybrid models to defeat MFA rather than eliminating the threat class. 
+Organisations should treat banking phishing defence as a layered control problem combining 
+technical authentication hardening with real-time fraud analytics and customer education, 
+recognising that no single control is sufficient when adversaries are actively adapting 
+their relay and social engineering techniques to match each new defensive layer deployed" ;
+}

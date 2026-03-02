@@ -1,0 +1,266 @@
+attack ApiBolaIdorDataExposure {
+    mitre_id   : "T1190" ;
+    category   : APPLICATION ;
+    difficulty : MEDIUM ;
+
+    real_world_case {
+        year        : 2023 ;
+        victim      : "Optus (Australia's second-largest telecommunications 
+provider) suffered a significant IDOR-class vulnerability exploitation 
+in September 2022 in which an unauthenticated API endpoint exposed 
+sequential customer account identifiers, allowing an attacker to 
+enumerate customer records by incrementing IDs and retrieve personal 
+data including names, dates of birth, phone numbers, email addresses, 
+home addresses, and government identity document numbers for 
+approximately 9.8 million current and former customers; 
+additionally: Parler social network BOLA exploitation in January 2021 
+allowed bulk download of 99% of all public and deleted posts including 
+GPS metadata; the T-Mobile API BOLA breach in November 2022 (disclosed 
+January 2023) exposed full account data for 37 million current customers 
+through an unauthorised API endpoint that did not require authentication; 
+Trello BOLA vulnerability disclosed 2024 exposed 15 million user 
+email addresses via an unauthenticated API endpoint accepting 
+username lookups; the OWASP API Security Top 10 consistently 
+ranks BOLA as the number one API vulnerability class based on 
+frequency and impact across disclosed incidents from 2019-2024" ;
+        impact      : "9.8 million customer records exposed in the 
+Optus case including government identity document numbers 
+(passport and driving licence numbers) for millions of 
+customers; AUD 140 million estimated cost to Optus including 
+the government-funded replacement of affected identity documents; 
+investigation by Australian Federal Police and the privacy 
+regulator; class action proceedings filed; in the T-Mobile 
+case: 37 million accounts exposed; in aggregate, BOLA/IDOR 
+vulnerabilities are responsible for some of the most impactful 
+data breaches in recent years due to their ease of exploitation 
+and the volume of records accessible through systematic enumeration" ;
+        attribution : "The Optus attacker self-disclosed via 
+online forum posts before apparently deleting the ransom demand; 
+individual opportunistic criminal actor; the T-Mobile breach 
+was attributed to an individual criminal actor conducting 
+API reconnaissance; in many BOLA cases, the discoverer 
+is a security researcher or bug bounty participant who 
+discloses responsibly, but the same vulnerability is 
+typically also exploited silently by criminal actors 
+before or after public disclosure in unrelated incidents" ;
+    }
+
+    attack_vector : "Broken Object Level Authorization (BOLA), 
+also known as IDOR (Insecure Direct Object Reference), 
+is the most prevalent API vulnerability class. It occurs 
+when an API endpoint accepts a client-supplied identifier 
+(user ID, account ID, document ID, order number) in a 
+request and returns or modifies the corresponding object 
+without verifying that the authenticated requestor is 
+authorised to access that specific object. The simplest 
+exploitation pattern is: authenticate as a normal user, 
+observe the API request made for your own account data 
+(e.g. GET /api/users/12345/profile), change the ID to 
+12346 and observe whether the response returns another 
+user's profile. If it does, the endpoint has a BOLA 
+vulnerability. Systematic enumeration then iterates 
+IDs at high speed, dumping all accessible records. 
+More sophisticated variants include: predictable 
+but non-sequential IDs (ULIDs, timestamp-based IDs) 
+that can be inferred or guessed from observable patterns; 
+horizontal privilege escalation via BOLA to access data 
+owned by users at the same privilege level; vertical 
+privilege escalation via BOLA in admin API endpoints 
+that fail to validate that the caller has administrative 
+privileges before returning sensitive user management data; 
+and nested resource BOLA where the outer resource 
+authorisation is checked but the inner resource 
+(e.g. /api/orders/67890/documents/123) is not. 
+GraphQL APIs present a particularly rich BOLA surface 
+because they are introspectable, allowing attackers 
+to enumerate all object types and their ID fields, 
+and because operation composition allows multiple 
+BOLA-vulnerable queries to be batched in a single request 
+for efficient enumeration. REST APIs with no rate limiting 
+on account data endpoints allow millions of records 
+to be enumerated in hours or minutes using concurrent 
+HTTP request scripts" ;
+
+    target_profile : "Any organisation operating a web or mobile 
+application with a REST or GraphQL API that manages 
+per-user data objects: telecommunications providers 
+with customer account APIs; financial services platforms 
+with account and transaction APIs; healthcare platforms 
+with patient record APIs; e-commerce platforms with 
+order and shipment APIs; social platforms with profile 
+and content APIs; any organisation that has had rapid 
+API development without a formal API security testing 
+programme; particularly at risk are organisations 
+that have migrated to a mobile-first or API-first 
+architecture without a corresponding shift in 
+security testing practices from traditional 
+web application security to API-specific testing" ;
+
+    success_rate        : 15-50% ;
+    average_impact      : "Full enumeration of all accessible 
+objects through the vulnerable endpoint; in customer-account 
+API scenarios: complete customer database dump of all 
+user-supplied data for the entire user base without 
+authentication escalation; typical data exposed: 
+PII, contact information, identity document data, 
+transaction history, account status, and any 
+sensitive field stored in user profiles; 
+regulatory notification obligations triggered 
+for the entire exposed user population regardless 
+of whether specific records were confirmed accessed" ;
+    delivery_method     : "Crafted API requests with modified 
+object identifier parameters sent via scripted 
+HTTP client, Burp Suite proxy intercept, Postman, 
+or curl; no exploit payload required — 
+the attack is purely a valid authenticated 
+or unauthenticated API call with a different ID value" ;
+    detection_difficulty : MEDIUM ;
+
+    prevention_measures : [
+        "Implement object-level authorisation checks 
+in every API endpoint handler before returning 
+or modifying any resource: the check must verify 
+that the authenticated principal's identity 
+matches the ownership of the requested object, 
+not just that the request is authenticated; 
+this check should be a mandatory code review 
+requirement enforced by automated static analysis 
+rules flagging any data retrieval that passes 
+a client-supplied ID without a corresponding 
+ownership or permission check",
+        "Replace sequential or predictable integer 
+IDs with UUIDs (v4, random) for all externally 
+exposed API resources, eliminating the trivial 
+enumeration pattern; UUIDs do not prevent BOLA 
+if authorisation is absent but they require 
+the attacker to already know or observe a 
+valid ID before enumerating related resources, 
+significantly increasing the recon cost",
+        "Conduct API-specific security testing as 
+a mandatory part of the development lifecycle 
+for all API endpoints: automated DAST tools 
+(OWASP ZAP, Burp Suite Enterprise, APIsec.ai, 
+42Crunch Platform) with horizontal privilege 
+escalation test suites that systematically 
+test each endpoint for BOLA by authenticating 
+as User A, observing IDs seen in responses, 
+and testing whether those IDs are accessible 
+as User B",
+        "Implement API rate limiting and anomaly 
+detection on all account data endpoints: 
+legitimate client behaviour involves 
+accessing a small number of resource IDs 
+matching the authenticated user's context; 
+alert on sequences of requests with 
+sequentially or randomly varying ID parameters 
+from a single authenticated session, 
+which is the signature of BOLA enumeration",
+        "Apply OWASP API Security Top 10 as a 
+formal security requirement for all API 
+design and code review processes; include 
+BOLA testing in penetration test scope 
+for all external-facing APIs; submit 
+all externally facing APIs to a bug 
+bounty programme with explicit 
+BOLA/IDOR in scope to leverage 
+external researcher testing coverage"
+    ] ;
+
+    tools_used : [
+        "Burp Suite Pro with Autorize extension 
+for automated horizontal privilege escalation testing",
+        "Custom Python or JavaScript request enumeration 
+scripts incrementing ID parameters across 
+API endpoint responses",
+        "Postman or Insomnia REST client 
+for manual API exploration and BOLA confirmation",
+        "OWASP ZAP active scanner with API 
+configuration for automated fuzzing of ID parameters",
+        "GraphQL introspection queries for 
+enumerating all object types and their 
+ID fields before targeted BOLA testing",
+        "ffuf or turbo-intruder for high-speed 
+concurrent API endpoint parameter enumeration"
+    ] ;
+
+    cve_references : [
+        "CVE-2022-29622",
+        "CVE-2023-27163"
+    ] ;
+
+    capec_id         : "CAPEC-122" ;
+    kill_chain_phase : ACTIONS_ON_OBJECTIVES ;
+
+    data_sources : [
+        "API gateway logs showing sequential or 
+high-velocity requests to a single endpoint 
+with varying ID parameters from a single 
+authenticated session or IP address",
+        "Application performance monitoring showing 
+anomalous per-user API request rates 
+significantly above the authenticated 
+user's historical baseline",
+        "WAF logs detecting ID enumeration patterns 
+in query parameters or request body ID fields 
+consistent with automated scripting",
+        "API security platform (Salt Security, 
+Noname Security, Traceable AI) anomaly 
+detection alerts for horizontal access 
+pattern violations",
+        "Backend database query logs showing 
+high-volume SELECT statements 
+with sequential ID values from 
+the application server layer 
+inconsistent with normal application usage"
+    ] ;
+
+    mitigations : [
+        "M1045 - Code signing: enforce mandatory 
+object-level authorisation check pattern 
+in all API endpoint code via automated 
+static analysis rules",
+        "M1016 - Vulnerability scanning: include 
+BOLA/IDOR in all API penetration test scope 
+using horizontal privilege escalation test methodology",
+        "M1036 - Account use policies: implement 
+per-endpoint rate limiting and velocity controls 
+alerting on anomalous ID enumeration patterns",
+        "M1050 - Exploit protection: deploy API 
+security platform with behavioural anomaly 
+detection for authorisation violation patterns",
+        "M1022 - Restrict file and directory permissions: 
+replace sequential integer IDs with UUID v4 
+for all externally exposed resource identifiers"
+    ] ;
+
+    platforms : [
+        "SaaS",
+        "Mobile Application",
+        "Web Application"
+    ] ;
+
+    privilege_required : USER ;
+    impact_type        : DATA_THEFT ;
+
+    notes : "BOLA has been ranked the number one API vulnerability 
+class by OWASP in both the 2019 and 2023 editions of the 
+API Security Top 10. Its persistence at the top of the 
+ranking despite widespread awareness is attributable to 
+the structural gap between how web application security 
+practices evolved (testing for injection, authentication 
+bypass, and session management) and the API-first 
+development model where each endpoint requires an 
+explicit authorisation decision that may not be 
+covered by traditional security testing tooling. 
+Automated DAST tools that test for SQLi and XSS 
+do not automatically test for horizontal privilege 
+escalation by design: the tester must authenticate 
+as two different users and compare response content 
+for the same endpoint with the other user's IDs, 
+which requires domain-specific test configuration. 
+The Optus case demonstrates that a single BOLA 
+vulnerability in a public-facing API can produce 
+a national-scale identity document compromise 
+event with regulatory consequences affecting 
+the entire customer base of a major telco" ;
+}

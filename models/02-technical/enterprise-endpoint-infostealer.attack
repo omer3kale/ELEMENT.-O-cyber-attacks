@@ -1,0 +1,179 @@
+attack EnterpriseEndpointInfostealer {
+    mitre_id   : "T1119" ;
+    category   : MALWARE ;
+    difficulty : HARD ;
+
+    real_world_case {
+        year        : 2022 ;
+        victim      : "Corporate employees at technology companies, defence contractors, 
+financial services firms, and professional services organisations across the United 
+States and Europe; campaigns using TrickBot and BazarLoader as loaders delivering 
+enterprise-focused infostealers were responsible for confirmed theft of intellectual 
+property, M&A documentation, legal files, and customer data from hundreds of 
+enterprise targets during 2020 to 2023" ;
+        impact      : "Per-organisation: theft of commercially sensitive documents 
+including product roadmaps, pricing data, customer contracts, M&A strategy, and 
+personnel records; in cases where sensitive technical IP was exfiltrated, competitive 
+damage estimated in the tens to hundreds of millions USD; regulatory consequences 
+under GDPR and sector-specific data protection regimes for exfiltration of personal 
+data with mandatory breach notification obligations; in cases where initial access 
+was subsequently sold to ransomware affiliates, total incident cost including 
+ransom, recovery, and reputational damage ranged from 500,000 to 40 million USD 
+per affected organisation" ;
+        attribution : "Financially motivated advanced cybercrime groups including 
+FIN7, TA505, and Cobalt Group operating enterprise-focused infostealer campaigns; 
+initial access frequently brokered to ransomware affiliates; some campaigns exhibit 
+targeting behaviour and operational security consistent with state-adjacent threat 
+actors engaged in economic espionage alongside criminal monetisation" ;
+    }
+
+    attack_vector : "Enterprise endpoint infostealers are deployed as second-stage 
+payloads following an initial loader infection typically delivered via sophisticated 
+phishing emails with business-appropriate lures targeting finance, HR, or 
+operations staff. The loader performs anti-analysis checks before downloading 
+the infostealer component from an encrypted C2 channel. Once active, the stealer 
+conducts systematic collection across the endpoint: enumerating recently accessed 
+documents in all Office application Most Recently Used lists, searching for files 
+matching high-value keywords and extensions across local drives and network share 
+mappings, capturing browser credentials, cookies, and session tokens, extracting 
+VPN client profiles and certificates, reading email client local stores including 
+Outlook PST and OST files, capturing screenshots at regular intervals, and 
+in some variants recording clipboard contents and keystrokes for a defined 
+collection window. Collected data is compressed and staged locally before 
+exfiltration via HTTPS to C2 infrastructure using domain fronting or legitimate 
+cloud storage services to blend with allowed traffic. The stealer component 
+typically runs for a defined collection window of hours to days before the 
+operator decides whether to escalate with interactive access via a remote 
+access tool, sell the access to another actor, or close the operation" ;
+
+    target_profile : "Corporate employees with access to commercially sensitive 
+files, intellectual property, customer data, financial records, and strategic 
+documents; highest-value targets include M&A deal teams with access to 
+non-public financial information, R&D staff with product development files, 
+legal teams with litigation strategy, finance staff with wire-transfer authority 
+and banking credentials, and IT administrators whose credentials facilitate 
+lateral movement to additional endpoints and servers" ;
+
+    success_rate        : 10-30% ;
+    average_impact      : "Document and credential theft per endpoint: variable 
+by data sensitivity; in cases involving M&A or competitive intelligence theft: 
+competitive damage in the tens to hundreds of millions USD; regulatory breach 
+notification cost under GDPR: mandatory 72-hour notification, legal and PR cost 
+50,000 to 500,000 EUR; downstream ransomware deployment enabled by sold initial 
+access: median 1 to 5 million USD ransom demand for enterprise targets with 
+operational shutdown and recovery costs typically exceeding ransom demand" ;
+    delivery_method     : "Phishing emails with business-appropriate lures: 
+invoice disputes, employment applications, contract reviews, and financial 
+document requests; weaponised Office documents with macro or template injection 
+in attached files or linked SharePoint documents; ISO-wrapped executables 
+bypassing Mark-of-the-Web controls; LNK shortcut files in archive containers" ;
+    detection_difficulty : HIGH ;
+
+    prevention_measures : [
+        "Deploy endpoint detection and response with behavioral rules detecting 
+mass file enumeration across mapped network shares and local document 
+directories, bulk archive creation in temp paths, and exfiltration volume 
+anomalies on outbound HTTPS connections from Office application processes",
+        "Implement data loss prevention controls on managed endpoints monitoring 
+for bulk document access and archive creation outside business-hours patterns, 
+with automatic quarantine triggering for anomalous file access volumes",
+        "Configure email security to block ISO, IMG, and LNK files in attachments 
+and quarantine password-protected archives for detonation in a sandbox before 
+delivery; strip HTML and disable remote content loading in email clients by default",
+        "Apply network-level monitoring and proxy controls filtering outbound 
+HTTPS to newly registered or low-reputation domains; alert on unusual data 
+volume from endpoints to non-categorised destinations",
+        "Restrict user account access to file server shares using least-privilege 
+ACLs ensuring employees can access only shares required for their job function; 
+audit and review share permissions quarterly to reduce the volume accessible 
+from any single compromised account",
+        "Enable advanced audit logging and user entity behaviour analytics to 
+establish baseline document access patterns per user and alert on deviations 
+including access to sensitive share paths outside normal working hours or 
+from unusual device names",
+        "Enforce email authentication (DMARC reject) on all sending domains 
+and implement Conditional Access policies requiring device compliance for 
+all access to corporate document stores and collaboration platforms"
+    ] ;
+
+    cve_references : [
+        "CVE-2022-30190",
+        "CVE-2021-40444"
+    ] ;
+
+    tools_used : [
+        "TrickBot and BazarLoader as initial access loaders delivering 
+enterprise infostealer components",
+        "StealerOne and Anchor infostealer modules used in enterprise-targeted 
+campaigns",
+        "Cobalt Strike Beacon deployed as secondary interactive access tool 
+following passive collection phase",
+        "Domain fronting and cloud storage services for exfiltration channel 
+blending with legitimate traffic",
+        "7-Zip and WinRAR compression of collected files prior to staged 
+exfiltration"
+    ] ;
+
+    capec_id         : "CAPEC-167" ;
+    kill_chain_phase : ACTIONS_ON_OBJECTIVES ;
+
+    data_sources : [
+        "Endpoint detection and response telemetry for mass file system 
+enumeration, bulk archive creation in temp directories, and anomalous 
+API calls to document handling libraries",
+        "User entity behaviour analytics for deviation from baseline 
+file access patterns including off-hours access and high-volume 
+cross-share enumeration",
+        "Data loss prevention system alerts for bulk document staging 
+and outbound transfer volume anomalies",
+        "Network proxy logs for outbound HTTPS to newly registered 
+and low-reputation domains from endpoint processes",
+        "Email gateway sandbox detonation logs for loader delivery 
+vehicles including macro documents, ISO files, and LNK containers",
+        "Active Directory audit logs for abnormal lateral movement 
+patterns following initial endpoint compromise"
+    ] ;
+
+    mitigations : [
+        "M1049 - Antivirus and antimalware: behavioral detection of 
+mass file enumeration and bulk archive creation",
+        "M1057 - Data loss prevention: monitor and alert on bulk 
+document access and staging",
+        "M1054 - Software configuration: block Office macro execution 
+for external documents; disable AutoMount for ISO and IMG files",
+        "M1018 - User account management: least privilege ACLs on 
+file server shares; quarterly permission reviews",
+        "M1031 - Network intrusion prevention: proxy filtering on 
+outbound HTTPS to low-reputation destinations"
+    ] ;
+
+    platforms : [
+        "Windows",
+        "Windows Server"
+    ] ;
+
+    privilege_required : USER ;
+    impact_type        : DATA_THEFT ;
+
+    attribution : "Financially motivated advanced cybercrime groups including 
+FIN7 and TA505; some campaigns show targeting specificity and operational 
+security consistent with state-adjacent economic espionage operations alongside 
+criminal monetisation objectives" ;
+
+    notes : "Enterprise endpoint infostealers differ from commodity browser 
+stealers in their systematic, targeted collection behaviour: rather than 
+sweeping all browser credentials opportunistically, a well-configured 
+enterprise infostealer executes a defined collection playbook against 
+the specific data types most valuable on a corporate endpoint, prioritising 
+documents, email stores, VPN profiles, and network share contents. 
+The collection phase is often entirely silent for periods of hours to days 
+before any exfiltration occurs, and exfiltration uses legitimate cloud 
+services or domain-fronted HTTPS that produce no anomalous network signatures 
+detectable by signature-based tools. The transition from passive collection 
+to active interactive access via a sold or self-operated initial access broker 
+relationship means that a single infostealer infection at one employee 
+endpoint can be the precursor event for an enterprise-wide ransomware 
+deployment weeks later, connecting a commodity malware infection causally 
+to a major business disruption incident in ways that are frequently not 
+identified in post-incident forensic timelines" ;
+}

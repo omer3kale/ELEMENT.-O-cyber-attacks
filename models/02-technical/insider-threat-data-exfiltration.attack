@@ -1,0 +1,210 @@
+attack InsiderThreatDataExfiltration {
+    mitre_id   : "T1078" ;
+    category   : APPLICATION ;
+    difficulty : MEDIUM ;
+
+    real_world_case {
+        year        : 2023 ;
+        victim      : "A large multinational financial services firm employing 
+tens of thousands of staff discovered in mid-2023 that a senior software 
+engineer had spent four months exfiltrating proprietary algorithmic trading 
+source code and client portfolio data prior to resigning; the individual 
+had accepted a position at a direct competitor and used their still-active 
+credentials and elevated repository access to clone large volumes of internal 
+Git repositories, download client account exports from the data warehouse, 
+and transfer files to a personal cloud storage account using OAuth integrations 
+the firm had not revoked; the activity was surfaced only after the firm's DLP 
+vendor matched exfiltrated file hashes to documents appearing on the competitor's 
+internal development environment during a later legal discovery process; similar 
+contemporaneous cases include Tesla v. Martin Tripp (2018, manufacturing data), 
+Apple v. multiple former employees (ongoing, chip design IP), and the National 
+Renewable Energy Laboratory data exfiltration case" ;
+        impact      : "Exposure of proprietary trading algorithms representing 
+years of quantitative research investment estimated by the firm's legal team 
+at USD 40-60 million in competitive advantage; personal account data for 
+approximately 85,000 clients triggering regulatory notification obligations 
+under GDPR (EU) and CCPA (California); civil litigation costs exceeding 
+USD 3 million; reputational harm with institutional clients following breach 
+notification; regulatory investigation by the Financial Conduct Authority 
+and SEC; the competing firm faced injunctive relief proceedings and a 
+formal trade secret misappropriation case under the Defend Trade Secrets Act" ;
+        attribution : "Malicious internal employee with legitimate broad access 
+permissions accumulated over a five-year tenure in an engineering role; 
+motivated by financial gain and competitive positioning at new employer; 
+no external attacker involved; the insider acted alone using exclusively 
+legitimate credentials, authorised tooling, and standard workflows to avoid 
+triggering signature-based security controls" ;
+    }
+
+    attack_vector : "Insider threat data exfiltration requires no exploit kit, 
+malware, or external infrastructure. The threat actor is a person with 
+legitimate employment credentials, authorised access to internal systems, 
+and an established pattern of normal usage that provides cover for malicious 
+activity. The exfiltration path exploits the same access mechanisms used 
+daily for legitimate work: remote access VPN, SaaS application APIs, 
+corporate endpoint access to file shares, cloud storage OAuth integrations, 
+and self-service data export features of business intelligence and CRM platforms. 
+Common exfiltration methods include: bulk download or git clone from well-indexed 
+internal code repositories; export-to-CSV or export-to-PDF functions in SaaS 
+platforms such as Salesforce, Workday, or ServiceNow; emailing documents 
+to personal accounts from corporate email systems; USB storage device copying 
+where endpoint DLP policies are absent or have gaps; synchronising corporate 
+OneDrive or Google Drive to a personal storage account; and use of screenshot 
+or screen-capture tools to capture data that cannot be downloaded directly. 
+Sophisticated insiders deliberately pace exfiltration to stay within normal 
+data transfer volume baselines, use authorised automation scripts to 
+reconstruct data that is individually accessible but aggregated at scale, 
+and time exfiltration to periods of known low monitoring (evenings, weekends, 
+public holidays, periods of high security team workload). The absence of 
+traditional attack indicators — no malware installation, no external C2 
+connection, no network anomaly from an unknown IP — makes this category 
+structurally different from all external attack patterns and requires 
+detection logic based on behavioural baselines rather than known-bad signatures" ;
+
+    target_profile : "Organisations with large privileged user populations, 
+especially those with: extensive contractor and third-party support staff 
+who may have been granted access equivalent to full employees but with less 
+rigorous access review cycles; engineering teams where broad repository 
+access is considered a default productivity requirement; finance and HR 
+functions with broad access to sensitive personal and financial data; 
+sales and CRM teams with full account history and contact database access; 
+and data science teams with access to raw data warehouses and model artefacts; 
+the risk is highest in organisations with weak joiner/mover/leaver identity 
+lifecycle processes, incomplete DLP coverage across cloud applications, 
+and UEBA (user entity behaviour analytics) that has not been tuned to 
+individual data access baselines; industries most impacted historically: 
+financial services, technology (IP-intensive), defence and aerospace, 
+pharmaceutical and biotech, and any sector where employee movement to 
+direct competitors is common" ;
+
+    success_rate        : 5-15% ;
+    average_impact      : "Confirmed malicious insider incidents are relatively 
+infrequent relative to external breaches but carry outsized impact per incident: 
+the 2023 Verizon DBIR estimated insider-driven incidents account for approximately 
+19% of all breaches with median time-to-detection of 85 days; typical exfiltrated 
+data volumes range from thousands to millions of records or megabytes to gigabytes 
+of proprietary documents; regulatory fines under GDPR for insider-driven breaches 
+average EUR 800,000 based on DPA published decisions; legal costs for civil 
+litigation under DTSA or equivalent average USD 1-5 million per case; 
+competitive harm from IP theft extends for years and is often impossible 
+to fully quantify or recover through legal action" ;
+    delivery_method     : "Abuse of legitimate remote access infrastructure 
+(VPN, RDP, SSL gateways), corporate endpoints, SaaS application export functions, 
+cloud storage OAuth integrations, email systems, and USB storage devices; 
+no external infrastructure or exploit required" ;
+    detection_difficulty : HIGH ;
+
+    prevention_measures : [
+        "Apply the principle of least privilege rigorously with formal 
+access review processes: all user access should be scoped to specific 
+job function requirements and reviewed quarterly; engineering roles 
+should have repository access limited to projects in scope rather than 
+broad organisational write access; revoke access immediately on notice 
+of resignation or role change",
+        "Deploy a data loss prevention solution with coverage across all 
+data egress paths: email, cloud storage upload, USB devices, web uploads, 
+and SaaS application data exports; configure policy to alert and block 
+bulk downloads of data classified at sensitive or above thresholds, 
+particularly in the 30-90 day window preceding and following employee 
+departure events",
+        "Implement UEBA (User and Entity Behaviour Analytics) tuned to 
+individual user baselines for data access volume, access time patterns, 
+and application usage; departing employee accounts should receive 
+elevated monitoring automatically from notice of resignation through 
+access termination; alert on access to high-sensitivity data sources 
+not accessed in the prior 90 days",
+        "Enforce a rigorous joiner, mover, and leaver identity lifecycle 
+process: new joiners' access should expire after 365 days without 
+formal re-certification by the business owner; movers must undergo 
+access resetting to match new role scope; leavers must have all 
+access revoked on the day of departure, not the last day of the 
+notice period",
+        "Implement segregation of duties for high-risk access combinations: 
+no single employee should have simultaneous read access to customer PII 
+databases, access to competitive intelligence, and ability to export to 
+personal cloud storage; control combinations that could enable 
+meaningful IP theft should require dual approval",
+        "Establish a clear logging and audit trail for all data access events 
+across internal file systems, code repositories, and SaaS platforms; 
+ensure log retention of at least 12 months; conduct periodic automated 
+review of access logs for departing employees showing spikes in data 
+access volume correlated with resignation date"
+    ] ;
+
+    cve_references : [
+        "CVE-2022-21999"
+    ] ;
+
+    tools_used : [
+        "Standard corporate productivity tools (SharePoint, OneDrive, 
+Google Drive, Salesforce, Workday) used beyond authorised scope",
+        "Git command-line client for bulk repository cloning",
+        "Personal cloud storage services (Dropbox, Google Drive personal, 
+Box) as exfiltration destinations",
+        "USB storage devices where endpoint controls allow",
+        "Screenshot and screen recording software for capturing 
+non-exportable data",
+        "Corporate VPN and remote desktop infrastructure used for 
+after-hours data access"
+    ] ;
+
+    capec_id         : "CAPEC-150" ;
+    kill_chain_phase : ACTIONS_ON_OBJECTIVES ;
+
+    data_sources : [
+        "DLP solution logs showing bulk download events, email 
+with large attachment volumes to personal domains, or USB 
+copy events above defined thresholds",
+        "SaaS application audit logs (Salesforce, GitHub Enterprise, 
+Google Workspace Admin, Microsoft Purview) showing large export 
+operations or unusual API query volumes by individual users",
+        "VPN and remote access session logs showing after-hours 
+access patterns inconsistent with individual user's historical baseline",
+        "SIEM correlation rules triggering on access to multiple 
+high-sensitivity data sources within a single session, or access 
+to resources not accessed in the prior 90 days",
+        "Endpoint DLP and EDR telemetry showing large file copy 
+operations to removable media or personal cloud storage sync clients"
+    ] ;
+
+    mitigations : [
+        "M1018 - User account management: enforce least privilege 
+access scoping and quarterly access certification reviews",
+        "M1057 - Data loss prevention: deploy DLP across all 
+egress channels with baseline-relative alerting and blocking",
+        "M1022 - Restrict file and directory permissions: limit 
+bulk export and download capabilities to documented business requirements",
+        "M1026 - Privileged account management: implement 
+joiner/mover/leaver lifecycle automation with same-day access termination",
+        "M1047 - Audit: maintain comprehensive user activity 
+logs with 12-month retention and automated anomaly detection"
+    ] ;
+
+    platforms : [
+        "SaaS",
+        "Windows",
+        "Linux",
+        "File Servers"
+    ] ;
+
+    privilege_required : USER ;
+    impact_type        : DATA_THEFT ;
+
+    notes : "Insider threat is structurally distinct from all external 
+attack categories in this catalog: the threat actor already holds 
+valid credentials and legitimate access, there is no attack_vector 
+in the traditional threat-delivery sense, and detection relies 
+entirely on behavioural anomaly rather than known-bad signature matching. 
+The success_rate of 5-15% reflects the proportion of potential 
+insider exfiltration attempts (employees under financial stress, 
+facing termination, or being recruited by competitors) that result 
+in a confirmed, completed, and impactful exfiltration event. The 
+category APPLICATION is chosen to emphasize that the mechanism 
+of harm is abuse of application-layer access rather than 
+network exploitation or malware deployment, though the 
+threat is fundamentally a human one. This entry intentionally 
+does not model negligent insider incidents (accidental data 
+exposure through misconfiguration or misdirected email), 
+which are modeled separately under cloud misconfiguration and 
+phishing patterns" ;
+}

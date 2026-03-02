@@ -1,0 +1,271 @@
+attack DataExtortionNoEncryption {
+    mitre_id   : "T1041" ;
+    category   : APPLICATION ;
+    difficulty : HARD ;
+
+    real_world_case {
+        year        : 2023 ;
+        victim      : "The MOVEit Transfer SQL injection campaign 
+(CVE-2023-34362) conducted by the Cl0p ransomware group between 
+May and June 2023 represents the largest pure data extortion 
+campaign in documented history: exploiting a zero-day SQL injection 
+vulnerability in Progress Software's MOVEit Transfer file 
+transfer application simultaneously against an estimated 2,500+ 
+organisations worldwide with no ransomware payload deployed; 
+confirmed victims include Shell, BBC, British Airways, Boots, 
+Ofcom, the US Department of Energy, Oak Ridge National Laboratory, 
+Johns Hopkins University Health System, Prudential Financial, 
+Aon, Ernst and Young, PwC, TD Ameritrade, 1st Source Bank, 
+and hundreds of additional organisations across financial 
+services, healthcare, legal, and government sectors; 
+total affected individuals estimated at 62 million by 
+Emsisoft tracking as of December 2023; a parallel campaign 
+by the same group in January 2023 exploited CVE-2023-0669 
+in Fortra GoAnywhere MFT affecting 130 additional organisations" ;
+        impact      : "No systems encrypted, no operational disruption 
+at time of compromise — the attack was invisible to most victims 
+until Cl0p began publishing victim names on its dark web extortion 
+site and demanding negotiated payments; extortion demands ranged 
+from USD 1 million to USD 35 million per organisation depending 
+on revenue and data sensitivity; most organisations chose not to 
+pay and instead incurred breach notification costs, regulatory 
+investigation, and class action exposure; total economic impact 
+estimated at USD 9.9 billion by Emsisoft as of December 2023 
+predominantly from notification, remediation, and legal costs 
+rather than paid ransoms; the US government offered a USD 10 million 
+reward for information on Cl0p leadership; breach notification 
+requirements under HIPAA, GDPR, and US state laws triggered for 
+all victims regardless of whether ransom was paid" ;
+        attribution : "Cl0p (also written TA505), a Russia-linked 
+cybercrime group with extensive history of enterprise data theft 
+and extortion operations dating to 2019; the group operates 
+a sophisticated affiliate and partnership model and is known 
+for patient mass-exploitation campaigns targeting specific 
+enterprise software vulnerabilities, notably GoAnywhere MFT, 
+Accellion FTA, MOVEit Transfer, and SolarWinds Serv-U; 
+Ukrainian law enforcement arrested six suspected Cl0p members 
+in June 2021 but the group resumed operations within weeks" ;
+    }
+
+    attack_vector : "Data extortion without encryption is a tactical 
+evolution of traditional ransomware: the attacker abandons the 
+complexity and operational risk of deploying and managing 
+encryption payloads in favour of a simpler, lower-detection-risk 
+operation focused exclusively on data acquisition and 
+monetisation. The attack begins with mass exploitation of 
+a known or zero-day vulnerability in internet-facing enterprise 
+software — preferentially file transfer platforms, managed 
+file transfer servers, and data exchange gateways which 
+by design hold large volumes of sensitive documents and 
+have extensive access to connected data stores. A single 
+SQL injection or RCE vulnerability in such a platform 
+grants immediate unauthenticated access to all files 
+in transit, stored credentials for connected systems, 
+and the application's backend database. Automated 
+exploitation scripts allow a single operator to exploit 
+the same vulnerability across thousands of organisations 
+simultaneously, with data staged in attacker-controlled 
+cloud infrastructure from each victim's environment. 
+The extortion phase follows data exfiltration: the attacker 
+establishes contact via email to the victim organisation's 
+security or legal team, presents proof of data possession 
+(samples of exfiltrated files with internal metadata), 
+and demands a negotiated payment in exchange for a 
+commitment not to publish the data. If payment is refused, 
+the victim's name and data samples are published on a 
+dark web extortion portal. The no-encryption approach 
+provides operational advantages over ransomware: no 
+ransomware payload to be detected by EDR; no operational 
+disruption that would immediately alert the victim and 
+trigger an incident response before exfiltration completes; 
+no key management or decryptor negotiation complexity; 
+and victims who discover the compromise after the fact 
+have no ability to recover by paying for a decryptor, 
+creating a fundamentally different negotiating dynamic" ;
+
+    target_profile : "Organisations operating enterprise file 
+transfer and managed file transfer platforms as part of 
+their B2B data exchange infrastructure: financial services 
+firms exchanging client data and transaction files with 
+counterparties; healthcare organisations transmitting 
+patient records and insurance claims; legal and 
+professional services firms transmitting client 
+documents; government agencies exchanging sensitive 
+programme data; any organisation using MOVEit Transfer, 
+GoAnywhere MFT, Accellion FTA, or similar platforms 
+for batch file exchange with high-sensitivity content; 
+the defining targeting criterion is the combination 
+of an exploitable vulnerability in internet-facing 
+software and the presence of high-value, 
+exfiltration-worthy data" ;
+
+    success_rate        : 10-30% ;
+    average_impact      : "Per-organisation impact: breach notification 
+costs USD 50,000-5 million depending on record count and 
+notification jurisdiction requirements; regulatory fines 
+under GDPR averaging EUR 100,000-2 million for healthcare, 
+financial services, and government victims; extortion demands 
+of USD 1-35 million with estimated 15-20% payment rate 
+among targeted organisations; class action litigation costs 
+of USD 200,000-20 million for high-record-count incidents; 
+aggregate industry impact for the MOVEit campaign alone 
+estimated at USD 9.9 billion" ;
+    delivery_method     : "Targeted exploitation of SQL injection, 
+SSRF, or RCE vulnerabilities in internet-facing enterprise 
+file transfer and managed file transfer platform instances; 
+automated mass exploitation scripts enabling simultaneous 
+compromise of thousands of organisations sharing the 
+same vulnerable software version" ;
+    detection_difficulty : HIGH ;
+
+    prevention_measures : [
+        "Apply patches for enterprise file transfer and 
+managed file transfer platforms within 24-48 hours 
+of vendor release; the MOVEit compromise was a zero-day 
+but the GoAnywhere campaign was conducted three months 
+after Fortra published a security advisory, meaning 
+organisations with a rapid patch application process 
+were protected; treat file transfer platform patches 
+as emergency priority given the data sensitivity 
+of content they process",
+        "Segment file transfer platform networks so that 
+a compromise of the transfer platform does not 
+automatically provide access to the inbound and 
+outbound file store, the backend database, 
+and connected internal systems simultaneously; 
+implement micro-segmentation forcing all data 
+flows through explicit approved paths rather 
+than permissive internal routing",
+        "Implement egress monitoring and DLP on all 
+file transfer platform outbound network connections: 
+the exfiltration in MOVEit-style attacks is a 
+detectable burst of large-volume outbound HTTP 
+or SFTP transfer from the platform server to 
+attacker-controlled infrastructure; alert on 
+outbound data volume from transfer servers 
+that exceeds normal operational baselines",
+        "Conduct application security testing of all 
+internet-facing enterprise software including 
+file transfer platforms, confirming the absence 
+of SQL injection vulnerabilities in all input 
+handling paths and requiring vendors to provide 
+penetration test results and SAST/DAST coverage 
+confirmation as part of procurement and renewal processes",
+        "Implement an incident response playbook 
+specifically for the data extortion without encryption 
+scenario: this class of attack may produce no 
+operational disruption and be discovered only via 
+external notification; the playbook must define 
+rapid forensic triage of file transfer platform 
+logs, immediate scope assessment of exfiltrated 
+data, legal counsel engagement for extortion 
+response, and breach notification timeline 
+management regardless of payment decision"
+    ] ;
+
+    cve_references : [
+        "CVE-2023-34362",
+        "CVE-2023-0669",
+        "CVE-2021-27101"
+    ] ;
+
+    tools_used : [
+        "Automated SQL injection exploitation scripts 
+targeting MOVEit Transfer or GoAnywhere MFT 
+specific vulnerability patterns",
+        "Cl0p proprietary staged exfiltration tooling 
+for large-volume file extraction to attacker 
+cloud infrastructure",
+        "Dark web extortion portal infrastructure 
+for victim naming, sample publication, and 
+payment negotiation",
+        "Custom SSRF reconnaissance and credential 
+extraction tooling for connected system lateral movement",
+        "Cobalt Strike or similar C2 for interactive 
+access on high-priority victims requiring 
+additional post-exploitation beyond automated collection"
+    ] ;
+
+    capec_id         : "CAPEC-691" ;
+    kill_chain_phase : ACTIONS_ON_OBJECTIVES ;
+
+    data_sources : [
+        "File transfer platform application logs showing 
+unexpected query concatenation patterns or 
+successful authentication from unrecognised 
+IP addresses not in approved transfer partner ranges",
+        "Network egress monitoring for large-volume 
+outbound data transfer from file transfer 
+platform servers to external IP addresses 
+not registered as counterparty transfer endpoints",
+        "DLP solutions monitoring outbound file transfer 
+content for data classification levels above 
+the authorised external transfer threshold",
+        "Threat intelligence subscription services 
+providing early warning of active exploitation 
+campaigns against specific file transfer platform 
+CVEs before internal detection",
+        "SIEM correlation of file transfer platform 
+authentication events with concurrent unusual 
+internal database query volumes or file 
+system access pattern anomalies"
+    ] ;
+
+    mitigations : [
+        "M1051 - Update software: apply file transfer 
+platform patches within 24 hours; treat file 
+transfer CVEs as emergency-priority given data 
+sensitivity",
+        "M1030 - Network segmentation: isolate file 
+transfer platforms from direct access to 
+internal file stores and databases; require 
+all connections through explicit routing policies",
+        "M1037 - Filter network traffic: monitor 
+and alert on high-volume egress from file 
+transfer platform servers to unrecognised 
+external endpoints",
+        "M1057 - Data loss prevention: classify and 
+monitor all data processed by file transfer 
+platforms; alert on exfiltration-volume 
+outbound transfers",
+        "M1016 - Vulnerability scanning: conduct 
+application security testing including SQL 
+injection testing on all internet-facing 
+enterprise file transfer software"
+    ] ;
+
+    platforms : [
+        "Windows",
+        "Linux",
+        "Cloud"
+    ] ;
+
+    privilege_required : NONE ;
+    impact_type        : DATA_THEFT ;
+
+    notes : "Data extortion without encryption is not a technically 
+novel attack — SQL injection and data exfiltration have existed 
+for decades. The innovation is operational and economic: Cl0p 
+recognised that the encryption step of ransomware adds operational 
+complexity and detection risk without adding proportionate 
+extortion leverage for organisations that hold cyber insurance 
+or have adequate backups. By removing encryption, the group 
+reduced dwell time, reduced payload detection risk, and 
+accelerated the operation from compromise to monetisation. 
+The MOVEit campaign demonstrated that mass simultaneous 
+exploitation of a single vulnerability in widely deployed 
+enterprise software can produce extortion revenue across 
+thousands of victims with a fully automated operation 
+requiring minimal per-victim human effort until the 
+negotiation phase. The implications for enterprise risk 
+management are significant: the absence of operational 
+disruption means the attack may not be discovered until 
+the attacker chooses to disclose it, removing the 
+victim's ability to respond before public exposure; 
+paying the ransom provides no guarantee of non-publication 
+and no technical countermeasure; and the attack is 
+fully successful from the attacker's perspective even 
+if the victim pays nothing, since the data remains 
+exfiltrated and can be leveraged or resold independently 
+of extortion payment outcome" ;
+}

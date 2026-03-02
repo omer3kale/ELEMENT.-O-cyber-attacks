@@ -1,0 +1,167 @@
+attack KaseyaStyleMspRansomware {
+    mitre_id   : "T1195.002" ;
+    category   : SUPPLY_CHAIN ;
+    difficulty : HARD ;
+
+    real_world_case {
+        year        : 2021 ;
+        victim      : "Managed service providers using the Kaseya VSA remote monitoring 
+and management platform and their downstream customers; approximately 60 MSPs and 
+between 800 and 1,500 downstream business customers across 17 countries were affected 
+in the July 2021 REvil ransomware campaign; downstream victim sectors included 
+supermarket chains in Sweden, schools in New Zealand, and businesses across the 
+United States and Europe" ;
+        impact      : "Kaseya initially refused to pay the 70 million USD universal 
+decryption key ransom demanded by REvil; individual MSP customers received ransom 
+demands of 50,000 USD per organisation; Swedish supermarket chain Coop closed 
+approximately 800 stores for up to a week due to point-of-sale system encryption; 
+estimated total global economic impact of 100 million USD or more across the 
+remediation window; Kaseya subsequently obtained a decryptor through undisclosed 
+means and distributed it to affected customers; multiple REvil operators were 
+subsequently arrested in international law enforcement operations in January 2022" ;
+        attribution : "REvil ransomware group (also known as Sodinokibi), a 
+Russia-aligned ransomware-as-a-service operation; the specific Kaseya attack 
+relied on zero-day vulnerabilities in Kaseya VSA (CVE-2021-30116, CVE-2021-30119, 
+CVE-2021-30120) that were under coordinated disclosure with Kaseya at the time 
+of exploitation, suggesting the attackers obtained vulnerability information 
+ahead of the patch release" ;
+    }
+
+    attack_vector : "The attackers exploited a chain of vulnerabilities in the 
+Kaseya VSA on-premises server software including an authentication bypass and 
+SQL injection vulnerabilities that allowed unauthenticated command execution on 
+VSA servers exposed to the internet. Once code execution on the VSA server was 
+achieved, the attackers used the VSA platform's legitimate agent deployment and 
+script execution capabilities to push the REvil ransomware payload to all 
+endpoints managed by the compromised VSA instance. Because the VSA agent runs 
+with elevated privileges on all managed endpoints and is inherently trusted by 
+endpoint security tooling as a known management process, the ransomware payload 
+was distributed as a legitimate-looking RMM script that installed a fake Windows 
+Defender update package before decrypting and executing the REvil binary. 
+The use of a trusted management channel meant that many endpoint protection 
+tools whitelisted the delivery process, and the simultaneous deployment across 
+all managed endpoints of each affected MSP meant that hundreds of client 
+organisations were hit simultaneously rather than sequentially, preventing 
+any MSP from detecting and isolating the attack before it reached customers" ;
+
+    target_profile : "Managed service providers operating on-premises Kaseya VSA 
+instances exposed to the internet without sufficient access control; downstream 
+customers of affected MSPs spanning virtually all industry verticals; organisations 
+using MSPs for IT management due to limited in-house capability represent a 
+high-risk segment because their endpoint security posture is dependent on the 
+MSP's platform security, which is outside their direct control" ;
+
+    success_rate        : 70-95% ;
+    average_impact      : "Per downstream customer: operational encryption of 
+all managed endpoints with median ransom demand of 50,000 USD; incident response 
+and recovery costs typically 2 to 5 times the ransom demand for organisations 
+without viable backups; for retail and service businesses: extended operational 
+shutdown during recovery; aggregate economic impact estimated at 100 million USD 
+plus across the full victim population" ;
+    delivery_method     : "Exploitation of unauthenticated vulnerabilities in 
+VSA server software; followed by use of the legitimate VSA agent script execution 
+and software deployment function to push ransomware to all managed endpoints 
+via the trusted RMM management channel" ;
+    detection_difficulty : HIGH ;
+
+    prevention_measures : [
+        "Require all MSP relationships to include contractual security assessment 
+provisions and evidence of third-party penetration testing of RMM platform 
+infrastructure on at least an annual basis",
+        "Restrict Kaseya VSA and equivalent RMM platform management interfaces 
+to access only from defined management networks or via VPN; remove all 
+internet-facing exposure of RMM web interfaces",
+        "Apply principle of least privilege to RMM agent accounts; restrict 
+the scope of script execution and software deployment permissions within 
+the RMM platform to the minimum required for contracted management operations",
+        "Implement endpoint protection policies that require manual approval 
+or out-of-band verification for any software deployment or script execution 
+originating from the RMM platform outside defined maintenance windows",
+        "Maintain tested offline or air-gapped backups of all critical 
+endpoints and servers managed via MSP relationships, owned and controlled 
+by your organisation independently of the MSP's backup infrastructure",
+        "Apply VSA software patches within 24 hours of vendor release for 
+critical vulnerabilities; subscribe to Kaseya and equivalent RMM vendor 
+security advisories and treat RMM platform patching as a critical patch 
+track equal to operating system and browser patching",
+        "Include MSP and RMM platform security requirements in third-party 
+risk management programme with evidence-based assessments rather than 
+self-attested questionnaires"
+    ] ;
+
+    cve_references : [
+        "CVE-2021-30116",
+        "CVE-2021-30119",
+        "CVE-2021-30120"
+    ] ;
+
+    tools_used : [
+        "REvil (Sodinokibi) ransomware payload distributed via VSA agent",
+        "Fake Windows Defender update wrapper used to execute ransomware 
+with AV bypass via legitimate process context",
+        "Kaseya VSA script execution and software deployment channel as 
+delivery mechanism",
+        "Authentication bypass and SQL injection exploits targeting VSA 
+web management interface"
+    ] ;
+
+    capec_id         : "CAPEC-438" ;
+    kill_chain_phase : DELIVERY ;
+
+    data_sources : [
+        "VSA server access logs and audit trails for unauthenticated 
+access attempts and bulk script deployments",
+        "Endpoint detection and response telemetry for mass file encryption 
+events and ransomware execution patterns",
+        "Windows Event Logs capturing software installation events 
+attributed to RMM agent processes outside maintenance windows",
+        "Network monitoring for unusual outbound C2 connections from 
+RMM-managed endpoints",
+        "MSP incident notification and threat intelligence sharing 
+channels for early campaign detection across the MSP customer base"
+    ] ;
+
+    mitigations : [
+        "M1051 - Update software: patch RMM platform software within 
+24 hours of critical vulnerability disclosure",
+        "M1030 - Network segmentation: remove internet-facing exposure 
+of RMM management interfaces",
+        "M1049 - Antivirus and antimalware: behavioral detection of 
+mass file encryption even when delivered via trusted RMM channels",
+        "M1053 - Data backup: maintain organisation-controlled offline 
+backups independent of MSP infrastructure",
+        "M1018 - User account management: restrict RMM agent deployment 
+and script execution scope to explicitly approved operations"
+    ] ;
+
+    platforms : [
+        "Windows",
+        "Windows Server"
+    ] ;
+
+    privilege_required : ADMINISTRATOR ;
+    impact_type        : SERVICE_DISRUPTION ;
+
+    attribution : "REvil (Sodinokibi) ransomware-as-a-service group, 
+Russia-aligned criminal ransomware operation; multiple operators 
+arrested in Russia and Eastern Europe in January 2022 following 
+US government pressure; the vulnerability chain was discovered and 
+being responsibly disclosed to Kaseya when REvil exploited it, 
+suggesting advance knowledge of the vulnerability from an 
+undisclosed source" ;
+
+    notes : "The Kaseya VSA attack demonstrated the second-order supply 
+chain risk inherent in MSP relationships: an organisation that had never 
+directly deployed Kaseya software found its endpoints encrypted because 
+its MSP used it for management. This cascading path - vendor to MSP to 
+MSP customer - means that a single vulnerability in a management platform 
+can simultaneously compromise the customers of dozens of MSPs with no 
+direct relationship to the vulnerable vendor. The use of the trusted 
+RMM channel as the delivery mechanism for ransomware represents an 
+evolution in attack technique that defeats most endpoint-layer defences 
+relying on process trust hierarchies: if the management agent is trusted, 
+any software it deploys inherits that trust. Organisations evaluating 
+MSP relationships should treat the MSP's platform security as an 
+extension of their own attack surface and apply equivalent security 
+assessment rigour to MSP tooling as to directly deployed software" ;
+}
