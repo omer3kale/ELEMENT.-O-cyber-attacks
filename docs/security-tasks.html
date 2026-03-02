@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Security Tasks — ELEMENT.İO</title>
+  <meta name="description" content="SecurityTaskGenerator bridges the attack catalog and the scheduler, producing brand-tagged task titles like [ACME Bank] [SOCIAL-ENG] Run phishing simulation.">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<nav class="site-nav" role="navigation" aria-label="Main">
+  <div class="site-nav__inner">
+    <a class="site-nav__brand" href="." aria-label="ELEMENT.İO home">ELEMENT<span>.İO</span></a>
+    <div class="site-nav__links">
+      <a class="site-nav__link" href=".">Home</a>
+      <a class="site-nav__link" href="attacks.html">Attacks</a>
+      <a class="site-nav__link" href="scheduler.html">Scheduler</a>
+      <a class="site-nav__link site-nav__link--active" href="security-tasks.html" aria-current="page">Security Tasks</a>
+      <a class="site-nav__link" href="multi-tenant.html">Multi-Tenant</a>
+    </div>
+    <div class="site-nav__ext">
+      <a class="btn-ghost" href="catalog/">View Catalog →</a>
+      <a class="btn-ghost" href="https://github.com/omer3kale/ELEMENT.-O-cyber-attacks" target="_blank" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page-wrap">
+  <section class="hero">
+    <p class="hero__eyebrow">Module 3 · Security Tasks</p>
+    <h1 class="hero__title">Security Task Generator</h1>
+    <p class="hero__desc">
+      <code>SecurityTaskGenerator</code> is the bridge between the attack catalog and the
+      scheduler. It derives a task title from each attack, optionally stamps it with a
+      brand prefix, and hands the full list to <code>ProcessableItemsService</code> to be
+      distributed across your analysts' calendars.
+    </p>
+    <div class="hero__cta">
+      <a class="btn-primary" href="multi-tenant.html">Add Multi-Tenant →</a>
+      <a class="btn-secondary" href="attacks.html">See the Attack Catalog</a>
+    </div>
+  </section>
+
+  <!-- ── How SecurityTaskGenerator works ──────────────────────── -->
+  <section class="section">
+    <p class="section__label">Architecture</p>
+    <h2 class="section__title">How <code>SecurityTaskGenerator</code> works</h2>
+    <div class="prose">
+      <p>
+        The generator is constructed with three collaborators:
+      </p>
+      <ul>
+        <li><code>AttackRepository</code> — provides the full <code>AttackAggregate[]</code> array.</li>
+        <li><code>ProcessableItemsService</code> — schedules the derived task titles.</li>
+        <li><code>?BrandAwareTaskTemplates</code> — optional; enables brand prefixes and per-attack overrides.</li>
+      </ul>
+      <p>
+        When <code>generateAndSchedule()</code> is called, the generator walks every attack
+        in the repository in order, builds a task title string, and assigns it round-robin
+        to the list of <code>User</code> objects. This guarantees that every analyst
+        receives a representative spread of attack categories rather than all phishing tasks
+        going to one person and all cloud attacks to another.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Task title construction ───────────────────────────────── -->
+  <section class="section">
+    <p class="section__label">Naming convention</p>
+    <h2 class="section__title">The <code>[CATEGORY][Brand] Task Title</code> convention</h2>
+    <div class="prose">
+      <p>
+        Every task name is assembled in three layers. Outer brackets are added
+        left-to-right; the core title comes from the attack's <code>.attack</code> file.
+      </p>
+    </div>
+
+    <div class="diagram">
+<pre>
+  Attack name from DSL:  "Phishing Email Campaign"
+  Category tag:          [SOCIAL-ENG]
+  Brand prefix (opt.):   [ACME Bank]
+
+  Without brand:         [SOCIAL-ENG] Run phishing simulation for Phishing Email Campaign
+  With brand:            [ACME Bank] [SOCIAL-ENG] Run phishing simulation for Phishing Email Campaign
+  With override:         [ACME Bank] Custom: Train staff on targeted BEC mails
+</pre>
+    </div>
+
+    <div class="callout" style="margin-top: 24px;">
+      <strong>Override takes full priority.</strong> If a <code>BrandAwareTaskTemplates</code>
+      instance has an explicit override for an attack name, that string is used verbatim
+      and no category tag or brand prefix is prepended.
+    </div>
+  </section>
+
+  <!-- ── BrandAwareTaskTemplates ──────────────────────────────── -->
+  <section class="section">
+    <p class="section__label">Value object</p>
+    <h2 class="section__title"><code>BrandAwareTaskTemplates</code></h2>
+    <div class="prose">
+      <p>
+        An immutable value object that carries a brand name and an optional map of
+        per-attack title overrides. Copy-on-write methods (<code>withBrandName()</code>,
+        <code>withOverride()</code>) return new instances without mutating the original.
+      </p>
+    </div>
+    <div class="code-label">Constructing and using BrandAwareTaskTemplates (PHP)</div>
+    <pre><code>use ElementO\SecurityTasks\Domain\BrandAwareTaskTemplates;
+use ElementO\SecurityTasks\Application\SecurityTaskGenerator;
+
+// Brand name only — all tasks get "[ACME Bank]" prefix
+$templates = new BrandAwareTaskTemplates('ACME Bank');
+
+// Add a bespoke title for one specific attack
+$templates = $templates->withOverride(
+    'Phishing Email Campaign',
+    'Conduct BEC awareness session for finance department',
+);
+
+$generator = new SecurityTaskGenerator($attackRepo, $service, $templates);</code></pre>
+  </section>
+
+  <!-- ── End-to-end example ────────────────────────────────────── -->
+  <section class="section">
+    <p class="section__label">End-to-end example</p>
+    <h2 class="section__title">From attack definition to calendar entry</h2>
+
+    <div class="flow">
+      <div class="flow-step">
+        <span class="flow-step__num">1</span>
+        <div class="flow-step__body">
+          <h3 class="flow-step__title">Attack defined in DSL</h3>
+          <p class="flow-step__desc">A <code>.attack</code> file in <code>models/</code> declares the attack name and category.</p>
+          <pre><code>attack SqlInjection {
+    category  APPLICATION_SECURITY
+    severity  CRITICAL
+}</code></pre>
+        </div>
+      </div>
+      <div class="flow-step">
+        <span class="flow-step__num">2</span>
+        <div class="flow-step__body">
+          <h3 class="flow-step__title">Category tag resolved</h3>
+          <p class="flow-step__desc"><code>SecurityTaskGenerator::categoryTag()</code> maps <code>APPLICATION_SECURITY</code> → <code>[APP]</code>.</p>
+          <pre><code>// Internal mapping (conceptual)
+AttackCategory::APPLICATION_SECURITY  →  "[APP]"</code></pre>
+        </div>
+      </div>
+      <div class="flow-step">
+        <span class="flow-step__num">3</span>
+        <div class="flow-step__body">
+          <h3 class="flow-step__title">Brand prefix applied</h3>
+          <p class="flow-step__desc">The optional <code>BrandAwareTaskTemplates</code> prepends the brand name.</p>
+          <pre><code>"[Globex Inc] [APP] Run SQL injection test for SqlInjection"</code></pre>
+        </div>
+      </div>
+      <div class="flow-step">
+        <span class="flow-step__num">4</span>
+        <div class="flow-step__body">
+          <h3 class="flow-step__title">Scheduled as <code>ProcessableItem</code></h3>
+          <p class="flow-step__desc">The task title string is handed to the scheduler, which assigns it a timestamp and persists it to the tenant's SQLite database.</p>
+          <pre><code>// Resulting row in processable_items.sqlite:
+// name:          "[Globex Inc] [APP] Run SQL injection test for SqlInjection"
+// user_id:       2    (Charlie, round-robin slot)
+// scheduled_at:  2026-03-09 14:20
+// status:        pending</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Category tag reference ────────────────────────────────── -->
+  <section class="section">
+    <p class="section__label">Reference</p>
+    <h2 class="section__title">All 12 category tags</h2>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
+      <span class="tag">SOCIAL-ENG</span>
+      <span class="tag tag--red">MALWARE</span>
+      <span class="tag tag--yellow">APP</span>
+      <span class="tag tag--purple">CLOUD</span>
+      <span class="tag tag--orange">SUPPLY-CHAIN</span>
+      <span class="tag">IOT</span>
+      <span class="tag tag--green">MOBILE</span>
+      <span class="tag tag--purple">AI-ML</span>
+      <span class="tag">NETWORK</span>
+      <span class="tag tag--yellow">PHYSICAL</span>
+      <span class="tag tag--orange">CRYPTO</span>
+      <span class="tag tag--purple">QUANTUM</span>
+    </div>
+  </section>
+
+  <!-- ── CLI reference ─────────────────────────────────────────── -->
+  <section class="section">
+    <p class="section__label">CLI reference</p>
+    <h2 class="section__title">Running the generator</h2>
+    <div class="code-label">Single-tenant (default)</div>
+    <pre><code>php bin/generate-security-tasks.php</code></pre>
+
+    <div class="code-label" style="margin-top: 16px;">Multi-tenant</div>
+    <pre><code>php bin/generate-security-tasks.php --tenant=acme-corp</code></pre>
+
+    <div class="callout" style="margin-top: 20px;">
+      The script seeds three demo users (Alice, Bob, Charlie) if the users table is empty,
+      then runs all three strategies and prints a formatted table to stdout.
+      Processed items are written to <code>data/processable_items.sqlite</code> or
+      <code>data/{tenant}.sqlite</code>.
+    </div>
+  </section>
+
+</div>
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <span class="site-footer__brand">ELEMENT<span>.İO</span></span>
+    <div class="site-footer__links">
+      <a href=".">Home</a>
+      <a href="attacks.html">Attacks</a>
+      <a href="scheduler.html">Scheduler</a>
+      <a href="security-tasks.html">Security Tasks</a>
+      <a href="multi-tenant.html">Multi-Tenant</a>
+    </div>
+    <a href="https://github.com/omer3kale/ELEMENT.-O-cyber-attacks" target="_blank" rel="noopener">GitHub ↗</a>
+  </div>
+</footer>
+
+</body>
+</html>

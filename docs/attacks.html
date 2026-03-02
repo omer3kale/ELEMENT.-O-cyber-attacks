@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Attack Catalog — ELEMENT.İO</title>
+  <meta name="description" content="30 structured attack definitions across 12 categories, modelled as AttackAggregate domain objects and parsed from a custom .attack DSL.">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<nav class="site-nav" role="navigation" aria-label="Main">
+  <div class="site-nav__inner">
+    <a class="site-nav__brand" href="." aria-label="ELEMENT.İO home">ELEMENT<span>.İO</span></a>
+    <div class="site-nav__links">
+      <a class="site-nav__link" href=".">Home</a>
+      <a class="site-nav__link site-nav__link--active" href="attacks.html" aria-current="page">Attacks</a>
+      <a class="site-nav__link" href="scheduler.html">Scheduler</a>
+      <a class="site-nav__link" href="security-tasks.html">Security Tasks</a>
+      <a class="site-nav__link" href="multi-tenant.html">Multi-Tenant</a>
+    </div>
+    <div class="site-nav__ext">
+      <a class="btn-ghost" href="catalog/">View Catalog →</a>
+      <a class="btn-ghost" href="https://github.com/omer3kale/ELEMENT.-O-cyber-attacks" target="_blank" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page-wrap">
+  <section class="hero">
+    <p class="hero__eyebrow">Module 1 · Domain Layer</p>
+    <h1 class="hero__title">Attack Catalog</h1>
+    <p class="hero__desc">
+      30 attack definitions across 12 threat categories, each parsed from a lightweight
+      <code>.attack</code> DSL into an <code>AttackAggregate</code> domain object.
+      No live exploit payloads — structural threat modelling only.
+    </p>
+    <div class="hero__cta">
+      <a class="btn-primary" href="catalog/">Browse the Live Catalog →</a>
+      <a class="btn-secondary" href="security-tasks.html">How Attacks Become Tasks</a>
+    </div>
+  </section>
+
+  <!-- ── What AttackAggregate models ──────────────────────────── -->
+  <section class="section">
+    <p class="section__label">Domain model</p>
+    <h2 class="section__title">What <code>AttackAggregate</code> models</h2>
+    <div class="prose">
+      <p>
+        Each attack definition captures three things: a <strong>unique name</strong> that
+        becomes the task title seed, an <strong>attack category</strong> drawn from the
+        <code>AttackCategory</code> enum (12 values), and any domain-specific context
+        fields declared in the DSL.
+      </p>
+      <p>
+        <code>AttackAggregate</code> is a pure value object — no persistence, no side
+        effects. It is instantiated by the <code>ANTLRParserAdapter</code> when it walks
+        the ANTLR parse tree for a given <code>.attack</code> file.
+      </p>
+      <p>
+        The <code>FilesystemAttackRepository</code> implementation calls
+        <code>parseDirectory()</code> on the ANTLR adapter and returns a flat
+        <code>AttackAggregate[]</code> array. Everything downstream — the scheduler,
+        the task generator — receives only this array.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── DSL syntax ────────────────────────────────────────────── -->
+  <section class="section">
+    <p class="section__label">Source format</p>
+    <h2 class="section__title">The <code>.attack</code> DSL</h2>
+    <div class="prose">
+      <p>
+        Each file in <code>models/</code> describes exactly one attack. The grammar is
+        defined in <code>grammar/AttackDef.g4</code> and compiled by ANTLR 4 into a
+        PHP parser.
+      </p>
+    </div>
+    <div class="code-label">models/phishing-email.attack (conceptual)</div>
+    <pre><code>attack PhishingEmail {
+    category  SOCIAL_ENGINEERING
+    severity  HIGH
+    surface   email
+    technique credential-harvesting
+}</code></pre>
+
+    <div class="code-label">Parsing entry point — bin/parse-attacks.php</div>
+    <pre><code>$parser  = new ANTLRParserAdapter();
+$attacks = $parser->parseDirectory($projectRoot . '/models');
+// $attacks is AttackAggregate[]</code></pre>
+  </section>
+
+  <!-- ── 12 categories ─────────────────────────────────────────── -->
+  <section class="section">
+    <p class="section__label">Taxonomy</p>
+    <h2 class="section__title">12 attack categories &amp; their task tags</h2>
+    <p class="section__sub">
+      When an attack is converted to a security task, its category is mapped to a short
+      tag that is prepended to the task title.
+    </p>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Task tag</th>
+            <th>Examples of modelled attacks</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Social Engineering</td><td><span class="tag">SOCIAL-ENG</span></td><td>Phishing, vishing, pretexting, BEC</td></tr>
+          <tr><td>Malware</td><td><span class="tag tag--red">MALWARE</span></td><td>Ransomware, spyware, rootkit, wiper</td></tr>
+          <tr><td>Application Security</td><td><span class="tag tag--yellow">APP</span></td><td>SQL injection, XSS, IDOR, deserialization</td></tr>
+          <tr><td>Cloud</td><td><span class="tag tag--purple">CLOUD</span></td><td>SSRF, misconfigured buckets, privilege escalation</td></tr>
+          <tr><td>Supply Chain</td><td><span class="tag tag--orange">SUPPLY-CHAIN</span></td><td>Dependency confusion, build tampering</td></tr>
+          <tr><td>IoT / OT</td><td><span class="tag">IOT</span></td><td>Firmware extraction, MQTT hijack</td></tr>
+          <tr><td>Mobile</td><td><span class="tag tag--green">MOBILE</span></td><td>APK repackaging, SSL-pinning bypass</td></tr>
+          <tr><td>AI / ML</td><td><span class="tag tag--purple">AI-ML</span></td><td>Model poisoning, prompt injection</td></tr>
+          <tr><td>Network</td><td><span class="tag">NETWORK</span></td><td>ARP spoofing, BGP hijack, DNS poisoning</td></tr>
+          <tr><td>Physical</td><td><span class="tag tag--yellow">PHYSICAL</span></td><td>USB drops, tailgating, keylogger planting</td></tr>
+          <tr><td>Cryptography</td><td><span class="tag tag--orange">CRYPTO</span></td><td>Weak cipher, key exposure, downgrade attacks</td></tr>
+          <tr><td>Quantum</td><td><span class="tag tag--purple">QUANTUM</span></td><td>Harvest-now-decrypt-later, post-quantum readiness</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── Catalog UI ─────────────────────────────────────────────── -->
+  <section class="section">
+    <p class="section__label">Live rendering</p>
+    <h2 class="section__title">Browse the interactive catalog</h2>
+    <div class="prose">
+      <p>
+        The static site at <a href="catalog/"><code>/catalog/</code></a> is generated at
+        CI time by <code>bin/build-static-site.php</code>, which feeds the parsed
+        <code>AttackAggregate[]</code> array into <code>AttackListRenderer</code>.
+        The result is a single self-contained HTML file — CSS-only modals, dark theme,
+        PWA manifest, no JavaScript framework required.
+      </p>
+    </div>
+    <a class="btn-primary" href="catalog/">Open the Attack Catalog →</a>
+  </section>
+
+</div>
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <span class="site-footer__brand">ELEMENT<span>.İO</span></span>
+    <div class="site-footer__links">
+      <a href=".">Home</a>
+      <a href="attacks.html">Attacks</a>
+      <a href="scheduler.html">Scheduler</a>
+      <a href="security-tasks.html">Security Tasks</a>
+      <a href="multi-tenant.html">Multi-Tenant</a>
+    </div>
+    <a href="https://github.com/omer3kale/ELEMENT.-O-cyber-attacks" target="_blank" rel="noopener">GitHub ↗</a>
+  </div>
+</footer>
+
+</body>
+</html>

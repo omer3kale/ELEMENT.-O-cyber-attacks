@@ -2,6 +2,11 @@
 
 A structured catalogue of 30 real-world cyber attack patterns, defined in a custom ANTLR 4 DSL, backed by a PHP 8.2 domain layer, and rendered as a static dark-theme HTML page.
 
+**[→ Live docs & architecture overview](https://omer3kale.github.io/ELEMENT.-O-cyber-attacks/)**
+| [Attack Catalog](https://omer3kale.github.io/ELEMENT.-O-cyber-attacks/catalog/)
+| [Scheduler](https://omer3kale.github.io/ELEMENT.-O-cyber-attacks/scheduler.html)
+| [Multi-Tenant](https://omer3kale.github.io/ELEMENT.-O-cyber-attacks/multi-tenant.html)
+
 ## Local usage
 
 ```bash

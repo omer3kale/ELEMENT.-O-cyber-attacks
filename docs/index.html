@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ELEMENT.İO — Cyber Attack Task Engine</title>
+  <meta name="description" content="Turn your full threat catalog into scheduled, brand-tagged security work items — for any team, any tenant, in minutes.">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<!-- ── Navigation ──────────────────────────────────────────────── -->
+<nav class="site-nav" role="navigation" aria-label="Main">
+  <div class="site-nav__inner">
+    <a class="site-nav__brand" href="." aria-label="ELEMENT.İO home">ELEMENT<span>.İO</span></a>
+    <div class="site-nav__links">
+      <a class="site-nav__link site-nav__link--active" href="." aria-current="page">Home</a>
+      <a class="site-nav__link" href="attacks.html">Attacks</a>
+      <a class="site-nav__link" href="scheduler.html">Scheduler</a>
+      <a class="site-nav__link" href="security-tasks.html">Security Tasks</a>
+      <a class="site-nav__link" href="multi-tenant.html">Multi-Tenant</a>
+    </div>
+    <div class="site-nav__ext">
+      <a class="btn-ghost" href="catalog/">View Catalog →</a>
+      <a class="btn-ghost" href="https://github.com/omer3kale/ELEMENT.-O-cyber-attacks" target="_blank" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Hero ────────────────────────────────────────────────────── -->
+<div class="page-wrap">
+  <section class="hero">
+    <p class="hero__eyebrow">Cyber Range Infrastructure · PHP 8.2 · SQLite · GitHub Pages</p>
+    <h1 class="hero__title">
+      Turn your full threat catalog into<br>
+      <em>scheduled, brand-tagged security work items</em><br>
+      — for any team, any tenant, in minutes.
+    </h1>
+    <p class="hero__desc">
+      ELEMENT.İO reads 30 structured attack definitions, schedules them as
+      processable items respecting office hours and German public holidays, stamps
+      them with your brand, and routes them to each analyst — all with a single
+      PHP command and zero cloud dependencies.
+    </p>
+    <div class="hero__cta">
+      <a class="btn-primary" href="security-tasks.html">How Tasks Are Generated →</a>
+      <a class="btn-secondary" href="catalog/">Browse the Attack Catalog</a>
+    </div>
+  </section>
+
+  <!-- ── Three-column overview ─────────────────────────────────── -->
+  <section class="section">
+    <p class="section__label">Architecture in 30 seconds</p>
+    <h2 class="section__title">Three modules, one pipeline</h2>
+    <p class="section__sub">
+      Each module maps to a bounded context in the DDD layer; none depends on the others at the infrastructure level.
+    </p>
+    <div class="card-grid">
+
+      <a class="card card--accent" href="attacks.html">
+        <div class="card__icon">⚔️</div>
+        <div class="card__title">Attack Catalog</div>
+        <div class="card__desc">
+          30 attacks across 12 categories defined in a custom <code>.attack</code> DSL and parsed by an
+          ANTLR-based adapter into <code>AttackAggregate</code> domain objects. No live exploit
+          payloads — structural threat modelling only.
+        </div>
+      </a>
+
+      <a class="card card--accent" href="scheduler.html">
+        <div class="card__icon">📅</div>
+        <div class="card__title">Scheduler</div>
+        <div class="card__desc">
+          <code>ProcessableItemsService</code> distributes work items across a date range with three
+          pluggable strategies — EVEN, RANDOM_SPACED, WEIGHTED — while honouring office hours and
+          German public holidays.
+        </div>
+      </a>
+
+      <a class="card card--accent" href="security-tasks.html">
+        <div class="card__icon">🏷️</div>
+        <div class="card__title">Security Task Generator</div>
+        <div class="card__desc">
+          <code>SecurityTaskGenerator</code> bridges the catalog and the scheduler. Each attack
+          becomes a tagged, brand-prefixed task title
+          like <code>[ACME Bank] [SOCIAL-ENG] Run phishing simulation…</code>.
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ── Example flows ─────────────────────────────────────────── -->
+  <section class="section">
+    <p class="section__label">Example flows</p>
+    <h2 class="section__title">How this works in practice</h2>
+
+    <!-- Flow 1 -->
+    <div class="flow" style="margin-bottom: 40px;">
+      <div class="flow-step">
+        <span class="flow-step__num">1</span>
+        <div class="flow-step__body">
+          <h3 class="flow-step__title">Single-tenant run</h3>
+          <p class="flow-step__desc">
+            Parse the attack catalog, seed three demo users, and schedule 5 tasks per user
+            over the next work week using all three distribution strategies.
+          </p>
+          <pre><code>composer install
+php bin/generate-security-tasks.php</code></pre>
+          <p class="flow-step__desc" style="margin-top:10px;">Output is written to <code>data/processable_items.sqlite</code>.</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <span class="flow-step__num">2</span>
+        <div class="flow-step__body">
+          <h3 class="flow-step__title">Multi-tenant run</h3>
+          <p class="flow-step__desc">
+            Provide a <code>--tenant</code> slug and each customer gets a fully isolated SQLite
+            database — no shared tables, no cross-tenant risk.
+          </p>
+          <pre><code>php bin/generate-security-tasks.php --tenant=acme-corp
+php bin/generate-security-tasks.php --tenant=globex-inc</code></pre>
+          <p class="flow-step__desc" style="margin-top:10px;">
+            Creates <code>data/acme-corp.sqlite</code> and <code>data/globex-inc.sqlite</code> independently.
+          </p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <span class="flow-step__num">3</span>
+        <div class="flow-step__body">
+          <h3 class="flow-step__title">Capacity planning with <code>estimateCapacity()</code></h3>
+          <p class="flow-step__desc">
+            Before committing to a schedule, estimate how many items can fit in a time window
+            given a minimum spacing floor.
+          </p>
+          <pre><code>// In your own PHP script or REPL:
+$start    = new DateTimeImmutable('next monday 09:00');
+$end      = $start->modify('+4 days')->setTime(17, 0);
+$capacity = $service->estimateCapacity($start, $end, minDistanceMinutes: 30);
+echo "Slots available: {$capacity}\n";</code></pre>
+          <p class="flow-step__desc" style="margin-top:10px;">
+            Useful for sizing a sprint before seeding the database.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Roadmap ────────────────────────────────────────────────── -->
+  <section class="section">
+    <p class="section__label">Where this can go next</p>
+    <h2 class="section__title">Two development directions</h2>
+    <div class="card-grid">
+      <div class="card">
+        <div class="card__icon">☁️</div>
+        <div class="card__title">Hosted service</div>
+        <div class="card__desc">
+          Multi-tenant dashboard with per-customer billing, alerting, and audit trails.
+          Run <code>bin/run-all-tenants.php</code> nightly via cron to push refreshed task
+          streams to every tenant automatically.
+        </div>
+      </div>
+      <div class="card">
+        <div class="card__icon">📦</div>
+        <div class="card__title">Self-hosted appliance</div>
+        <div class="card__desc">
+          Docker image, Helm chart, and deeper ticketing integration (Jira, GitHub Issues,
+          ServiceNow). The CLI + SQLite backend makes it natural to package as a
+          single-binary container later.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Self-hosted quick start ──────────────────────────────── -->
+  <section class="section">
+    <p class="section__label">Self-hosted quick start</p>
+    <h2 class="section__title">Run this locally in under two minutes</h2>
+    <div class="callout">
+      <strong>Requirements:</strong> PHP 8.2, Composer, Java 21 (for ANTLR tooling if you regenerate the grammar).
+    </div>
+    <div class="flow" style="margin-top: 24px;">
+      <div class="flow-step">
+        <span class="flow-step__num">1</span>
+        <div class="flow-step__body">
+          <h3 class="flow-step__title">Clone &amp; install</h3>
+          <pre><code>git clone https://github.com/omer3kale/ELEMENT.-O-cyber-attacks.git
+cd ELEMENT.-O-cyber-attacks
+composer install</code></pre>
+        </div>
+      </div>
+      <div class="flow-step">
+        <span class="flow-step__num">2</span>
+        <div class="flow-step__body">
+          <h3 class="flow-step__title">Set environment (optional)</h3>
+          <pre><code>cp .env.example .env
+# Edit DATA_DIR and TZ if desired</code></pre>
+        </div>
+      </div>
+      <div class="flow-step">
+        <span class="flow-step__num">3</span>
+        <div class="flow-step__body">
+          <h3 class="flow-step__title">Run the test suite</h3>
+          <pre><code>./vendor/bin/phpunit
+# 46 tests, 369 assertions, 0 failures</code></pre>
+        </div>
+      </div>
+      <div class="flow-step">
+        <span class="flow-step__num">4</span>
+        <div class="flow-step__body">
+          <h3 class="flow-step__title">Generate your first task stream</h3>
+          <pre><code>php bin/generate-security-tasks.php
+# Or with a tenant slug:
+php bin/generate-security-tasks.php --tenant=my-org</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Safety ────────────────────────────────────────────────── -->
+  <section class="section">
+    <p class="section__label">Safety-first design</p>
+    <h2 class="section__title">No secrets. No live payloads. No cross-tenant risk.</h2>
+    <div class="callout callout--green">
+      <strong>GitHub contains code only.</strong>
+      Tenant data, SQLite files, and all runtime state live in <code>$DATA_DIR</code> on your
+      infrastructure — never committed to any repository.
+    </div>
+    <div class="card-grid" style="margin-top: 24px;">
+      <div class="card">
+        <div class="card__title">No tokens in the repo</div>
+        <div class="card__desc">No API keys, credentials, or tenant data are stored in version control. Configure secrets as environment variables on your VPS.</div>
+      </div>
+      <div class="card">
+        <div class="card__title">DB-file isolation</div>
+        <div class="card__desc">Each tenant slug maps to exactly one SQLite file. The slug regex prevents path traversal. No shared tables, no JOIN-based leaks.</div>
+      </div>
+      <div class="card">
+        <div class="card__title">Structural modeling only</div>
+        <div class="card__desc">Attack definitions describe threat categories and scheduling context — not live exploit payloads or proof-of-concept code.</div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /page-wrap -->
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <span class="site-footer__brand">ELEMENT<span>.İO</span></span>
+    <div class="site-footer__links">
+      <a href=".">Home</a>
+      <a href="attacks.html">Attacks</a>
+      <a href="scheduler.html">Scheduler</a>
+      <a href="security-tasks.html">Security Tasks</a>
+      <a href="multi-tenant.html">Multi-Tenant</a>
+    </div>
+    <a href="https://github.com/omer3kale/ELEMENT.-O-cyber-attacks" target="_blank" rel="noopener">GitHub ↗</a>
+  </div>
+</footer>
+
+</body>
+</html>

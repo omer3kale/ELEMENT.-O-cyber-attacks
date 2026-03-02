@@ -36,10 +36,24 @@ jobs:
       - name: Build static site
         run: php bin/build-static-site.php
 
-      - name: Upload dist artifact
+      - name: Assemble site directory
+        run: |
+          # Create the unified Pages root
+          mkdir -p site/catalog
+
+          # Copy the /docs documentation site into /site
+          cp -r docs/. site/
+
+          # Move the generated attack catalog under /site/catalog/
+          cp dist/index.html   site/catalog/index.html
+          cp dist/manifest.json site/catalog/manifest.json 2>/dev/null || true
+          cp dist/sw.js         site/catalog/sw.js          2>/dev/null || true
+          cp -r dist/icons      site/catalog/               2>/dev/null || true
+
+      - name: Upload site artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: site
 
       - name: Deploy to GitHub Pages
         id: deployment

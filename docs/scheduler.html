@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scheduler — ELEMENT.İO</title>
+  <meta name="description" content="ProcessableItemsService distributes work across office hours using three pluggable strategies: EVEN, RANDOM_SPACED, and WEIGHTED.">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<nav class="site-nav" role="navigation" aria-label="Main">
+  <div class="site-nav__inner">
+    <a class="site-nav__brand" href="." aria-label="ELEMENT.İO home">ELEMENT<span>.İO</span></a>
+    <div class="site-nav__links">
+      <a class="site-nav__link" href=".">Home</a>
+      <a class="site-nav__link" href="attacks.html">Attacks</a>
+      <a class="site-nav__link site-nav__link--active" href="scheduler.html" aria-current="page">Scheduler</a>
+      <a class="site-nav__link" href="security-tasks.html">Security Tasks</a>
+      <a class="site-nav__link" href="multi-tenant.html">Multi-Tenant</a>
+    </div>
+    <div class="site-nav__ext">
+      <a class="btn-ghost" href="catalog/">View Catalog →</a>
+      <a class="btn-ghost" href="https://github.com/omer3kale/ELEMENT.-O-cyber-attacks" target="_blank" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page-wrap">
+  <section class="hero">
+    <p class="hero__eyebrow">Module 2 · ProcessableItems</p>
+    <h1 class="hero__title">Scheduler</h1>
+    <p class="hero__desc">
+      <code>ProcessableItemsService</code> distributes work items across a date range while
+      honouring office hours, German public holidays, and per-user minimum time spacing.
+      Three pluggable distribution strategies let you choose between predictable compliance
+      runs and realistic red-team unpredictability.
+    </p>
+  </section>
+
+  <!-- ── ProcessableItem lifecycle ────────────────────────────── -->
+  <section class="section">
+    <p class="section__label">Domain model</p>
+    <h2 class="section__title"><code>ProcessableItem</code> lifecycle</h2>
+    <div class="prose">
+      <p>
+        A <code>ProcessableItem</code> is the fundamental unit of scheduled work. It carries
+        a <strong>name</strong> (the task title string), a <strong>userId</strong> (which
+        analyst owns it), a <strong>scheduledAt</strong> timestamp, and a
+        <strong>status</strong> that starts at <code>pending</code> and transitions to
+        <code>processed</code> once the analyst marks it complete.
+      </p>
+      <p>
+        Items are persisted to SQLite via <code>ProcessableItemRepository</code>. The schema
+        is created automatically on first connection — no migration tooling required.
+      </p>
+    </div>
+    <div class="diagram">
+<pre>  create()          mark complete
+     │                    │
+  pending  ──────────►  processed
+     │
+  stored in {tenant}.sqlite</pre>
+    </div>
+  </section>
+
+  <!-- ── Three strategies ──────────────────────────────────────── -->
+  <section class="section">
+    <p class="section__label">Pluggable distribution</p>
+    <h2 class="section__title">Three strategies, one interface</h2>
+    <p class="section__sub">
+      Pass a <code>DistributionStrategy</code> enum case to
+      <code>generateAndSchedule()</code> to select how tasks are spread across the
+      scheduling window.
+    </p>
+
+    <div class="card-grid">
+      <div class="card card--accent">
+        <div class="card__icon">⚖️</div>
+        <div class="card__title">EVEN</div>
+        <div class="card__desc">
+          Tasks are distributed at mathematically equal intervals across eligible slots.
+          Fully deterministic — the same inputs always produce the same schedule.
+          Best for <strong>compliance audits</strong> and regression testing.
+        </div>
+      </div>
+      <div class="card card--accent">
+        <div class="card__icon">🎲</div>
+        <div class="card__title">RANDOM_SPACED</div>
+        <div class="card__desc">
+          Slots are chosen with uniform randomness, subject to a minimum-spacing floor.
+          Non-deterministic — yields a different sequence on every run.
+          Best for <strong>realistic red-team exercises</strong> where predictable
+          timing would allow adversary preparation.
+        </div>
+      </div>
+      <div class="card card--accent">
+        <div class="card__icon">📈</div>
+        <div class="card__title">WEIGHTED</div>
+        <div class="card__desc">
+          Earlier available slots have lower weight; later slots have progressively higher
+          weight. Results in a <em>late-day bias</em> — tasks tend to cluster in the
+          afternoon. Best for <strong>security awareness training</strong> targeting
+          end-of-day cognitive load.
+        </div>
+      </div>
+    </div>
+
+    <!-- Trade-off table -->
+    <div class="table-wrap" style="margin-top: 28px;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Strategy</th>
+            <th>Deterministic?</th>
+            <th>Distribution shape</th>
+            <th>Best use case</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>EVEN</strong></td>
+            <td>✅ Yes</td>
+            <td>Uniform — equal gaps</td>
+            <td>Compliance audits, regression suites</td>
+          </tr>
+          <tr>
+            <td><strong>RANDOM_SPACED</strong></td>
+            <td>❌ No</td>
+            <td>Uniform random, spacing-floored</td>
+            <td>Red-team simulations, threat emulation</td>
+          </tr>
+          <tr>
+            <td><strong>WEIGHTED</strong></td>
+            <td>❌ No</td>
+            <td>Exponential late-day bias</td>
+            <td>Security awareness, cognitive-load training</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── Pseudocode ────────────────────────────────────────────── -->
+  <section class="section">
+    <p class="section__label">Algorithm overview</p>
+    <h2 class="section__title">How EVEN and WEIGHTED work</h2>
+
+    <div class="code-label">EVEN — conceptual algorithm</div>
+    <pre><code>eligible_slots  ← all datetime ticks in [start, end] during office hours
+                  minus holidays and already-used slots
+gap             ← floor(count(eligible_slots) / item_count)
+for i in range(item_count):
+    slot ← eligible_slots[i * gap]   // equal step
+    assign(user, slot)</code></pre>
+
+    <div class="code-label" style="margin-top: 20px;">WEIGHTED — conceptual algorithm</div>
+    <pre><code>eligible_slots  ← same as EVEN
+weights         ← [1, 2, 3, …, n]   // index ≈ position in day, so later = heavier
+chosen          ← weighted_random_sample(eligible_slots, weights, item_count)
+for slot in sort(chosen):
+    assign(user, slot)</code></pre>
+  </section>
+
+  <!-- ── Office hours & holidays ───────────────────────────────── -->
+  <section class="section">
+    <p class="section__label">Constraints</p>
+    <h2 class="section__title">Office hours &amp; German holiday calendar</h2>
+    <div class="prose">
+      <p>
+        <code>GermanHolidayCalendar</code> embeds the full set of federal German public
+        holidays. The scheduler calls <code>isEligible(DateTimeImmutable)</code> on each
+        candidate slot and skips anything outside <strong>09:00–17:00 Mon–Fri</strong>
+        on non-holiday days.
+      </p>
+      <p>
+        The minimum-spacing floor (default 30 minutes, configurable via
+        <code>$minDistanceMinutes</code>) prevents two tasks for the same user from landing
+        within the floor window. If the window does not contain enough eligible slots for
+        the requested item count, the scheduler silently produces fewer items rather than
+        violating the floor.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── estimateCapacity ──────────────────────────────────────── -->
+  <section class="section">
+    <p class="section__label">Planning API</p>
+    <h2 class="section__title"><code>estimateCapacity()</code></h2>
+    <div class="callout">
+      <strong>Question it answers:</strong> "How many tasks can I schedule for one user
+      in this time window before I run out of eligible slots?"
+    </div>
+    <div class="code-label" style="margin-top: 20px;">Usage (PHP)</div>
+    <pre><code>use ElementO\ProcessableItems\Application\ProcessableItemsService;
+
+$start    = new DateTimeImmutable('next monday 09:00');
+$end      = $start->modify('+4 days')->setTime(17, 0);
+
+// With default 30-minute spacing floor:
+$capacity = $service->estimateCapacity($start, $end);
+// → e.g. 16 for a standard 5-day work week
+
+// With tighter 20-minute floor:
+$capacity = $service->estimateCapacity($start, $end, minDistanceMinutes: 20);</code></pre>
+    <p class="section__sub" style="margin-top: 16px;">
+      Call before seeding users to ensure you never request more tasks per user than the
+      window can hold. Multiply by user count for total sprint capacity.
+    </p>
+  </section>
+
+</div>
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <span class="site-footer__brand">ELEMENT<span>.İO</span></span>
+    <div class="site-footer__links">
+      <a href=".">Home</a>
+      <a href="attacks.html">Attacks</a>
+      <a href="scheduler.html">Scheduler</a>
+      <a href="security-tasks.html">Security Tasks</a>
+      <a href="multi-tenant.html">Multi-Tenant</a>
+    </div>
+    <a href="https://github.com/omer3kale/ELEMENT.-O-cyber-attacks" target="_blank" rel="noopener">GitHub ↗</a>
+  </div>
+</footer>
+
+</body>
+</html>
