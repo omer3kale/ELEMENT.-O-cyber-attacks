@@ -8,21 +8,9 @@ use ElementO\Presentation\I18n;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Comprehensive test for the shared I18n class.
- *
- * Covers:
- *  - Every key in I18n::KEYS has a non-empty EN, TR, and DE translation
- *  - I18n::t() returns the correct value for each lang
- *  - I18n::i() produces all four required data-i18n-* attributes
- *  - I18n::assertComplete() does not throw
- *  - All data-i18n-key values found in docs HTML files are declared in I18n::KEYS
- */
 final class I18nTest extends TestCase
 {
-    // ---------------------------------------------------------------------------
     // Completeness
-    // ---------------------------------------------------------------------------
 
     public function testKeysConstantIsNonEmpty(): void
     {
@@ -71,10 +59,8 @@ final class I18nTest extends TestCase
             'Translation table contains keys not declared in I18n::KEYS: ' . implode(', ', $extra)
         );
     }
-
-    // ---------------------------------------------------------------------------
+    
     // t() helper
-    // ---------------------------------------------------------------------------
 
     #[DataProvider('tProvider')]
     public function testTReturnsExpectedTranslation(string $key, string $lang, string $expected): void
@@ -95,19 +81,15 @@ final class I18nTest extends TestCase
 
     public function testTFallsBackToKeyForUnknownKey(): void
     {
-        // t() is intentionally lenient; assertComplete() is the strict guard
         self::assertSame('nonexistent_key_xyz', I18n::t('nonexistent_key_xyz', 'en'));
     }
 
     public function testTFallsBackToEnForUnknownLang(): void
     {
-        // unknown lang falls back to the 'en' entry
         self::assertSame(I18n::t('nav_home', 'en'), I18n::t('nav_home', 'fr'));
     }
 
-    // ---------------------------------------------------------------------------
     // i() helper
-    // ---------------------------------------------------------------------------
 
     public function testIEmitsAllFourAttributes(): void
     {
@@ -120,7 +102,6 @@ final class I18nTest extends TestCase
 
     public function testIOutputIsEscapedForHtml(): void
     {
-        // All current translations are plain text, but verify the output is attribute-safe
         foreach (I18n::KEYS as $key) {
             $attrs = I18n::i($key);
             self::assertStringNotContainsString(
@@ -131,9 +112,7 @@ final class I18nTest extends TestCase
         }
     }
 
-    // ---------------------------------------------------------------------------
     // assertComplete()
-    // ---------------------------------------------------------------------------
 
     public function testAssertCompleteDoesNotThrow(): void
     {
@@ -141,14 +120,8 @@ final class I18nTest extends TestCase
         I18n::assertComplete();
     }
 
-    // ---------------------------------------------------------------------------
     // Docs HTML consistency scan
-    // ---------------------------------------------------------------------------
 
-    /**
-     * Scans every docs/*.html file and verifies that each data-i18n-key value
-     * found in the HTML is a declared key in I18n::KEYS.
-     */
     public function testAllHtmlDataI18nKeysAreDeclared(): void
     {
         $docsDir = dirname(__DIR__, 2) . '/docs';

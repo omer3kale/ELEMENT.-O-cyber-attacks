@@ -147,6 +147,65 @@ $attacks = $parser->parseDirectory($projectRoot . '/models');
     <a class="btn-primary" href="https://omer3kale.github.io/ELEMENT.-O-cyber-attacks/catalog/" target="_blank" rel="noopener" data-i18n-key="btn_open_catalog" data-i18n-en="Open the Attack Catalog →" data-i18n-tr="Saldırı Kataloğunu Aç →" data-i18n-de="Angriffskatalog öffnen →">Open the Attack Catalog →</a>
   </section>
 
+  <!-- ── Future multilingual DSL -->
+  <section class="section">
+    <p class="section__label">Design roadmap</p>
+    <h2 class="section__title">Future: multilingual attack content</h2>
+    <div class="prose">
+      <p>
+        Today, attack content — names, descriptions, vectors, real-world cases — is authored
+        in a single language (English) inside the <code>.attack</code> DSL files. The UI chrome
+        (labels, headings, buttons) is already fully EN/TR/DE via <code>I18n</code>, but the
+        <em>data</em> layer is not yet multilingual.
+      </p>
+      <p>
+        A future extension could introduce per-language fields so that the attack catalog renders
+        in EN / TR / DE end-to-end without duplicating entire attack files. Two candidate designs:
+      </p>
+
+      <h3>Option A — separate fields per language</h3>
+      <p>Simple to parse; each field is a standalone rule in the grammar.</p>
+      <pre><code>attack "Account takeover via phishing" {
+  description_en: "Attacker sends a spoofed login page via email to harvest credentials."
+  description_tr: "Saldırgan, kimlik bilgilerini toplamak için e-posta aracılığıyla sahte bir giriş sayfası gönderir."
+  description_de: "Der Angreifer sendet eine gefälschte Anmeldeseite per E-Mail, um Zugangsdaten zu stehlen."
+
+  real_world_en: "Twitter 2020 — spear-phishing of employee credentials via phone."
+  real_world_tr: "Twitter 2020 — telefon aracılığıyla çalışan kimlik bilgilerinin hedefli kimlik avı."
+  real_world_de: "Twitter 2020 — gezieltes Phishing von Mitarbeiter-Zugangsdaten per Telefon."
+}</code></pre>
+
+      <h3>Option B — nested language block</h3>
+      <p>More structured and easier to extend beyond three languages without multiplying top-level field names.</p>
+      <pre><code>attack "Account takeover via phishing" {
+  description {
+    en: "Attacker sends a spoofed login page via email to harvest credentials."
+    tr: "Saldırgan, kimlik bilgilerini toplamak için e-posta aracılığıyla sahte bir giriş sayfası gönderir."
+    de: "Der Angreifer sendet eine gefälschte Anmeldeseite per E-Mail, um Zugangsdaten zu stehlen."
+  }
+
+  real_world {
+    en: "Twitter 2020 — spear-phishing of employee credentials via phone."
+    tr: "Twitter 2020 — telefon aracılığıyla çalışan kimlik bilgilerinin hedefli kimlik avı."
+    de: "Twitter 2020 — gezieltes Phishing von Mitarbeiter-Zugangsdaten per Telefon."
+  }
+}</code></pre>
+
+      <p>
+        This design is intentionally not implemented for the challenge; it serves as a concrete
+        roadmap for how the DSL and renderer could evolve to support multilingual attack content
+        in a controlled, testable way.
+      </p>
+      <p>When this is eventually implemented, the following components would need to change:</p>
+      <ul>
+        <li><code>grammar/AttackDef.g4</code> — add multilingual field rules to the grammar</li>
+        <li><code>ANTLRParserAdapter</code> and <code>AttackAggregate</code> — carry per-language strings</li>
+        <li><code>AttackListRenderer</code> — pick the active language for description/real-world fields</li>
+        <li>New tests — assert every <code>.attack</code> file defines all required language variants</li>
+      </ul>
+    </div>
+  </section>
+
 </div>
 
 <footer class="site-footer">

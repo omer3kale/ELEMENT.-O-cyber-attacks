@@ -35,12 +35,22 @@
 <!-- ── Hero -->
 <div class="page-wrap">
   <section class="hero">
-    <h1 class="hero__title">
+    <h1 class="hero__title"
+      data-i18n-key="landing_hero_title"
+      data-i18n-en="Turn your full threat catalog into scheduled, brand-tagged security work items — for any team, any tenant, in minutes."
+      data-i18n-tr="Tüm tehdit kataloğunuzu planlı, marka etiketli güvenlik iş öğelerine dönüştürün — her ekip, her kiracı için, dakikalar içinde."
+      data-i18n-de="Verwandeln Sie Ihren gesamten Bedrohungskatalog in geplante, markierte Sicherheitsaufgaben – für jedes Team, jeden Mandanten, in Minuten."
+    >
       Turn your full threat catalog into<br>
       <em>scheduled, brand-tagged security work items</em><br>
       — for any team, any tenant, in minutes.
     </h1>
-    <p class="hero__desc">
+    <p class="hero__desc"
+      data-i18n-key="landing_hero_desc"
+      data-i18n-en="ELEMENT.İO reads 30 structured attack definitions, schedules them as processable items respecting office hours and German public holidays, stamps them with your brand, and routes them to each analyst — all with a single PHP command and zero cloud dependencies."
+      data-i18n-tr="ELEMENT.İO, 30 yapılandırılmış saldırı tanımını okur; bunları mesai saatlerine ve Almanya'nın resmi tatillerine saygı göstererek işlenebilir öğeler olarak planlar, markanızla damgalar ve her analize yönlendirir — tek bir PHP komutuyla, sıfır bulut bağımlılığıyla."
+      data-i18n-de="ELEMENT.İO liest 30 strukturierte Angriffsdefinitionen, plant sie als verarbeitbare Elemente unter Berücksichtigung von Bürozeiten und deutschen Feiertagen, versieht sie mit Ihrem Markenzeichen und leitet sie an jeden Analysten weiter – alles mit einem einzigen PHP-Befehl und ohne Cloud-Abhängigkeiten."
+    >
       ELEMENT.İO reads 30 structured attack definitions, schedules them as
       processable items respecting office hours and German public holidays, stamps
       them with your brand, and routes them to each analyst — all with a single
@@ -54,35 +64,72 @@
 
   <!-- ── Three-column overview -->
   <section class="section">
-    <p class="section__label">Architecture in 30 seconds</p>
+    <p class="section__label"
+      data-i18n-key="landing_label_arch"
+      data-i18n-en="Architecture in 30 seconds"
+      data-i18n-tr="30 saniyede mimari"
+      data-i18n-de="Architektur in 30 Sekunden"
+    >Architecture in 30 seconds</p>
     <h2 class="section__title" data-i18n-key="section_three_modules" data-i18n-en="Three modules, one pipeline" data-i18n-tr="Üç modül, bir boru hattı" data-i18n-de="Drei Module, eine Pipeline">Three modules, one pipeline</h2>
-    <p class="section__sub">
+    <p class="section__sub"
+      data-i18n-key="landing_arch_sub"
+      data-i18n-en="Each module maps to a bounded context in the DDD layer; none depends on the others at the infrastructure level."
+      data-i18n-tr="Her modül, DDD katmanındaki bir sınırlı bağlama karşılık gelir; hiçbiri altyapı düzeyinde diğerlerine bağımlı değildir."
+      data-i18n-de="Jedes Modul entspricht einem Bounded Context in der DDD-Schicht; keines hängt auf Infrastrukturebene von den anderen ab."
+    >
       Each module maps to a bounded context in the DDD layer; none depends on the others at the infrastructure level.
     </p>
     <div class="card-grid">
 
       <a class="card card--accent" href="attacks.html">
-        <div class="card__title">Attack Catalog</div>
-        <div class="card__desc">
-          30 attacks across 12 categories defined in a custom <code>.attack</code> DSL and parsed by an
+        <div class="card__title"
+          data-i18n-key="landing_card_attacks_title"
+          data-i18n-en="Attack Catalog"
+          data-i18n-tr="Saldırı Kataloğu"
+          data-i18n-de="Angriffskatalog"
+        >Attack Catalog</div>
+        <div class="card__desc"
+          data-i18n-key="landing_card_attacks_desc"
+          data-i18n-en="30 attacks across 12 categories defined in a custom .attack DSL and parsed by an ANTLR-based adapter into AttackAggregate domain objects. No live exploit payloads — structural threat modelling only."
+          data-i18n-tr="Özel .attack DSL'i ile tanımlanmış 12 kategoride 30 saldırı, ANTLR tabanlı bir adaptör tarafından AttackAggregate domain nesnelerine çözümlenir. Canlı exploit yükü yok — yalnızca yapısal tehdit modellemesi."
+          data-i18n-de="30 Angriffe in 12 Kategorien, definiert in einer eigenen .attack-DSL und von einem ANTLR-Adapter in AttackAggregate-Domänenobjekte geparst. Keine Live-Exploit-Payloads – nur strukturelle Bedrohungsmodellierung."
+        >30 attacks across 12 categories defined in a custom <code>.attack</code> DSL and parsed by an
           ANTLR-based adapter into <code>AttackAggregate</code> domain objects. No live exploit
           payloads — structural threat modelling only.
         </div>
       </a>
 
       <a class="card card--accent" href="scheduler.html">
-        <div class="card__title">Scheduler</div>
-        <div class="card__desc">
-          <code>ProcessableItemsService</code> distributes work items across a date range with three
+        <div class="card__title"
+          data-i18n-key="landing_card_scheduler_title"
+          data-i18n-en="Scheduler"
+          data-i18n-tr="Zamanlayıcı"
+          data-i18n-de="Scheduler"
+        >Scheduler</div>
+        <div class="card__desc"
+          data-i18n-key="landing_card_scheduler_desc"
+          data-i18n-en="ProcessableItemsService distributes work items across a date range with three pluggable strategies — EVEN, RANDOM_SPACED, WEIGHTED — while honouring office hours and German public holidays."
+          data-i18n-tr="ProcessableItemsService, iş öğelerini bir tarih aralığına üç takılabilir stratejiyle dağıtır — EVEN, RANDOM_SPACED, WEIGHTED — mesai saatlerine ve Almanya'nın resmi tatillerine saygı göstererek."
+          data-i18n-de="ProcessableItemsService verteilt Aufgaben über einen Datumsbereich mit drei austauschbaren Strategien – EVEN, RANDOM_SPACED, WEIGHTED – unter Berücksichtigung von Bürozeiten und deutschen Feiertagen."
+        ><code>ProcessableItemsService</code> distributes work items across a date range with three
           pluggable strategies — EVEN, RANDOM_SPACED, WEIGHTED — while honouring office hours and
           German public holidays.
         </div>
       </a>
 
       <a class="card card--accent" href="security-tasks.html">
-        <div class="card__title">Security Task Generator</div>
-        <div class="card__desc">
-          <code>SecurityTaskGenerator</code> bridges the catalog and the scheduler. Each attack
+        <div class="card__title"
+          data-i18n-key="landing_card_tasks_title"
+          data-i18n-en="Security Task Generator"
+          data-i18n-tr="Güvenlik Görevi Oluşturucu"
+          data-i18n-de="Sicherheitsaufgaben-Generator"
+        >Security Task Generator</div>
+        <div class="card__desc"
+          data-i18n-key="landing_card_tasks_desc"
+          data-i18n-en="SecurityTaskGenerator bridges the catalog and the scheduler. Each attack becomes a tagged, brand-prefixed task title like [ACME Bank] [SOCIAL-ENG] Run phishing simulation…"
+          data-i18n-tr="SecurityTaskGenerator, katalog ile zamanlayıcı arasında köprü kurar. Her saldırı, [ACME Bank] [SOCIAL-ENG] Kimlik avı simülasyonu çalıştır… gibi etiketli, marka önekli bir görev başlığına dönüşür."
+          data-i18n-de="SecurityTaskGenerator verbindet den Katalog mit dem Scheduler. Jeder Angriff wird zu einem markierten, markenvorangestellten Aufgabentitel wie [ACME Bank] [SOCIAL-ENG] Phishing-Simulation durchführen…"
+        ><code>SecurityTaskGenerator</code> bridges the catalog and the scheduler. Each attack
           becomes a tagged, brand-prefixed task title
           like <code>[ACME Bank] [SOCIAL-ENG] Run phishing simulation…</code>.
         </div>
@@ -93,9 +140,19 @@
 
   <!-- ── Mock attack walkthrough -->
   <section class="section">
-    <p class="section__label">For your team</p>
+    <p class="section__label"
+      data-i18n-key="landing_label_team"
+      data-i18n-en="For your team"
+      data-i18n-tr="Ekibiniz için"
+      data-i18n-de="Für Ihr Team"
+    >For your team</p>
     <h2 class="section__title" data-i18n-key="section_safety_question" data-i18n-en="How can you send harmless (mock) attacks to your coworkers?" data-i18n-tr="Zararssız (sahte) saldırıları iş arkadaşlarınıza nasıl gönderirsiniz?" data-i18n-de="Wie können harmlose (Mock-)Angriffe an Kollegen gesendet werden?">How can you send harmless (mock) attacks to your coworkers?</h2>
-    <p class="section__sub">
+    <p class="section__sub"
+      data-i18n-key="landing_team_sub"
+      data-i18n-en="No technical background needed. Here's how a team lead or exec can run a safe, fully controlled security awareness exercise in three steps."
+      data-i18n-tr="Teknik bir altyapıya gerek yok. Bir ekip lideri veya yöneticinin güvenli, tam kontrollü bir güvenlik farkındalık egzersizini üç adımda nasıl yürütebileceği aşağıda açıklanmıştır."
+      data-i18n-de="Kein technisches Hintergrundwissen erforderlich. So kann eine Führungskraft in drei Schritten eine sichere, vollständig kontrollierte Sicherheitsbewusstseinsübung durchführen."
+    >
       No technical background needed. Here's how a team lead or exec can run a safe,
       fully controlled security awareness exercise in three steps.
     </p>
@@ -104,8 +161,18 @@
       <div class="flow-step">
         <span class="flow-step__num">1</span>
         <div class="flow-step__body">
-          <h3 class="flow-step__title">Pick your scenario from the catalog</h3>
-          <p class="flow-step__desc">
+          <h3 class="flow-step__title"
+            data-i18n-key="landing_step1_title"
+            data-i18n-en="Pick your scenario from the catalog"
+            data-i18n-tr="Katalogdan senaryonuzu seçin"
+            data-i18n-de="Wählen Sie Ihr Szenario aus dem Katalog"
+          >Pick your scenario from the catalog</h3>
+          <p class="flow-step__desc"
+            data-i18n-key="landing_step1_desc"
+            data-i18n-en="Browse the Attack Catalog and choose a scenario that fits your team's risk profile — for example, a phishing email simulation or a fake USB-drop exercise. Every entry is a structured description, not a live exploit. Nothing harmful is sent until you deliberately trigger it."
+            data-i18n-tr="Saldırı Kataloğuna göz atın ve ekibinizin risk profiline uyan bir senaryo seçin — örneğin, bir kimlik avı e-posta simülasyonu veya sahte bir USB bırakma egzersizi. Her giriş, canlı bir exploit değil, yapılandırılmış bir açıklamadır. Siz kasıtlı olarak tetikleyene kadar zararlı hiçbir şey gönderilmez."
+            data-i18n-de="Durchsuchen Sie den Angriffskatalog und wählen Sie ein Szenario, das zum Risikoprofil Ihres Teams passt – z. B. eine Phishing-E-Mail-Simulation oder eine gefälschte USB-Drop-Übung. Jeder Eintrag ist eine strukturierte Beschreibung, kein Live-Exploit. Es wird nichts Schädliches gesendet, bis Sie es bewusst auslösen."
+          >
             Browse the <a href="catalog/">Attack Catalog</a> and choose a scenario that
             fits your team's risk profile — for example, a phishing email simulation or
             a fake USB-drop exercise. Every entry is a <strong>structured description</strong>,
@@ -116,8 +183,18 @@
       <div class="flow-step">
         <span class="flow-step__num">2</span>
         <div class="flow-step__body">
-          <h3 class="flow-step__title">Schedule it for your team's calendar</h3>
-          <p class="flow-step__desc">
+          <h3 class="flow-step__title"
+            data-i18n-key="landing_step2_title"
+            data-i18n-en="Schedule it for your team's calendar"
+            data-i18n-tr="Ekibinizin takvimine planlayın"
+            data-i18n-de="Planen Sie es in den Teamkalender ein"
+          >Schedule it for your team's calendar</h3>
+          <p class="flow-step__desc"
+            data-i18n-key="landing_step2_desc"
+            data-i18n-en="The scheduler automatically spreads tasks across your analysts' working hours, respecting lunch, public holidays, and minimum spacing between exercises — so nobody gets hit with three scenarios on a Monday morning. You choose the week, the number of tasks per person, and whether the timing is predictable or randomised (to better mimic real attacker behaviour)."
+            data-i18n-tr="Zamanlayıcı, görevleri analistlerinizin çalışma saatlerine otomatik olarak yayar; öğle aralarına, resmi tatillere ve egzersizler arasındaki minimum aralığa saygı gösterir — böylece kimse Pazartesi sabahı üç senaryoyla karşılaşmaz. Haftayı, kişi başına görev sayısını ve zamanlanın tahmin edilebilir mi yoksa rastgele mi olacağını siz seçersiniz."
+            data-i18n-de="Der Scheduler verteilt Aufgaben automatisch auf die Arbeitszeiten Ihrer Analysten, unter Berücksichtigung von Mittagspausen, Feiertagen und Mindestabständen zwischen Übungen – damit niemand am Montagmorgen mit drei Szenarien konfrontiert wird. Sie wählen die Woche, die Anzahl der Aufgaben pro Person und ob die Zeiteinteilung vorhersehbar oder zufällig ist."
+          >
             The scheduler automatically spreads tasks across your analysts' working hours,
             respecting lunch, public holidays, and minimum spacing between exercises — so
             nobody gets hit with three scenarios on a Monday morning. You choose the week,
@@ -129,8 +206,18 @@
       <div class="flow-step">
         <span class="flow-step__num">3</span>
         <div class="flow-step__body">
-          <h3 class="flow-step__title">Your team receives a branded task — they respond</h3>
-          <p class="flow-step__desc">
+          <h3 class="flow-step__title"
+            data-i18n-key="landing_step3_title"
+            data-i18n-en="Your team receives a branded task — they respond"
+            data-i18n-tr="Ekibiniz marklı bir görev alır — yanıt verirler"
+            data-i18n-de="Ihr Team erhält eine Markenaufgabe — sie reagieren"
+          >Your team receives a branded task — they respond</h3>
+          <p class="flow-step__desc"
+            data-i18n-key="landing_step3_desc"
+            data-i18n-en="Each team member gets a task titled with your company name and the attack category, e.g. [Acme Corp] [SOCIAL-ENG] Identify and report suspicious email. They treat it like any work ticket — investigate, respond, and mark it complete. You review who caught it and who missed it, with zero real risk to your systems."
+            data-i18n-tr="Her ekip üyesi, şirket adınız ve saldırı kategorisiyle başlıklı bir görev alır; ör. [Acme Corp] [SOCIAL-ENG] Şüpheli e-postayı tanımlayın ve bildirin. Bunu normal bir iş bileti gibi ele alırlar — soruşturur, yanıt verir ve tamamlandı olarak işaretlerler. Sistemlerinize sıfır gerçek risk ile kimin yakaladığını ve kimin kaçırdığını gözden geçirirsiniz."
+            data-i18n-de="Jedes Teammitglied erhält eine Aufgabe mit dem Namen Ihres Unternehmens und der Angriffskategorie, z. B. [Acme Corp] [SOCIAL-ENG] Verdächtige E-Mail identifizieren und melden. Sie behandeln sie wie jedes andere Arbeitsticket – untersuchen, reagieren und als erledigt markieren. Sie überprüfen, wer es erkannt und wer es verpasst hat, mit null realem Risiko für Ihre Systeme."
+          >
             Each team member gets a task titled with your company name and the attack
             category, e.g. <strong>"[Acme Corp] [SOCIAL-ENG] Identify and report
             suspicious email"</strong>. They treat it like any work ticket — investigate,
@@ -144,20 +231,45 @@
 
   <!-- ── Roadmap -->
   <section class="section">
-    <p class="section__label">Where this can go next</p>
+    <p class="section__label"
+      data-i18n-key="landing_label_roadmap"
+      data-i18n-en="Where this can go next"
+      data-i18n-tr="Bundan sonra nereye gidebilir"
+      data-i18n-de="Wohin das als Nächstes führen kann"
+    >Where this can go next</p>
     <h2 class="section__title" data-i18n-key="section_two_directions" data-i18n-en="Two directions" data-i18n-tr="İki yön" data-i18n-de="Zwei Richtungen">Two directions</h2>
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 8px;">
       <div class="card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 32px;">
-        <div class="card__title" style="margin-bottom: 10px;">Support our services</div>
-        <div class="card__desc">
+        <div class="card__title" style="margin-bottom: 10px;"
+          data-i18n-key="landing_dir1_title"
+          data-i18n-en="Support our services"
+          data-i18n-tr="Hizmetlerimizi destekleyin"
+          data-i18n-de="Unsere Dienste unterstützen"
+        >Support our services</div>
+        <div class="card__desc"
+          data-i18n-key="landing_dir1_desc"
+          data-i18n-en="We run managed security awareness exercises for teams of all sizes. Reach out to schedule a demo, get a branded tenant set up, or discuss a tailored threat catalog for your industry."
+          data-i18n-tr="Her büyüklükteki ekip için yönetilen güvenlik farkındalığı egzersizleri yürütüyoruz. Bir demo planlamak, marklı bir kiracı kurmak veya sektörünüze özel bir tehdit kataloğunu tartışmak için bize ulaşın."
+          data-i18n-de="Wir führen verwaltete Sicherheitsbewusstseinsübungen für Teams jeder Größe durch. Melden Sie sich, um eine Demo zu planen, einen markierten Mandanten einzurichten oder einen maßgeschneiderten Bedrohungskatalog für Ihre Branche zu besprechen."
+        >
           We run managed security awareness exercises for teams of all sizes.
           Reach out to schedule a demo, get a branded tenant set up, or discuss
           a tailored threat catalog for your industry.
         </div>
       </div>
       <div class="card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 32px;">
-        <div class="card__title" style="margin-bottom: 10px;">Check the GitHub &amp; build your own</div>
-        <div class="card__desc">
+        <div class="card__title" style="margin-bottom: 10px;"
+          data-i18n-key="landing_dir2_title"
+          data-i18n-en="Check the GitHub &amp; build your own"
+          data-i18n-tr="GitHub'a göz atın ve kendiniz oluşturun"
+          data-i18n-de="GitHub ansehen und selbst bauen"
+        >Check the GitHub &amp; build your own</div>
+        <div class="card__desc"
+          data-i18n-key="landing_dir2_desc"
+          data-i18n-en="The full source — attack DSL, scheduler, task generator, and multi-tenant infrastructure — is open on GitHub. Fork it, extend the catalog, plug in your own ticketing system, and make it yours."
+          data-i18n-tr="Tam kaynak kodu — saldırı DSL'i, zamanlayıcı, görev oluşturucu ve çok kiracılı altyapı — GitHub'da açık. Fork edin, kataloğu genişletin, kendi bilet sisteminizi takın ve onu sizin yapın."
+          data-i18n-de="Der vollständige Quellcode – Angriffs-DSL, Scheduler, Aufgaben-Generator und Multi-Tenant-Infrastruktur – ist auf GitHub offen. Forken Sie ihn, erweitern Sie den Katalog, schließen Sie Ihr eigenes Ticketsystem an und machen Sie ihn zu Ihrem."
+        >
           The full source — attack DSL, scheduler, task generator, and multi-tenant
           infrastructure — is open on GitHub. Fork it, extend the catalog, plug in
           your own ticketing system, and make it yours.

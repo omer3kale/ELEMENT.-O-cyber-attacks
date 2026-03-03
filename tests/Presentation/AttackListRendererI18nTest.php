@@ -9,10 +9,6 @@ use ElementO\Presentation\I18n;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Enforces that every I18n::KEYS entry has explicit EN, TR, and DE translations.
- * Keys and translations now live in I18n; AttackListRenderer delegates to I18n::assertComplete().
- */
 final class AttackListRendererI18nTest extends TestCase
 {
     /** @var array<string> */
@@ -65,7 +61,6 @@ final class AttackListRendererI18nTest extends TestCase
 
     public function testAssertI18nCompleteRunsWithoutException(): void
     {
-        // render([]) triggers assertI18nComplete(); any missing entry throws RuntimeException
         $renderer = new AttackListRenderer();
         $html     = $renderer->render([]);
         self::assertStringContainsString('lang-toggle', $html);

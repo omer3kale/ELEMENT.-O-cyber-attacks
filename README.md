@@ -40,74 +40,23 @@ I treat every bounded context as its own world with its own language. The attack
 
 "amountPerUser" is interpreted as a desired maximum per individual user, not a global pool; if the window cannot fit that many, the service returns fewer items rather than throwing an exception. The interpretation and the fallback behaviour are both stated in the method docblock at the call site so whoever uses the service never has to guess.
 
-**How you explain decisions and assumptions**
+***How you explain decisions and assumptions***
 
-Each design choice is captured in the method docblocks on `ProcessableItemsService` and in the distribution strategy trade-off table below, so future maintainers know why each rule exists without reading implementation code. PHPUnit test names are written as plain-English statements — `testMinDistanceFloorIsEnforced`, `testWeightedStrategyProducesLaterAverageSlot` — so the test suite doubles as living documentation of the business rules.
+Each design choice is captured in the method docblocks on "ProcessableItemsService" and in the distribution strategy trade-off table below, so future maintainers know why each rule exists without reading implementation code. PHPUnit test names are written as plain-English statements, "testMinDistanceFloorIsEnforced", "testWeightedStrategyProducesLaterAverageSlot", so the test suite doubles as living documentation of the business rules.
 
-**How you would extend or refactor the solution in the future**
+***How you would extend or refactor the solution in the future***
 
-Swapping SQLite for PostgreSQL only requires a new `ConnectionFactory` — the service depends on `ProcessableItemRepository`, not a driver, so zero business logic changes. Concrete next steps already scoped: blackout windows per user, iCal/Google Calendar import for busy blocks, team-level quotas, a PSR-7 REST layer, and webhook notifications when a scheduled item's time is reached.
+Swapping SQLite for MSSQL only requires a new "ConnectionFactory", the service depends on "ProcessableItemRepository", not a driver, so zero business logic changes. Concrete next steps already scoped: blackout windows per user, iCal/Google Calendar import for busy blocks, team level quotas, enriched catalog of attacks & scenarios and webhook notifications when a scheduled item's time is reached.
 
----
 
-## Distribution strategies
+***Design decisions captured in code***
+"amountPerUser" interpretation documented in "scheduleItems()"
+30-min floor enforced at entry, not inside each strategy; one place to change
+"DateTimeImmutable" throughout, no mutation bugs possible in long date windows
+Holiday coverage: federal holidays only; state specific holidays are out of scope and noted inline
 
-| Strategy | Algorithm | Predictability | Best for |
-|---|---|---|---|
-| `EVEN` | Evenly-spaced indices — no randomness | High — fully deterministic | Compliance schedules, auditable workflows |
-| `RANDOM_SPACED` | Shuffles pool, greedily picks slots ≥ minDistance apart | Low — varies per run | Phishing simulations, anything where predictability lets users anticipate |
-| `WEIGHTED` | Weighted pool (09–13 ×1, 13–15 ×2, 15–17 ×3), shuffled, greedy pick | Medium — biased but not deterministic | Awareness reminders that should not compete with morning work |
-
-\`\`\`
-Predictability : EVEN  > WEIGHTED > RANDOM_SPACED
-Late-day bias  : WEIGHTED > RANDOM_SPACED ≈ EVEN
-Surprise factor: RANDOM_SPACED > WEIGHTED > EVEN
-\`\`\`
-
----
-
-## Language support
-
-The catalog and documentation share a single i18n layer (`src/Presentation/I18n.php`) with 100% EN/TR/DE coverage for all UI keys; this implementation is treated as stable and is only changed when adding new keys or fixing bugs.
-
-- **51 keys** span catalog UI, navigation, page titles, CTA buttons, and section headings.
-- The toggle persists the user's choice to `localStorage`; it is rendered client-side in pure JS with no build step.
-- `I18n::assertComplete()` is called at renderer entry and in CI — any missing translation is a hard failure, not a silent fallback.
-- `I18nTest` and `AttackListRendererI18nTest` enforce 100% key × language matrix coverage.
-
----
-
-## Optional
-
-**Tests:** 46 tests, 369 assertions — zero warnings, zero skipped.
-
-\`\`\`bash
-./vendor/bin/phpunit
-# OK (46 tests, 369 assertions)
-\`\`\`
-
-**Commit history** — 9 clean, single-concern commits:
-
-\`\`\`
-b2f933c  P20+P21: GitHub Pages docs site, run-all-tenants, two deployment paths
-676651b  Add multi-tenant ConnectionFactory, BrandAwareTaskTemplates, tenant/brand tests
-796406a  Fix CI: seed MT RNG in weighted test; add estimateCapacity, category tags, strategy docblocks
-30f3dbf  Add Module 3: SecurityTaskGenerator bridges attack catalog with scheduler
-b0e7d90  Add ProcessableItems module: service, SQLite, holiday calendar, PHPUnit tests
-afb3453  Rebrand to ELEMENT.İO, remove meta tagline, add PWA
-138bb05  Fix PSR-4 namespace in composer.json
-bd6d424  Add ANTLR generated parser files so CI can run without Java
-886ca54  Add full attack catalog, renderer, workspace checks, modal popups, Pages deployment
-\`\`\`
-
-**Design decisions captured in code:**
-- `amountPerUser` interpretation documented in `scheduleItems()` docblock
-- 30-min floor enforced at entry, not inside each strategy — one place to change
-- `DateTimeImmutable` throughout — no mutation bugs possible in long date windows
-- Holiday coverage: federal holidays only; state-specific holidays are out of scope and noted inline
-
-**Edge cases explicitly handled:**
-- Holiday-dense weeks (Christmas Eve → New Year) may return zero items — no exception, documented
-- Window shorter than `minDistanceMinutes` → zero items, no exception
-- `amountPerUser = 0` → empty array, no slot generation triggered
-- Per-user scheduling is independent — one user hitting zero slots does not affect others
+***Edge cases handled***
+Holiday-dense weeks (Christmas Eve -> New Year) may return zero items; no exception, documented
+Window shorter than "minDistanceMinutes" -> zero items, no exception
+"amountPerUser = 0" -> empty array, no slot generation triggered
+Per-user scheduling is independent, one user hitting zero slots does not affect others
