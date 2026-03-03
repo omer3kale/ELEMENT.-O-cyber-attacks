@@ -13,15 +13,20 @@
   <div class="site-nav__inner">
     <a class="site-nav__brand" href="." aria-label="ELEMENT.İO home">ELEMENT<span>.İO</span></a>
     <div class="site-nav__links">
-      <a class="site-nav__link" href=".">Home</a>
-      <a class="site-nav__link" href="attacks.html">Attacks</a>
-      <a class="site-nav__link" href="scheduler.html">Scheduler</a>
-      <a class="site-nav__link" href="security-tasks.html">Security Tasks</a>
-      <a class="site-nav__link site-nav__link--active" href="multi-tenant.html" aria-current="page">Multi-Tenant</a>
+      <a class="site-nav__link" href="." data-i18n-key="nav_home" data-i18n-en="Home" data-i18n-tr="Ana Sayfa" data-i18n-de="Startseite">Home</a>
+      <a class="site-nav__link" href="attacks.html" data-i18n-key="nav_attacks" data-i18n-en="Attacks" data-i18n-tr="Saldırılar" data-i18n-de="Angriffe">Attacks</a>
+      <a class="site-nav__link" href="scheduler.html" data-i18n-key="nav_scheduler" data-i18n-en="Scheduler" data-i18n-tr="Zamanlayıcı" data-i18n-de="Scheduler">Scheduler</a>
+      <a class="site-nav__link" href="security-tasks.html" data-i18n-key="nav_security_tasks" data-i18n-en="Security Tasks" data-i18n-tr="Güvenlik Görevleri" data-i18n-de="Sicherheitsaufgaben">Security Tasks</a>
+      <a class="site-nav__link site-nav__link--active" href="multi-tenant.html" aria-current="page" data-i18n-key="nav_multi_tenant" data-i18n-en="Multi-Tenant" data-i18n-tr="Çok Kiracılı" data-i18n-de="Mandantenfähig">Multi-Tenant</a>
     </div>
     <div class="site-nav__ext">
-      <a class="btn-ghost" href="catalog/">View Catalog →</a>
-      <a class="btn-ghost" href="https://github.com/omer3kale/ELEMENT.-O-cyber-attacks" target="_blank" rel="noopener">GitHub ↗</a>
+      <a class="btn-ghost" href="catalog/" data-i18n-key="nav_view_catalog" data-i18n-en="View Catalog →" data-i18n-tr="Kataloğu Görüntüle →" data-i18n-de="Katalog anzeigen →">View Catalog →</a>
+      <a class="btn-ghost" href="https://github.com/omer3kale/ELEMENT.-O-cyber-attacks" target="_blank" rel="noopener" data-i18n-key="nav_github" data-i18n-en="GitHub ↗" data-i18n-tr="GitHub ↗" data-i18n-de="GitHub ↗">GitHub ↗</a>
+      <div class="lang-toggle">
+        <button type="button" data-lang="en" class="lang-button">EN</button>
+        <button type="button" data-lang="tr" class="lang-button">TR</button>
+        <button type="button" data-lang="de" class="lang-button">DE</button>
+      </div>
     </div>
   </div>
 </nav>
@@ -29,7 +34,7 @@
 <div class="page-wrap">
   <section class="hero">
     <p class="hero__eyebrow">Module 4 · Multi-Tenancy</p>
-    <h1 class="hero__title">Multi-Tenant Architecture</h1>
+    <h1 class="hero__title" data-i18n-key="page_title_multi_tenant" data-i18n-en="Multi-Tenant Architecture" data-i18n-tr="Çok Kiracılı Mimari" data-i18n-de="Mandantenfähige Architektur">Multi-Tenant Architecture</h1>
     <p class="hero__desc">
       One codebase, unlimited customers. Each tenant gets an isolated SQLite database
       identified by a validated slug. No shared tables, no JOIN-based leaks, no extra
@@ -103,5 +108,27 @@
   </div>
 </footer>
 
+<script>
+(function () {
+  var btns = document.querySelectorAll('.lang-button');
+  var els  = document.querySelectorAll('[data-i18n-key]');
+  function setLang(lang) {
+    els.forEach(function (el) {
+      var val = el.getAttribute('data-i18n-' + lang);
+      if (val !== null) { el.textContent = val; }
+    });
+    btns.forEach(function (btn) {
+      btn.classList.toggle('lang-active', btn.getAttribute('data-lang') === lang);
+    });
+    try { localStorage.setItem('lang', lang); } catch (e) {}
+  }
+  btns.forEach(function (btn) {
+    btn.addEventListener('click', function () { setLang(btn.getAttribute('data-lang')); });
+  });
+  var saved = 'en';
+  try { var s = localStorage.getItem('lang'); if (s === 'en' || s === 'tr' || s === 'de') saved = s; } catch (e) {}
+  setLang(saved);
+})();
+</script>
 </body>
 </html>

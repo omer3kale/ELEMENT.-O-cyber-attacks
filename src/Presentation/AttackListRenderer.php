@@ -11,6 +11,8 @@ final class AttackListRenderer
 {
     public function render(array $attacks): string
     {
+        I18n::assertComplete();
+        $lang   = 'en';
         $cards  = '';
         $modals = '';
         foreach ($attacks as $attack) {
@@ -36,7 +38,9 @@ final class AttackListRenderer
         <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; font-size: 14px; line-height: 1.6; }
-        .site-header { background: #161b22; border-bottom: 1px solid #30363d; padding: 24px 32px; }
+        .site-header { background: #161b22; border-bottom: 1px solid #30363d; padding: 24px 32px; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+        .header-left { display: flex; flex-direction: column; }
+        .header-right { margin-left: auto; }
         .site-header__title { font-size: 22px; font-weight: 700; color: #e6edf3; letter-spacing: 0.5px; }
         .site-header__meta { font-size: 12px; color: #8b949e; margin-top: 4px; }
         .site-main { padding: 32px; }
@@ -89,11 +93,24 @@ final class AttackListRenderer
         .modal__examples { background: #020617; border: 1px solid #1e293b; border-radius: 6px; padding: 10px 14px; overflow-x: auto; margin-top: 6px; }
         .modal__examples code { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 12px; color: #a5d6a7; white-space: pre-wrap; word-break: break-all; }
         @media (max-width: 640px) { .modal__content { margin: 0; max-height: 100vh; border-radius: 0; padding: 20px 16px; } }
+        .lang-toggle { display: inline-flex; gap: 0.5rem; align-items: center; }
+        .lang-button { background: transparent; border: 1px solid #30363d; color: #8b949e; padding: 0.15rem 0.55rem; border-radius: 999px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s; }
+        .lang-button.lang-active { background: #58a6ff; color: #0d1117; border-color: #58a6ff; }
+        .lang-button:hover:not(.lang-active) { border-color: #58a6ff; color: #58a6ff; }
         </style>
         </head>
         <body>
         <header class="site-header">
-          <div class="site-header__title">ELEMENT.İO / Cyber Attack Catalogue</div>
+          <div class="header-left">
+            <div class="site-header__title" data-i18n-key="catalog_title" data-i18n-en="ELEMENT.İO / Cyber Attack Catalogue" data-i18n-tr="ELEMENT.İO / Siber Saldırı Kataloğu" data-i18n-de="ELEMENT.İO / Katalog für Cyberangriffe">ELEMENT.İO / Cyber Attack Catalogue</div>
+          </div>
+          <div class="header-right">
+            <div class="lang-toggle">
+              <button type="button" data-lang="en" class="lang-button lang-active">EN</button>
+              <button type="button" data-lang="tr" class="lang-button">TR</button>
+              <button type="button" data-lang="de" class="lang-button">DE</button>
+            </div>
+          </div>
         </header>
         <main class="site-main">
           <div class="attack-grid">
@@ -105,6 +122,28 @@ final class AttackListRenderer
         if ('serviceWorker' in navigator) {
           window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
         }
+        </script>
+        <script>
+        (function () {
+          var btns = document.querySelectorAll('.lang-button');
+          var els  = document.querySelectorAll('[data-i18n-key]');
+          function setLang(lang) {
+            els.forEach(function (el) {
+              var val = el.getAttribute('data-i18n-' + lang);
+              if (val !== null) { el.textContent = val; }
+            });
+            btns.forEach(function (btn) {
+              btn.classList.toggle('lang-active', btn.getAttribute('data-lang') === lang);
+            });
+            try { localStorage.setItem('lang', lang); } catch (e) {}
+          }
+          btns.forEach(function (btn) {
+            btn.addEventListener('click', function () { setLang(btn.getAttribute('data-lang')); });
+          });
+          var saved = 'en';
+          try { var s = localStorage.getItem('lang'); if (s === 'en' || s === 'tr' || s === 'de') saved = s; } catch (e) {}
+          setLang(saved);
+        })();
         </script>
         </body>
         </html>
@@ -153,7 +192,7 @@ final class AttackListRenderer
             $exampleHtml = <<<HTML
 
             <div class="attack-card__examples">
-              <div class="attack-card__examples-title">Example vectors (safe)</div>
+              <div class="attack-card__examples-title" data-i18n-key="example_vectors" data-i18n-en="Example vectors (safe)" data-i18n-tr="Örnek vektörler (güvenli)" data-i18n-de="Beispielvektoren (sicher)">Example vectors (safe)</div>
               <code>{$exampleEncoded}</code>
             </div>
         HTML;
@@ -174,17 +213,17 @@ final class AttackListRenderer
                 </div>
               </div>
               <div class="attack-card__stats">
-                <span>MITRE: {$mitreId}</span>
-                <span>Impact: {$impact}</span>
-                <span>Platforms: {$platformStr}</span>
+                <span><span data-i18n-key="mitre_label" data-i18n-en="MITRE:" data-i18n-tr="MITRE:" data-i18n-de="MITRE:">MITRE:</span> {$mitreId}</span>
+                <span><span data-i18n-key="impact_label" data-i18n-en="Impact:" data-i18n-tr="Etki:" data-i18n-de="Auswirkung:">Impact:</span> {$impact}</span>
+                <span><span data-i18n-key="platforms_label" data-i18n-en="Platforms:" data-i18n-tr="Platformlar:" data-i18n-de="Plattformen:">Platforms:</span> {$platformStr}</span>
               </div>
               <div class="risk-bar-wrap">
                 <div class="risk-bar"><div class="risk-bar__fill" style="width:{$barWidth}%;background:{$barColor}"></div></div>
-                <span class="risk-label">Risk {$riskScore}/100</span>
+                <span class="risk-label"><span data-i18n-key="risk_label" data-i18n-en="Risk" data-i18n-tr="Risk" data-i18n-de="Risiko">Risk</span> {$riskScore}/100</span>
               </div>
               <div class="attack-card__types">{$typeHtml}</div>
               <div class="attack-card__desc">{$desc}</div>{$exampleHtml}
-              <a href="#{$modalId}" class="attack-card__details-button">View details</a>
+              <a href="#{$modalId}" class="attack-card__details-button" data-i18n-key="view_details" data-i18n-en="View details" data-i18n-tr="Detayları gör" data-i18n-de="Details anzeigen">View details</a>
             </div>
         HTML;
     }
@@ -377,16 +416,16 @@ final class AttackListRenderer
         }
 
         $toolsSection = $toolsHtml !== ''
-            ? '<h3>Tools used</h3><ul>' . $toolsHtml . '</ul>'
+            ? '<h3 data-i18n-key="tools_used" data-i18n-en="Tools used" data-i18n-tr="Kullan\u0131lan ara\u00e7lar" data-i18n-de="Verwendete Tools">Tools used</h3><ul>' . $toolsHtml . '</ul>'
             : '';
         $cvesSection = $cvesHtml !== ''
-            ? '<h3>CVE references</h3><ul>' . $cvesHtml . '</ul>'
+            ? '<h3 data-i18n-key="cve_references" data-i18n-en="CVE references" data-i18n-tr="CVE referanslar\u0131" data-i18n-de="CVE-Referenzen">CVE references</h3><ul>' . $cvesHtml . '</ul>'
             : '';
         $dataSourcesSection = $dataSourcesHtml !== ''
-            ? '<h3>Data sources</h3><ul>' . $dataSourcesHtml . '</ul>'
+            ? '<h3 data-i18n-key="data_sources" data-i18n-en="Data sources" data-i18n-tr="Veri kaynaklar\u0131" data-i18n-de="Datenquellen">Data sources</h3><ul>' . $dataSourcesHtml . '</ul>'
             : '';
         $mitigationsSection = $mitigationsHtml !== ''
-            ? '<h3>Mitigations</h3><ul>' . $mitigationsHtml . '</ul>'
+            ? '<h3 data-i18n-key="mitigations" data-i18n-en="Mitigations" data-i18n-tr="Azaltma \u00f6nlemleri" data-i18n-de="Gegenmaßnahmen">Mitigations</h3><ul>' . $mitigationsHtml . '</ul>'
             : '';
 
         $realWorldHtml = '';
@@ -396,13 +435,13 @@ final class AttackListRenderer
             $rwVictim    = htmlspecialchars($rwc->victim, ENT_QUOTES | ENT_HTML5, 'UTF-8');
             $rwImpact    = htmlspecialchars($rwc->impact, ENT_QUOTES | ENT_HTML5, 'UTF-8');
             $rwAttrib    = $rwc->attribution !== null
-                ? '<p><strong>Attribution:</strong> ' . htmlspecialchars($rwc->attribution, ENT_QUOTES | ENT_HTML5, 'UTF-8') . '</p>'
+                ? '<p><strong data-i18n-key="attribution_label" data-i18n-en="Attribution:" data-i18n-tr="At\u0131f:" data-i18n-de="Zuschreibung:">Attribution:</strong> ' . htmlspecialchars($rwc->attribution, ENT_QUOTES | ENT_HTML5, 'UTF-8') . '</p>'
                 : '';
             $realWorldHtml = <<<HTML
-              <h3>Real-world case</h3>
-              <p><strong>Year:</strong> {$rwYear}</p>
-              <p><strong>Victim:</strong> {$rwVictim}</p>
-              <p><strong>Impact:</strong> {$rwImpact}</p>
+              <h3 data-i18n-key="real_world" data-i18n-en="Real-world case" data-i18n-tr="Ger\u00e7ek d\u00fcnya vakas\u0131" data-i18n-de="Realer Vorfall">Real-world case</h3>
+              <p><strong data-i18n-key="year_label" data-i18n-en="Year:" data-i18n-tr="Y\u0131l:" data-i18n-de="Jahr:">Year:</strong> {$rwYear}</p>
+              <p><strong data-i18n-key="victim_label" data-i18n-en="Victim:" data-i18n-tr="Ma\u011fdur:" data-i18n-de="Opfer:">Victim:</strong> {$rwVictim}</p>
+              <p><strong data-i18n-key="impact_case" data-i18n-en="Impact:" data-i18n-tr="Etki:" data-i18n-de="Auswirkung:">Impact:</strong> {$rwImpact}</p>
               {$rwAttrib}
         HTML;
         }
@@ -410,14 +449,14 @@ final class AttackListRenderer
         $notesHtml = '';
         if ($attack->notes !== null && trim($attack->notes) !== '') {
             $notes     = htmlspecialchars($attack->notes, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-            $notesHtml = '<h3>Notes</h3><p>' . $notes . '</p>';
+            $notesHtml = '<h3 data-i18n-key="notes" data-i18n-en="Notes" data-i18n-tr="Notlar" data-i18n-de="Hinweise">Notes</h3><p>' . $notes . '</p>';
         }
 
         $exampleRaw  = $this->exampleVectors($attack);
         $exampleHtml = '';
         if ($exampleRaw !== '') {
             $exampleEncoded = htmlspecialchars($exampleRaw, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-            $exampleHtml    = '<h3>Example vectors (safe)</h3><div class="modal__examples"><code>' . $exampleEncoded . '</code></div>';
+            $exampleHtml    = '<h3 data-i18n-key="example_vectors" data-i18n-en="Example vectors (safe)" data-i18n-tr="\u00d6rnek vekt\u00f6rler (g\u00fcvenli)" data-i18n-de="Beispielvektoren (sicher)">Example vectors (safe)</h3><div class="modal__examples"><code>' . $exampleEncoded . '</code></div>';
         }
 
         $barColor = $riskScore >= 75 ? '#f47067' : ($riskScore >= 50 ? '#e3b341' : '#7ee787');
@@ -437,33 +476,33 @@ final class AttackListRenderer
                 </div>
                 <div class="attack-card__types" style="margin-top:8px">{$typeHtml}</div>
               </div>
-              <a href="#!" class="modal__close">Close</a>
+              <a href="#!" class="modal__close" data-i18n-key="close" data-i18n-en="Close" data-i18n-tr="Kapat" data-i18n-de="Schließen">Close</a>
             </header>
             <div class="modal__body">
               <div class="attack-card__stats" style="margin-bottom:4px">
-                <span>MITRE: {$mitreId}</span>
-                <span>Risk: {$riskScore}/100</span>
-                <span>Impact: {$impact}</span>
-                <span>Success rate: {$successRate}</span>
-                <span>Privilege: {$privilege}</span>
+                <span><span data-i18n-key="mitre_label" data-i18n-en="MITRE:" data-i18n-tr="MITRE:" data-i18n-de="MITRE:">MITRE:</span> {$mitreId}</span>
+                <span><span data-i18n-key="risk_stat" data-i18n-en="Risk:" data-i18n-tr="Risk:" data-i18n-de="Risiko:">Risk:</span> {$riskScore}/100</span>
+                <span><span data-i18n-key="impact_label" data-i18n-en="Impact:" data-i18n-tr="Etki:" data-i18n-de="Auswirkung:">Impact:</span> {$impact}</span>
+                <span><span data-i18n-key="success_rate" data-i18n-en="Success rate:" data-i18n-tr="Başarı oranı:" data-i18n-de="Erfolgsrate:">Success rate:</span> {$successRate}</span>
+                <span><span data-i18n-key="privilege" data-i18n-en="Privilege:" data-i18n-tr="Yetki:" data-i18n-de="Berechtigung:">Privilege:</span> {$privilege}</span>
               </div>
               <div class="risk-bar-wrap" style="margin-bottom:16px">
                 <div class="risk-bar"><div class="risk-bar__fill" style="width:{$barWidth}%;background:{$barColor}"></div></div>
-                <span class="risk-label">Risk {$riskScore}/100</span>
+                <span class="risk-label"><span data-i18n-key="risk_label" data-i18n-en="Risk" data-i18n-tr="Risk" data-i18n-de="Risiko">Risk</span> {$riskScore}/100</span>
               </div>
-              <p><strong>Platforms:</strong> {$platforms}</p>
-              <h3>Description</h3>
+              <p><strong data-i18n-key="platforms_label" data-i18n-en="Platforms:" data-i18n-tr="Platformlar:" data-i18n-de="Plattformen:">Platforms:</strong> {$platforms}</p>
+              <h3 data-i18n-key="description" data-i18n-en="Description" data-i18n-tr="Açıklama" data-i18n-de="Beschreibung">Description</h3>
               <p>{$attackVector}</p>
-              <h3>Target profile</h3>
+              <h3 data-i18n-key="target_profile" data-i18n-en="Target profile" data-i18n-tr="Hedef profili" data-i18n-de="Zielprofil">Target profile</h3>
               <p>{$targetProfile}</p>
-              <h3>Delivery</h3>
-              <p><strong>Method:</strong> {$deliveryMethod}</p>
-              <p><strong>Average impact:</strong> {$averageImpact}</p>
-              <p><strong>Kill chain phase:</strong> {$killChain}</p>
+              <h3 data-i18n-key="delivery" data-i18n-en="Delivery" data-i18n-tr="Dağıtım" data-i18n-de="Übermittlung">Delivery</h3>
+              <p><strong data-i18n-key="method_label" data-i18n-en="Method:" data-i18n-tr="Yöntem:" data-i18n-de="Methode:">Method:</strong> {$deliveryMethod}</p>
+              <p><strong data-i18n-key="avg_impact" data-i18n-en="Average impact:" data-i18n-tr="Ortalama etki:" data-i18n-de="Durchschn. Auswirkung:">Average impact:</strong> {$averageImpact}</p>
+              <p><strong data-i18n-key="kill_chain" data-i18n-en="Kill chain phase:" data-i18n-tr="Kill chain aşaması:" data-i18n-de="Kill-Chain-Phase:">Kill chain phase:</strong> {$killChain}</p>
               {$toolsSection}
               {$cvesSection}
-              <h3>Detection &amp; mitigations</h3>
-              <p><strong>Detection difficulty:</strong> {$detectionDiff}</p>
+              <h3 data-i18n-key="detection_mit" data-i18n-en="Detection &amp; mitigations" data-i18n-tr="Tespit &amp; azaltma" data-i18n-de="Erkennung &amp;amp; Gegenmaßnahmen">Detection &amp; mitigations</h3>
+              <p><strong data-i18n-key="detection_diff" data-i18n-en="Detection difficulty:" data-i18n-tr="Tespit zorluğu:" data-i18n-de="Erkennungsschwierigkeit:">Detection difficulty:</strong> {$detectionDiff}</p>
               {$dataSourcesSection}
               {$mitigationsSection}
               {$realWorldHtml}

@@ -11,12 +11,16 @@
         <testsuite name="SecurityTasks">
             <directory>tests/SecurityTasks</directory>
         </testsuite>
+        <testsuite name="Presentation">
+            <directory>tests/Presentation</directory>
+        </testsuite>
     </testsuites>
 
     <source>
         <include>
             <directory>src/ProcessableItems</directory>
             <directory>src/SecurityTasks</directory>
+            <directory>src/Presentation</directory>
         </include>
     </source>
 </phpunit>

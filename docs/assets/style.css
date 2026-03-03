@@ -424,3 +424,20 @@ pre code {
   .site-footer { padding: 20px 16px; }
   pre { font-size: 12px; }
 }
+
+/* ── Language switcher ─────────────────────────────────────── */
+.lang-toggle { display: inline-flex; gap: 0.4rem; align-items: center; margin-left: 8px; }
+.lang-button {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.lang-button.lang-active { background: var(--accent); color: #0d1117; border-color: var(--accent); }
+.lang-button:hover:not(.lang-active) { border-color: var(--accent); color: var(--accent); }

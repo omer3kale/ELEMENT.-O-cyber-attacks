@@ -14,15 +14,20 @@
   <div class="site-nav__inner">
     <a class="site-nav__brand" href="." aria-label="ELEMENT.İO home">ELEMENT<span>.İO</span></a>
     <div class="site-nav__links">
-      <a class="site-nav__link site-nav__link--active" href="." aria-current="page">Home</a>
-      <a class="site-nav__link" href="attacks.html">Attacks</a>
-      <a class="site-nav__link" href="scheduler.html">Scheduler</a>
-      <a class="site-nav__link" href="security-tasks.html">Security Tasks</a>
-      <a class="site-nav__link" href="multi-tenant.html">Multi-Tenant</a>
+      <a class="site-nav__link site-nav__link--active" href="." aria-current="page" data-i18n-key="nav_home" data-i18n-en="Home" data-i18n-tr="Ana Sayfa" data-i18n-de="Startseite">Home</a>
+      <a class="site-nav__link" href="attacks.html" data-i18n-key="nav_attacks" data-i18n-en="Attacks" data-i18n-tr="Saldırılar" data-i18n-de="Angriffe">Attacks</a>
+      <a class="site-nav__link" href="scheduler.html" data-i18n-key="nav_scheduler" data-i18n-en="Scheduler" data-i18n-tr="Zamanlayıcı" data-i18n-de="Scheduler">Scheduler</a>
+      <a class="site-nav__link" href="security-tasks.html" data-i18n-key="nav_security_tasks" data-i18n-en="Security Tasks" data-i18n-tr="Güvenlik Görevleri" data-i18n-de="Sicherheitsaufgaben">Security Tasks</a>
+      <a class="site-nav__link" href="multi-tenant.html" data-i18n-key="nav_multi_tenant" data-i18n-en="Multi-Tenant" data-i18n-tr="Çok Kiracılı" data-i18n-de="Mandantenfähig">Multi-Tenant</a>
     </div>
     <div class="site-nav__ext">
-      <a class="btn-ghost" href="catalog/">View Catalog →</a>
-      <a class="btn-ghost" href="https://github.com/omer3kale/ELEMENT.-O-cyber-attacks" target="_blank" rel="noopener">GitHub ↗</a>
+      <a class="btn-ghost" href="catalog/" data-i18n-key="nav_view_catalog" data-i18n-en="View Catalog →" data-i18n-tr="Kataloğu Görüntüle →" data-i18n-de="Katalog anzeigen →">View Catalog →</a>
+      <a class="btn-ghost" href="https://github.com/omer3kale/ELEMENT.-O-cyber-attacks" target="_blank" rel="noopener" data-i18n-key="nav_github" data-i18n-en="GitHub ↗" data-i18n-tr="GitHub ↗" data-i18n-de="GitHub ↗">GitHub ↗</a>
+      <div class="lang-toggle">
+        <button type="button" data-lang="en" class="lang-button">EN</button>
+        <button type="button" data-lang="tr" class="lang-button">TR</button>
+        <button type="button" data-lang="de" class="lang-button">DE</button>
+      </div>
     </div>
   </div>
 </nav>
@@ -42,15 +47,15 @@
       PHP command and zero cloud dependencies.
     </p>
     <div class="hero__cta">
-      <a class="btn-primary" href="security-tasks.html">How Tasks Are Generated →</a>
-      <a class="btn-secondary" href="catalog/">Browse the Attack Catalog</a>
+      <a class="btn-primary" href="security-tasks.html" data-i18n-key="btn_how_tasks" data-i18n-en="How Tasks Are Generated →" data-i18n-tr="Görevler Nasıl Oluşturulur →" data-i18n-de="Wie Aufgaben erstellt werden →">How Tasks Are Generated →</a>
+      <a class="btn-secondary" href="catalog/" data-i18n-key="btn_browse_catalog" data-i18n-en="Browse the Attack Catalog" data-i18n-tr="Saldırı Kataloğunu İncele" data-i18n-de="Angriffskatalog durchsuchen">Browse the Attack Catalog</a>
     </div>
   </section>
 
   <!-- ── Three-column overview -->
   <section class="section">
     <p class="section__label">Architecture in 30 seconds</p>
-    <h2 class="section__title">Three modules, one pipeline</h2>
+    <h2 class="section__title" data-i18n-key="section_three_modules" data-i18n-en="Three modules, one pipeline" data-i18n-tr="Üç modül, bir boru hattı" data-i18n-de="Drei Module, eine Pipeline">Three modules, one pipeline</h2>
     <p class="section__sub">
       Each module maps to a bounded context in the DDD layer; none depends on the others at the infrastructure level.
     </p>
@@ -89,7 +94,7 @@
   <!-- ── Mock attack walkthrough -->
   <section class="section">
     <p class="section__label">For your team</p>
-    <h2 class="section__title">How can you send harmless (mock) attacks to your coworkers?</h2>
+    <h2 class="section__title" data-i18n-key="section_safety_question" data-i18n-en="How can you send harmless (mock) attacks to your coworkers?" data-i18n-tr="Zararssız (sahte) saldırıları iş arkadaşlarınıza nasıl gönderirsiniz?" data-i18n-de="Wie können harmlose (Mock-)Angriffe an Kollegen gesendet werden?">How can you send harmless (mock) attacks to your coworkers?</h2>
     <p class="section__sub">
       No technical background needed. Here's how a team lead or exec can run a safe,
       fully controlled security awareness exercise in three steps.
@@ -140,7 +145,7 @@
   <!-- ── Roadmap -->
   <section class="section">
     <p class="section__label">Where this can go next</p>
-    <h2 class="section__title">Two directions</h2>
+    <h2 class="section__title" data-i18n-key="section_two_directions" data-i18n-en="Two directions" data-i18n-tr="İki yön" data-i18n-de="Zwei Richtungen">Two directions</h2>
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 8px;">
       <div class="card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 32px;">
         <div class="card__title" style="margin-bottom: 10px;">Support our services</div>
@@ -157,7 +162,7 @@
           infrastructure — is open on GitHub. Fork it, extend the catalog, plug in
           your own ticketing system, and make it yours.
         </div>
-        <a class="btn-secondary" href="https://github.com/omer3kale/ELEMENT.-O-cyber-attacks" target="_blank" rel="noopener" style="margin-top: 20px;">View on GitHub ↗</a>
+        <a class="btn-secondary" href="https://github.com/omer3kale/ELEMENT.-O-cyber-attacks" target="_blank" rel="noopener" style="margin-top: 20px;" data-i18n-key="btn_view_github" data-i18n-en="View on GitHub ↗" data-i18n-tr="GitHub'da Görüntüle ↗" data-i18n-de="Auf GitHub ansehen ↗">View on GitHub ↗</a>
       </div>
     </div>
   </section>
@@ -178,5 +183,27 @@
   </div>
 </footer>
 
+<script>
+(function () {
+  var btns = document.querySelectorAll('.lang-button');
+  var els  = document.querySelectorAll('[data-i18n-key]');
+  function setLang(lang) {
+    els.forEach(function (el) {
+      var val = el.getAttribute('data-i18n-' + lang);
+      if (val !== null) { el.textContent = val; }
+    });
+    btns.forEach(function (btn) {
+      btn.classList.toggle('lang-active', btn.getAttribute('data-lang') === lang);
+    });
+    try { localStorage.setItem('lang', lang); } catch (e) {}
+  }
+  btns.forEach(function (btn) {
+    btn.addEventListener('click', function () { setLang(btn.getAttribute('data-lang')); });
+  });
+  var saved = 'en';
+  try { var s = localStorage.getItem('lang'); if (s === 'en' || s === 'tr' || s === 'de') saved = s; } catch (e) {}
+  setLang(saved);
+})();
+</script>
 </body>
 </html>
