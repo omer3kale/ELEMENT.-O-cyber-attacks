@@ -7,6 +7,10 @@ namespace ElementO\Presentation;
 /**
  * Central i18n table for all UI strings across the catalog and docs pages.
  *
+ * Shared EN/TR/DE UI translation table used by both catalog and docs.
+ * This module is considered stable; changes should maintain 100% key × language
+ * coverage and keep existing keys backward compatible.
+ *
  * - LANGS:         the three supported languages.
  * - KEYS:          the single source of truth; every key must be present in $tr.
  * - t(key, lang):  returns the translated string (falls back to 'en' if a lang entry is missing).
